@@ -1,6 +1,6 @@
 import type { LexXrpcProcedure } from "@atproto/lexicon";
 import type { OpenAPIV3_1 } from "openapi-types";
-import { Endpoint, calculateTag } from "../utils";
+import { calculateTag, Endpoint } from "../utils";
 import { convertObject, convertProperty } from "./object";
 
 export async function convertProcedure(

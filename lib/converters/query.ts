@@ -31,7 +31,7 @@ export async function convertQuery(
 				in: "query",
 				...(property.description && { description: property.description }),
 				required: required.has(name),
-				// @ts-ignore FIXME: We know this will never be an ArraySchemaObject
+				// @ts-expect-error FIXME: We know this will never be an ArraySchemaObject
 				// but TypeScript doesn't. Probably just gotta break out the inner parts
 				// of convertProperty more.
 				schema: convertProperty(id, name, property),

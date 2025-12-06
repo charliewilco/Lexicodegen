@@ -41,7 +41,11 @@ export function convertObject(
 	};
 }
 
-function convertProperties(id: string, name: string, properties: LexObject["properties"]) {
+function convertProperties(
+	id: string,
+	name: string,
+	properties: LexObject["properties"],
+) {
 	if (!properties) return;
 
 	const converted: OpenAPIV3_1.SchemaObject["properties"] = {};

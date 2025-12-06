@@ -22,7 +22,10 @@ export enum Endpoint {
 	DoesNotExist = 2,
 }
 
-export async function checkEndpoint(path: string, method = "GET"): Promise<Endpoint> {
+export async function checkEndpoint(
+	path: string,
+	method = "GET",
+): Promise<Endpoint> {
 	const url = new URL(path, "https://bsky.social/xrpc/");
 	const response = await fetch(url, { method });
 
