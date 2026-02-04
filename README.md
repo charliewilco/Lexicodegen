@@ -17,5 +17,5 @@ bun run main.ts
 then convert to yaml
 
 ```bash
-yq  -Poy ./output/openapi.json > ./output/openapi.yaml
+yq -Poy ./output/openapi.json > ./output/openapi.yaml
 ```

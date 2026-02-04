@@ -4,8 +4,8 @@
 	"type": "module",
 	"private": true,
 	"scripts": {
-		"build": "bun run ./main.ts",
-		"postbuild": "bunx biome format --write ./output/*.json ./lexicons/**/**/**/*.json",
+		"generate": "bun run ./main.ts",
+		"postgenerate": "bunx biome format --write ./output/*.json ./lexicons/**/**/**/*.json",
 		"dev": "bun --watch run ./main.ts"
 	},
 	"dependencies": {

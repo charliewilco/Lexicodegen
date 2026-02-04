@@ -58,9 +58,11 @@ async function createDocument(
 			const containsDeprecated =
 				def.description?.toLowerCase().startsWith("deprecated") ?? false;
 
-			const isIgnored = IGNORED_IDS.includes(identifier.toLowerCase());
+			const isIgnored = IGNORED_IDS.some((id) =>
+				identifier.toLowerCase().includes(id.toLowerCase()),
+			);
 
-			if (isIgnored || containsDeprecated) {
+			if (isIgnored || containsDeprecated || containsUnspecced) {
 				if (isIgnored) {
 					console.log(
 						styleText("red", `skipping ${identifier} (is in ignored list)`),
