@@ -2,6 +2,9 @@
 help:
 	@just --list
 
+build:
+	bun build ./main.ts --outfile ./dist/main.js --target "bun" --outfile ./dist/main.js --minify
+
 # Format generated OpenAPI, lexicon JSON files, and TypeScript sources.
 format:
 	bunx biome format --write ./output/*.json ./lexicons/**/**/**/*.json ./lib/**/*.ts ./main.ts
