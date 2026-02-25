@@ -2486,6 +2486,103 @@
 				}
 			}
 		},
+		"/xrpc/com.atproto.lexicon.resolveLexicon": {
+			"get": {
+				"tags": ["com.atproto.lexicon"],
+				"description": "*To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*\n\nResolves an atproto lexicon (NSID) to a schema.",
+				"operationId": "com.atproto.lexicon.resolveLexicon",
+				"security": [
+					{
+						"Bearer": []
+					}
+				],
+				"parameters": [
+					{
+						"name": "nsid",
+						"in": "query",
+						"description": "The lexicon NSID to resolve.",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"description": "The lexicon NSID to resolve.",
+							"format": "nsid"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["uri", "cid", "schema"],
+									"properties": {
+										"cid": {
+											"type": "string",
+											"description": "The CID of the lexicon schema record.",
+											"format": "cid"
+										},
+										"schema": {
+											"$ref": "#/components/schemas/com.atproto.lexicon.schema.main"
+										},
+										"uri": {
+											"type": "string",
+											"description": "The AT-URI of the lexicon schema record.",
+											"format": "at-uri"
+										}
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["error", "message"],
+									"properties": {
+										"error": {
+											"type": "string",
+											"enum": [
+												"InvalidRequest",
+												"ExpiredToken",
+												"InvalidToken",
+												"LexiconNotFound"
+											]
+										},
+										"message": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["error", "message"],
+									"properties": {
+										"error": {
+											"const": "AuthMissing"
+										},
+										"message": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
 		"/xrpc/com.atproto.server.requestEmailConfirmation": {
 			"post": {
 				"tags": ["com.atproto.server"],
@@ -3145,7 +3242,7 @@
 		"/xrpc/com.atproto.server.deleteSession": {
 			"post": {
 				"tags": ["com.atproto.server"],
-				"description": "*This endpoint is part of the atproto PDS server and account management APIs. Requests often require authentication and are made directly to the user's own PDS instance.*\n\n *To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*\n\nDelete the current session. Requires auth.",
+				"description": "*This endpoint is part of the atproto PDS server and account management APIs. Requests often require authentication and are made directly to the user's own PDS instance.*\n\n *To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*\n\nDelete the current session. Requires auth using the 'refreshJwt' (not the 'accessJwt').",
 				"operationId": "com.atproto.server.deleteSession",
 				"security": [
 					{
@@ -3166,7 +3263,13 @@
 									"properties": {
 										"error": {
 											"type": "string",
-											"enum": ["InvalidRequest", "ExpiredToken", "InvalidToken"]
+											"enum": [
+												"InvalidRequest",
+												"ExpiredToken",
+												"InvalidToken",
+												"InvalidToken",
+												"ExpiredToken"
+											]
 										},
 										"message": {
 											"type": "string"
@@ -3615,6 +3718,7 @@
 											"type": "string",
 											"format": "did"
 										},
+										"didDoc": {},
 										"email": {
 											"type": "string"
 										},
@@ -3624,7 +3728,6 @@
 										"emailAuthFactor": {
 											"type": "boolean"
 										},
-										"didDoc": {},
 										"active": {
 											"type": "boolean"
 										},
@@ -3714,6 +3817,15 @@
 											"format": "did"
 										},
 										"didDoc": {},
+										"email": {
+											"type": "string"
+										},
+										"emailConfirmed": {
+											"type": "boolean"
+										},
+										"emailAuthFactor": {
+											"type": "boolean"
+										},
 										"active": {
 											"type": "boolean"
 										},
@@ -3741,7 +3853,9 @@
 												"InvalidRequest",
 												"ExpiredToken",
 												"InvalidToken",
-												"AccountTakedown"
+												"AccountTakedown",
+												"InvalidToken",
+												"ExpiredToken"
 											]
 										},
 										"message": {
@@ -6750,6 +6864,513 @@
 												"DidNotFound",
 												"DidDeactivated"
 											]
+										},
+										"message": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["error", "message"],
+									"properties": {
+										"error": {
+											"const": "AuthMissing"
+										},
+										"message": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/xrpc/com.atproto.temp.dereferenceScope": {
+			"get": {
+				"tags": ["com.atproto.temp"],
+				"description": "*To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*\n\nAllows finding the oauth permission scope from a reference",
+				"operationId": "com.atproto.temp.dereferenceScope",
+				"security": [
+					{
+						"Bearer": []
+					}
+				],
+				"parameters": [
+					{
+						"name": "scope",
+						"in": "query",
+						"description": "The scope reference (starts with 'ref:')",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"description": "The scope reference (starts with 'ref:')"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["scope"],
+									"properties": {
+										"scope": {
+											"type": "string",
+											"description": "The full oauth permission scope"
+										}
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["error", "message"],
+									"properties": {
+										"error": {
+											"type": "string",
+											"enum": [
+												"InvalidRequest",
+												"ExpiredToken",
+												"InvalidToken",
+												"InvalidScopeReference"
+											]
+										},
+										"message": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["error", "message"],
+									"properties": {
+										"error": {
+											"const": "AuthMissing"
+										},
+										"message": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/xrpc/com.atproto.temp.addReservedHandle": {
+			"post": {
+				"tags": ["com.atproto.temp"],
+				"description": "*To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*\n\nAdd a handle to the set of reserved handles.",
+				"operationId": "com.atproto.temp.addReservedHandle",
+				"security": [
+					{
+						"Bearer": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"required": ["handle"],
+								"properties": {
+									"handle": {
+										"type": "string"
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {}
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["error", "message"],
+									"properties": {
+										"error": {
+											"type": "string",
+											"enum": ["InvalidRequest", "ExpiredToken", "InvalidToken"]
+										},
+										"message": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["error", "message"],
+									"properties": {
+										"error": {
+											"const": "AuthMissing"
+										},
+										"message": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/xrpc/com.atproto.temp.checkSignupQueue": {
+			"get": {
+				"tags": ["com.atproto.temp"],
+				"description": "*To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*\n\nCheck accounts location in signup queue.",
+				"operationId": "com.atproto.temp.checkSignupQueue",
+				"security": [
+					{
+						"Bearer": []
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["activated"],
+									"properties": {
+										"activated": {
+											"type": "boolean"
+										},
+										"placeInQueue": {
+											"type": "integer"
+										},
+										"estimatedTimeMs": {
+											"type": "integer"
+										}
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["error", "message"],
+									"properties": {
+										"error": {
+											"type": "string",
+											"enum": ["InvalidRequest", "ExpiredToken", "InvalidToken"]
+										},
+										"message": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["error", "message"],
+									"properties": {
+										"error": {
+											"const": "AuthMissing"
+										},
+										"message": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/xrpc/com.atproto.temp.checkHandleAvailability": {
+			"get": {
+				"tags": ["com.atproto.temp"],
+				"description": "*To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*\n\nChecks whether the provided handle is available. If the handle is not available, available suggestions will be returned. Optional inputs will be used to generate suggestions.",
+				"operationId": "com.atproto.temp.checkHandleAvailability",
+				"security": [
+					{
+						"Bearer": []
+					}
+				],
+				"parameters": [
+					{
+						"name": "handle",
+						"in": "query",
+						"description": "Tentative handle. Will be checked for availability or used to build handle suggestions.",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"description": "Tentative handle. Will be checked for availability or used to build handle suggestions.",
+							"format": "handle"
+						}
+					},
+					{
+						"name": "email",
+						"in": "query",
+						"description": "User-provided email. Might be used to build handle suggestions.",
+						"required": false,
+						"schema": {
+							"type": "string",
+							"description": "User-provided email. Might be used to build handle suggestions."
+						}
+					},
+					{
+						"name": "birthDate",
+						"in": "query",
+						"description": "User-provided birth date. Might be used to build handle suggestions.",
+						"required": false,
+						"schema": {
+							"type": "string",
+							"description": "User-provided birth date. Might be used to build handle suggestions.",
+							"format": "date-time"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["handle", "result"],
+									"properties": {
+										"handle": {
+											"type": "string",
+											"description": "Echo of the input handle.",
+											"format": "handle"
+										},
+										"result": {
+											"oneOf": [
+												{
+													"$ref": "#/components/schemas/com.atproto.temp.checkHandleAvailability.resultAvailable"
+												},
+												{
+													"$ref": "#/components/schemas/com.atproto.temp.checkHandleAvailability.resultUnavailable"
+												}
+											]
+										}
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["error", "message"],
+									"properties": {
+										"error": {
+											"type": "string",
+											"enum": [
+												"InvalidRequest",
+												"ExpiredToken",
+												"InvalidToken",
+												"InvalidEmail"
+											]
+										},
+										"message": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["error", "message"],
+									"properties": {
+										"error": {
+											"const": "AuthMissing"
+										},
+										"message": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/xrpc/com.atproto.temp.requestPhoneVerification": {
+			"post": {
+				"tags": ["com.atproto.temp"],
+				"description": "*To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*\n\nRequest a verification code to be sent to the supplied phone number",
+				"operationId": "com.atproto.temp.requestPhoneVerification",
+				"security": [
+					{
+						"Bearer": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"required": ["phoneNumber"],
+								"properties": {
+									"phoneNumber": {
+										"type": "string"
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK"
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["error", "message"],
+									"properties": {
+										"error": {
+											"type": "string",
+											"enum": ["InvalidRequest", "ExpiredToken", "InvalidToken"]
+										},
+										"message": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["error", "message"],
+									"properties": {
+										"error": {
+											"const": "AuthMissing"
+										},
+										"message": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/xrpc/com.atproto.temp.revokeAccountCredentials": {
+			"post": {
+				"tags": ["com.atproto.temp"],
+				"description": "*To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*\n\nRevoke sessions, password, and app passwords associated with account. May be resolved by a password reset.",
+				"operationId": "com.atproto.temp.revokeAccountCredentials",
+				"security": [
+					{
+						"Bearer": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"required": ["account"],
+								"properties": {
+									"account": {
+										"type": "string",
+										"format": "at-identifier"
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK"
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["error", "message"],
+									"properties": {
+										"error": {
+											"type": "string",
+											"enum": ["InvalidRequest", "ExpiredToken", "InvalidToken"]
 										},
 										"message": {
 											"type": "string"
@@ -11880,8 +12501,9 @@
 											"type": "boolean",
 											"description": "If true, response has fallen-back to generic results, and is not scoped using relativeToDid"
 										},
-										"recId": {
-											"type": "integer"
+										"recIdStr": {
+											"type": "string",
+											"description": "Snowflake for this recommendation, use when submitting recommendation events."
 										}
 									}
 								}
@@ -15111,10 +15733,97 @@
 				}
 			}
 		},
+		"/xrpc/app.bsky.contact.sendNotification": {
+			"post": {
+				"tags": ["app.bsky.contact"],
+				"description": "*This endpoint is part of the Bluesky application Lexicon APIs (`app.bsky.*`). Public endpoints which don't require authentication can be made directly against the public Bluesky AppView API: https://public.api.bsky.app. Authenticated requests are usually made to the user's PDS, with automatic service proxying. Authenticated requests can be used for both public and non-public endpoints.*\n\n*To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*\n\nSystem endpoint to send notifications related to contact imports. Requires role authentication.",
+				"operationId": "app.bsky.contact.sendNotification",
+				"security": [
+					{
+						"Bearer": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"required": ["from", "to"],
+								"properties": {
+									"from": {
+										"type": "string",
+										"description": "The DID of who this notification comes from.",
+										"format": "did"
+									},
+									"to": {
+										"type": "string",
+										"description": "The DID of who this notification should go to.",
+										"format": "did"
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {}
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["error", "message"],
+									"properties": {
+										"error": {
+											"type": "string",
+											"enum": ["InvalidRequest", "ExpiredToken", "InvalidToken"]
+										},
+										"message": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["error", "message"],
+									"properties": {
+										"error": {
+											"const": "AuthMissing"
+										},
+										"message": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
 		"/xrpc/app.bsky.contact.getSyncStatus": {
 			"get": {
 				"tags": ["app.bsky.contact"],
-				"description": "*This endpoint is part of the Bluesky application Lexicon APIs (`app.bsky.*`). Public endpoints which don't require authentication can be made directly against the public Bluesky AppView API: https://public.api.bsky.app. Authenticated requests are usually made to the user's PDS, with automatic service proxying. Authenticated requests can be used for both public and non-public endpoints.*\n\n*To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*\n\nWARNING: This is unstable and under active development, don't use it while this warning is here. Gets the user's current contact import status. Requires authentication.",
+				"description": "*This endpoint is part of the Bluesky application Lexicon APIs (`app.bsky.*`). Public endpoints which don't require authentication can be made directly against the public Bluesky AppView API: https://public.api.bsky.app. Authenticated requests are usually made to the user's PDS, with automatic service proxying. Authenticated requests can be used for both public and non-public endpoints.*\n\n*To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*\n\nGets the user's current contact import status. Requires authentication.",
 				"operationId": "app.bsky.contact.getSyncStatus",
 				"security": [
 					{
@@ -15151,7 +15860,8 @@
 												"InvalidRequest",
 												"ExpiredToken",
 												"InvalidToken",
-												"TODO"
+												"InvalidDid",
+												"InternalError"
 											]
 										},
 										"message": {
@@ -15187,7 +15897,7 @@
 		"/xrpc/app.bsky.contact.startPhoneVerification": {
 			"post": {
 				"tags": ["app.bsky.contact"],
-				"description": "*This endpoint is part of the Bluesky application Lexicon APIs (`app.bsky.*`). Public endpoints which don't require authentication can be made directly against the public Bluesky AppView API: https://public.api.bsky.app. Authenticated requests are usually made to the user's PDS, with automatic service proxying. Authenticated requests can be used for both public and non-public endpoints.*\n\n*To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*\n\nWARNING: This is unstable and under active development, don't use it while this warning is here. Starts a phone verification flow. The phone passed will receive a code via SMS that should be passed to `app.bsky.contact.verifyPhone`. Requires authentication.",
+				"description": "*This endpoint is part of the Bluesky application Lexicon APIs (`app.bsky.*`). Public endpoints which don't require authentication can be made directly against the public Bluesky AppView API: https://public.api.bsky.app. Authenticated requests are usually made to the user's PDS, with automatic service proxying. Authenticated requests can be used for both public and non-public endpoints.*\n\n*To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*\n\nStarts a phone verification flow. The phone passed will receive a code via SMS that should be passed to `app.bsky.contact.verifyPhone`. Requires authentication.",
 				"operationId": "app.bsky.contact.startPhoneVerification",
 				"security": [
 					{
@@ -15237,7 +15947,10 @@
 												"InvalidRequest",
 												"ExpiredToken",
 												"InvalidToken",
-												"TODO"
+												"RateLimitExceeded",
+												"InvalidDid",
+												"InvalidPhone",
+												"InternalError"
 											]
 										},
 										"message": {
@@ -15273,7 +15986,7 @@
 		"/xrpc/app.bsky.contact.getMatches": {
 			"get": {
 				"tags": ["app.bsky.contact"],
-				"description": "*This endpoint is part of the Bluesky application Lexicon APIs (`app.bsky.*`). Public endpoints which don't require authentication can be made directly against the public Bluesky AppView API: https://public.api.bsky.app. Authenticated requests are usually made to the user's PDS, with automatic service proxying. Authenticated requests can be used for both public and non-public endpoints.*\n\n*To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*\n\nWARNING: This is unstable and under active development, don't use it while this warning is here. Returns the matched contacts (contacts that were mutually imported). Excludes dismissed matches. Requires authentication.",
+				"description": "*This endpoint is part of the Bluesky application Lexicon APIs (`app.bsky.*`). Public endpoints which don't require authentication can be made directly against the public Bluesky AppView API: https://public.api.bsky.app. Authenticated requests are usually made to the user's PDS, with automatic service proxying. Authenticated requests can be used for both public and non-public endpoints.*\n\n*To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*\n\nReturns the matched contacts (contacts that were mutually imported). Excludes dismissed matches. Requires authentication.",
 				"operationId": "app.bsky.contact.getMatches",
 				"security": [
 					{
@@ -15338,7 +16051,10 @@
 												"InvalidRequest",
 												"ExpiredToken",
 												"InvalidToken",
-												"TODO"
+												"InvalidDid",
+												"InvalidLimit",
+												"InvalidCursor",
+												"InternalError"
 											]
 										},
 										"message": {
@@ -15374,7 +16090,7 @@
 		"/xrpc/app.bsky.contact.importContacts": {
 			"post": {
 				"tags": ["app.bsky.contact"],
-				"description": "*This endpoint is part of the Bluesky application Lexicon APIs (`app.bsky.*`). Public endpoints which don't require authentication can be made directly against the public Bluesky AppView API: https://public.api.bsky.app. Authenticated requests are usually made to the user's PDS, with automatic service proxying. Authenticated requests can be used for both public and non-public endpoints.*\n\n*To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*\n\nWARNING: This is unstable and under active development, don't use it while this warning is here. Import contacts for securely matching with other users. This follows the protocol explained in https://docs.bsky.app/blog/contact-import-rfc. Requires authentication.",
+				"description": "*This endpoint is part of the Bluesky application Lexicon APIs (`app.bsky.*`). Public endpoints which don't require authentication can be made directly against the public Bluesky AppView API: https://public.api.bsky.app. Authenticated requests are usually made to the user's PDS, with automatic service proxying. Authenticated requests can be used for both public and non-public endpoints.*\n\n*To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*\n\nImport contacts for securely matching with other users. This follows the protocol explained in https://docs.bsky.app/blog/contact-import-rfc. Requires authentication.",
 				"operationId": "app.bsky.contact.importContacts",
 				"security": [
 					{
@@ -15439,7 +16155,11 @@
 												"InvalidRequest",
 												"ExpiredToken",
 												"InvalidToken",
-												"TODO"
+												"InvalidDid",
+												"InvalidContacts",
+												"TooManyContacts",
+												"InvalidToken",
+												"InternalError"
 											]
 										},
 										"message": {
@@ -15475,7 +16195,7 @@
 		"/xrpc/app.bsky.contact.dismissMatch": {
 			"post": {
 				"tags": ["app.bsky.contact"],
-				"description": "*This endpoint is part of the Bluesky application Lexicon APIs (`app.bsky.*`). Public endpoints which don't require authentication can be made directly against the public Bluesky AppView API: https://public.api.bsky.app. Authenticated requests are usually made to the user's PDS, with automatic service proxying. Authenticated requests can be used for both public and non-public endpoints.*\n\n*To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*\n\nWARNING: This is unstable and under active development, don't use it while this warning is here. Removes a match that was found via contact import. It shouldn't appear again if the same contact is re-imported. Requires authentication.",
+				"description": "*This endpoint is part of the Bluesky application Lexicon APIs (`app.bsky.*`). Public endpoints which don't require authentication can be made directly against the public Bluesky AppView API: https://public.api.bsky.app. Authenticated requests are usually made to the user's PDS, with automatic service proxying. Authenticated requests can be used for both public and non-public endpoints.*\n\n*To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*\n\nRemoves a match that was found via contact import. It shouldn't appear again if the same contact is re-imported. Requires authentication.",
 				"operationId": "app.bsky.contact.dismissMatch",
 				"security": [
 					{
@@ -15526,7 +16246,8 @@
 												"InvalidRequest",
 												"ExpiredToken",
 												"InvalidToken",
-												"TODO"
+												"InvalidDid",
+												"InternalError"
 											]
 										},
 										"message": {
@@ -15562,7 +16283,7 @@
 		"/xrpc/app.bsky.contact.removeData": {
 			"post": {
 				"tags": ["app.bsky.contact"],
-				"description": "*This endpoint is part of the Bluesky application Lexicon APIs (`app.bsky.*`). Public endpoints which don't require authentication can be made directly against the public Bluesky AppView API: https://public.api.bsky.app. Authenticated requests are usually made to the user's PDS, with automatic service proxying. Authenticated requests can be used for both public and non-public endpoints.*\n\n*To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*\n\nWARNING: This is unstable and under active development, don't use it while this warning is here. Removes all stored hashes used for contact matching, existing matches, and sync status. Requires authentication.",
+				"description": "*This endpoint is part of the Bluesky application Lexicon APIs (`app.bsky.*`). Public endpoints which don't require authentication can be made directly against the public Bluesky AppView API: https://public.api.bsky.app. Authenticated requests are usually made to the user's PDS, with automatic service proxying. Authenticated requests can be used for both public and non-public endpoints.*\n\n*To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*\n\nRemoves all stored hashes used for contact matching, existing matches, and sync status. Requires authentication.",
 				"operationId": "app.bsky.contact.removeData",
 				"security": [
 					{
@@ -15606,7 +16327,8 @@
 												"InvalidRequest",
 												"ExpiredToken",
 												"InvalidToken",
-												"TODO"
+												"InvalidDid",
+												"InternalError"
 											]
 										},
 										"message": {
@@ -15642,7 +16364,7 @@
 		"/xrpc/app.bsky.contact.verifyPhone": {
 			"post": {
 				"tags": ["app.bsky.contact"],
-				"description": "*This endpoint is part of the Bluesky application Lexicon APIs (`app.bsky.*`). Public endpoints which don't require authentication can be made directly against the public Bluesky AppView API: https://public.api.bsky.app. Authenticated requests are usually made to the user's PDS, with automatic service proxying. Authenticated requests can be used for both public and non-public endpoints.*\n\n*To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*\n\nWARNING: This is unstable and under active development, don't use it while this warning is here. Verifies control over a phone number with a code received via SMS and starts a contact import session. Requires authentication.",
+				"description": "*This endpoint is part of the Bluesky application Lexicon APIs (`app.bsky.*`). Public endpoints which don't require authentication can be made directly against the public Bluesky AppView API: https://public.api.bsky.app. Authenticated requests are usually made to the user's PDS, with automatic service proxying. Authenticated requests can be used for both public and non-public endpoints.*\n\n*To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*\n\nVerifies control over a phone number with a code received via SMS and starts a contact import session. Requires authentication.",
 				"operationId": "app.bsky.contact.verifyPhone",
 				"security": [
 					{
@@ -15702,7 +16424,11 @@
 												"InvalidRequest",
 												"ExpiredToken",
 												"InvalidToken",
-												"TODO"
+												"RateLimitExceeded",
+												"InvalidDid",
+												"InvalidPhone",
+												"InvalidCode",
+												"InternalError"
 											]
 										},
 										"message": {
@@ -15927,6 +16653,338 @@
 								}
 							}
 						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["error", "message"],
+									"properties": {
+										"error": {
+											"type": "string",
+											"enum": ["InvalidRequest", "ExpiredToken", "InvalidToken"]
+										},
+										"message": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["error", "message"],
+									"properties": {
+										"error": {
+											"const": "AuthMissing"
+										},
+										"message": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/xrpc/app.bsky.draft.createDraft": {
+			"post": {
+				"tags": ["app.bsky.draft"],
+				"description": "*This endpoint is part of the Bluesky application Lexicon APIs (`app.bsky.*`). Public endpoints which don't require authentication can be made directly against the public Bluesky AppView API: https://public.api.bsky.app. Authenticated requests are usually made to the user's PDS, with automatic service proxying. Authenticated requests can be used for both public and non-public endpoints.*\n\n*To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*\n\nInserts a draft using private storage (stash). An upper limit of drafts might be enforced. Requires authentication.",
+				"operationId": "app.bsky.draft.createDraft",
+				"security": [
+					{
+						"Bearer": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"required": ["draft"],
+								"properties": {
+									"draft": {
+										"$ref": "#/components/schemas/app.bsky.draft.defs.draft"
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["id"],
+									"properties": {
+										"id": {
+											"type": "string",
+											"description": "The ID of the created draft."
+										}
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["error", "message"],
+									"properties": {
+										"error": {
+											"type": "string",
+											"enum": [
+												"InvalidRequest",
+												"ExpiredToken",
+												"InvalidToken",
+												"DraftLimitReached"
+											]
+										},
+										"message": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["error", "message"],
+									"properties": {
+										"error": {
+											"const": "AuthMissing"
+										},
+										"message": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/xrpc/app.bsky.draft.updateDraft": {
+			"post": {
+				"tags": ["app.bsky.draft"],
+				"description": "*This endpoint is part of the Bluesky application Lexicon APIs (`app.bsky.*`). Public endpoints which don't require authentication can be made directly against the public Bluesky AppView API: https://public.api.bsky.app. Authenticated requests are usually made to the user's PDS, with automatic service proxying. Authenticated requests can be used for both public and non-public endpoints.*\n\n*To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*\n\nUpdates a draft using private storage (stash). If the draft ID points to a non-existing ID, the update will be silently ignored. This is done because updates don't enforce draft limit, so it accepts all writes, but will ignore invalid ones. Requires authentication.",
+				"operationId": "app.bsky.draft.updateDraft",
+				"security": [
+					{
+						"Bearer": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"required": ["draft"],
+								"properties": {
+									"draft": {
+										"$ref": "#/components/schemas/app.bsky.draft.defs.draftWithId"
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK"
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["error", "message"],
+									"properties": {
+										"error": {
+											"type": "string",
+											"enum": ["InvalidRequest", "ExpiredToken", "InvalidToken"]
+										},
+										"message": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["error", "message"],
+									"properties": {
+										"error": {
+											"const": "AuthMissing"
+										},
+										"message": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/xrpc/app.bsky.draft.getDrafts": {
+			"get": {
+				"tags": ["app.bsky.draft"],
+				"description": "*This endpoint is part of the Bluesky application Lexicon APIs (`app.bsky.*`). Public endpoints which don't require authentication can be made directly against the public Bluesky AppView API: https://public.api.bsky.app. Authenticated requests are usually made to the user's PDS, with automatic service proxying. Authenticated requests can be used for both public and non-public endpoints.*\n\n*To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*\n\nGets views of user drafts. Requires authentication.",
+				"operationId": "app.bsky.draft.getDrafts",
+				"security": [
+					{
+						"Bearer": []
+					}
+				],
+				"parameters": [
+					{
+						"name": "limit",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "integer",
+							"minimum": 1,
+							"maximum": 100,
+							"default": 50
+						}
+					},
+					{
+						"name": "cursor",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["drafts"],
+									"properties": {
+										"cursor": {
+											"type": "string"
+										},
+										"drafts": {
+											"type": "array",
+											"items": {
+												"$ref": "#/components/schemas/app.bsky.draft.defs.draftView"
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["error", "message"],
+									"properties": {
+										"error": {
+											"type": "string",
+											"enum": ["InvalidRequest", "ExpiredToken", "InvalidToken"]
+										},
+										"message": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": ["error", "message"],
+									"properties": {
+										"error": {
+											"const": "AuthMissing"
+										},
+										"message": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/xrpc/app.bsky.draft.deleteDraft": {
+			"post": {
+				"tags": ["app.bsky.draft"],
+				"description": "*This endpoint is part of the Bluesky application Lexicon APIs (`app.bsky.*`). Public endpoints which don't require authentication can be made directly against the public Bluesky AppView API: https://public.api.bsky.app. Authenticated requests are usually made to the user's PDS, with automatic service proxying. Authenticated requests can be used for both public and non-public endpoints.*\n\n*To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*\n\nDeletes a draft by ID. Requires authentication.",
+				"operationId": "app.bsky.draft.deleteDraft",
+				"security": [
+					{
+						"Bearer": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"required": ["id"],
+								"properties": {
+									"id": {
+										"type": "string",
+										"format": "tid"
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK"
 					},
 					"400": {
 						"description": "Bad Request",
@@ -22159,6 +23217,91 @@
 					"didDoc": {}
 				}
 			},
+			"com.atproto.temp.checkHandleAvailability.resultAvailable": {
+				"type": "object",
+				"description": "Indicates the provided handle is available.",
+				"properties": {}
+			},
+			"com.atproto.temp.checkHandleAvailability.resultUnavailable": {
+				"type": "object",
+				"description": "Indicates the provided handle is unavailable and gives suggestions of available handles.",
+				"required": ["suggestions"],
+				"properties": {
+					"suggestions": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/com.atproto.temp.checkHandleAvailability.suggestion"
+						}
+					}
+				}
+			},
+			"com.atproto.temp.checkHandleAvailability.suggestion": {
+				"type": "object",
+				"required": ["handle", "method"],
+				"properties": {
+					"handle": {
+						"type": "string",
+						"format": "handle"
+					},
+					"method": {
+						"type": "string",
+						"description": "Method used to build this suggestion. Should be considered opaque to clients. Can be used for metrics."
+					}
+				}
+			},
+			"com.germnetwork.declaration": {
+				"type": "object",
+				"required": ["version", "currentKey"],
+				"properties": {
+					"version": {
+						"type": "string",
+						"description": "Semver version number, without pre-release or build information, for the format of opaque content",
+						"minLength": 5,
+						"maxLength": 14
+					},
+					"currentKey": {
+						"type": "string",
+						"format": "byte",
+						"description": "Opaque value, an ed25519 public key prefixed with a byte enum"
+					},
+					"messageMe": {
+						"$ref": "#/components/schemas/com.germnetwork.declaration.messageMe"
+					},
+					"keyPackage": {
+						"type": "string",
+						"format": "byte",
+						"description": "Opaque value, contains MLS KeyPackage(s), and other signature data, and is signed by the currentKey"
+					},
+					"continuityProofs": {
+						"type": "array",
+						"items": {
+							"type": "string",
+							"format": "byte"
+						},
+						"maxItems": 1000
+					}
+				}
+			},
+			"com.germnetwork.declaration.messageMe": {
+				"type": "object",
+				"required": ["showButtonTo", "messageMeUrl"],
+				"properties": {
+					"messageMeUrl": {
+						"type": "string",
+						"description": "A URL to present to an account that does not have its own com.germnetwork.declaration record, must have an empty fragment component, where the app should fill in the fragment component with the DIDs of the two accounts who wish to message each other",
+						"format": "uri",
+						"minLength": 1,
+						"maxLength": 2047
+					},
+					"showButtonTo": {
+						"type": "string",
+						"description": "The policy of who can message the account, this value is included in the keyPackage, but is duplicated here to allow applications to decide if they should show a 'Message on Germ' button to the viewer.",
+						"minLength": 1,
+						"maxLength": 100,
+						"enum": ["none", "usersIFollow", "everyone"]
+					}
+				}
+			},
 			"chat.bsky.moderation.getActorMetadata.metadata": {
 				"type": "object",
 				"required": [
@@ -22973,6 +24116,9 @@
 					},
 					"activitySubscription": {
 						"$ref": "#/components/schemas/app.bsky.actor.defs.profileAssociatedActivitySubscription"
+					},
+					"germ": {
+						"$ref": "#/components/schemas/app.bsky.actor.defs.profileAssociatedGerm"
 					}
 				}
 			},
@@ -22983,6 +24129,20 @@
 					"allowIncoming": {
 						"type": "string",
 						"enum": ["all", "none", "following"]
+					}
+				}
+			},
+			"app.bsky.actor.defs.profileAssociatedGerm": {
+				"type": "object",
+				"required": ["showButtonTo", "messageMeUrl"],
+				"properties": {
+					"messageMeUrl": {
+						"type": "string",
+						"format": "uri"
+					},
+					"showButtonTo": {
+						"type": "string",
+						"enum": ["usersIFollow", "everyone"]
 					}
 				}
 			},
@@ -23122,6 +24282,9 @@
 							"$ref": "#/components/schemas/app.bsky.actor.defs.personalDetailsPref"
 						},
 						{
+							"$ref": "#/components/schemas/app.bsky.actor.defs.declaredAgePref"
+						},
+						{
 							"$ref": "#/components/schemas/app.bsky.actor.defs.feedViewPref"
 						},
 						{
@@ -23147,6 +24310,9 @@
 						},
 						{
 							"$ref": "#/components/schemas/app.bsky.actor.defs.verificationPrefs"
+						},
+						{
+							"$ref": "#/components/schemas/app.bsky.actor.defs.liveEventPreferences"
 						}
 					]
 				}
@@ -23239,6 +24405,24 @@
 						"type": "string",
 						"description": "The birth date of account owner.",
 						"format": "date-time"
+					}
+				}
+			},
+			"app.bsky.actor.defs.declaredAgePref": {
+				"type": "object",
+				"description": "Read-only preference containing value(s) inferred from the user's declared birthdate. Absence of this preference object in the response indicates that the user has not made a declaration.",
+				"properties": {
+					"isOverAge13": {
+						"type": "boolean",
+						"description": "Indicates if the user has declared that they are over 13 years of age."
+					},
+					"isOverAge16": {
+						"type": "boolean",
+						"description": "Indicates if the user has declared that they are over 16 years of age."
+					},
+					"isOverAge18": {
+						"type": "boolean",
+						"description": "Indicates if the user has declared that they are over 18 years of age."
 					}
 				}
 			},
@@ -23450,6 +24634,22 @@
 					}
 				}
 			},
+			"app.bsky.actor.defs.liveEventPreferences": {
+				"type": "object",
+				"description": "Preferences for live events.",
+				"properties": {
+					"hiddenFeedIds": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						}
+					},
+					"hideAllFeeds": {
+						"type": "boolean",
+						"description": "Whether to hide all feeds from live events."
+					}
+				}
+			},
 			"app.bsky.actor.defs.postInteractionSettingsPref": {
 				"type": "object",
 				"description": "Default post interaction settings for the account. These values should be applied as default values when creating new posts. These refs should mirror the threadgate and postgate records exactly.",
@@ -23492,6 +24692,14 @@
 				"type": "object",
 				"required": ["status", "record"],
 				"properties": {
+					"uri": {
+						"type": "string",
+						"format": "at-uri"
+					},
+					"cid": {
+						"type": "string",
+						"format": "cid"
+					},
 					"status": {
 						"type": "string",
 						"description": "The status for the account.",
@@ -23513,6 +24721,10 @@
 					"isActive": {
 						"type": "boolean",
 						"description": "True if the status is not expired, false if it is expired. Only present if expiration was set."
+					},
+					"isDisabled": {
+						"type": "boolean",
+						"description": "True if the user's go-live access has been disabled by a moderator, false otherwise."
 					}
 				}
 			},
@@ -23652,7 +24864,7 @@
 			"app.bsky.ageassurance.defs.configRegion": {
 				"type": "object",
 				"description": "The Age Assurance configuration for a specific region.",
-				"required": ["countryCode", "rules"],
+				"required": ["countryCode", "minAccessAge", "rules"],
 				"properties": {
 					"countryCode": {
 						"type": "string",
@@ -23661,6 +24873,9 @@
 					"regionCode": {
 						"type": "string",
 						"description": "The ISO 3166-2 region code this configuration applies to. If omitted, the configuration applies to the entire country."
+					},
+					"minAccessAge": {
+						"type": "integer"
 					},
 					"rules": {
 						"type": "array",
@@ -25444,7 +26659,8 @@
 							"unverified",
 							"like-via-repost",
 							"repost-via-repost",
-							"subscribed-post"
+							"subscribed-post",
+							"contact-match"
 						]
 					},
 					"reasonSubject": {
@@ -25766,6 +26982,11 @@
 					},
 					"aspectRatio": {
 						"$ref": "#/components/schemas/app.bsky.embed.defs.aspectRatio"
+					},
+					"presentation": {
+						"type": "string",
+						"description": "A hint to the client about how to present the video.",
+						"enum": ["default", "gif"]
 					}
 				}
 			},
@@ -25806,6 +27027,11 @@
 					},
 					"aspectRatio": {
 						"$ref": "#/components/schemas/app.bsky.embed.defs.aspectRatio"
+					},
+					"presentation": {
+						"type": "string",
+						"description": "A hint to the client about how to present the video.",
+						"enum": ["default", "gif"]
 					}
 				}
 			},
@@ -25935,6 +27161,23 @@
 					}
 				}
 			},
+			"app.bsky.contact.defs.notification": {
+				"type": "object",
+				"description": "A stash object to be sent via bsync representing a notification to be created.",
+				"required": ["from", "to"],
+				"properties": {
+					"from": {
+						"type": "string",
+						"description": "The DID of who this notification comes from.",
+						"format": "did"
+					},
+					"to": {
+						"type": "string",
+						"description": "The DID of who this notification should go to.",
+						"format": "did"
+					}
+				}
+			},
 			"app.bsky.video.defs.jobStatus": {
 				"type": "object",
 				"required": ["jobId", "did", "state"],
@@ -25965,6 +27208,232 @@
 					},
 					"message": {
 						"type": "string"
+					}
+				}
+			},
+			"app.bsky.draft.defs.draftWithId": {
+				"type": "object",
+				"description": "A draft with an identifier, used to store drafts in private storage (stash).",
+				"required": ["id", "draft"],
+				"properties": {
+					"id": {
+						"type": "string",
+						"description": "A TID to be used as a draft identifier.",
+						"format": "tid"
+					},
+					"draft": {
+						"$ref": "#/components/schemas/app.bsky.draft.defs.draft"
+					}
+				}
+			},
+			"app.bsky.draft.defs.draft": {
+				"type": "object",
+				"description": "A draft containing an array of draft posts.",
+				"required": ["posts"],
+				"properties": {
+					"deviceId": {
+						"type": "string",
+						"description": "UUIDv4 identifier of the device that created this draft.",
+						"maxLength": 100
+					},
+					"deviceName": {
+						"type": "string",
+						"description": "The device and/or platform on which the draft was created.",
+						"maxLength": 100
+					},
+					"posts": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/app.bsky.draft.defs.draftPost"
+						},
+						"maxItems": 100
+					},
+					"langs": {
+						"type": "array",
+						"items": {
+							"type": "string",
+							"format": "language"
+						},
+						"maxItems": 3
+					},
+					"postgateEmbeddingRules": {
+						"type": "array",
+						"items": {
+							"oneOf": [
+								{
+									"$ref": "#/components/schemas/app.bsky.feed.postgate.disableRule"
+								}
+							]
+						},
+						"maxItems": 5
+					},
+					"threadgateAllow": {
+						"type": "array",
+						"items": {
+							"oneOf": [
+								{
+									"$ref": "#/components/schemas/app.bsky.feed.threadgate.mentionRule"
+								},
+								{
+									"$ref": "#/components/schemas/app.bsky.feed.threadgate.followerRule"
+								},
+								{
+									"$ref": "#/components/schemas/app.bsky.feed.threadgate.followingRule"
+								},
+								{
+									"$ref": "#/components/schemas/app.bsky.feed.threadgate.listRule"
+								}
+							]
+						},
+						"maxItems": 5
+					}
+				}
+			},
+			"app.bsky.draft.defs.draftPost": {
+				"type": "object",
+				"description": "One of the posts that compose a draft.",
+				"required": ["text"],
+				"properties": {
+					"text": {
+						"type": "string",
+						"description": "The primary post content. It has a higher limit than post contents to allow storing a larger text that can later be refined into smaller posts.",
+						"maxLength": 10000
+					},
+					"labels": {
+						"oneOf": [
+							{
+								"$ref": "#/components/schemas/com.atproto.label.defs.selfLabels"
+							}
+						]
+					},
+					"embedImages": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/app.bsky.draft.defs.draftEmbedImage"
+						},
+						"maxItems": 4
+					},
+					"embedVideos": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/app.bsky.draft.defs.draftEmbedVideo"
+						},
+						"maxItems": 1
+					},
+					"embedExternals": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/app.bsky.draft.defs.draftEmbedExternal"
+						},
+						"maxItems": 1
+					},
+					"embedRecords": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/app.bsky.draft.defs.draftEmbedRecord"
+						},
+						"maxItems": 1
+					}
+				}
+			},
+			"app.bsky.draft.defs.draftView": {
+				"type": "object",
+				"description": "View to present drafts data to users.",
+				"required": ["id", "draft", "createdAt", "updatedAt"],
+				"properties": {
+					"id": {
+						"type": "string",
+						"description": "A TID to be used as a draft identifier.",
+						"format": "tid"
+					},
+					"draft": {
+						"$ref": "#/components/schemas/app.bsky.draft.defs.draft"
+					},
+					"createdAt": {
+						"type": "string",
+						"description": "The time the draft was created.",
+						"format": "date-time"
+					},
+					"updatedAt": {
+						"type": "string",
+						"description": "The time the draft was last updated.",
+						"format": "date-time"
+					}
+				}
+			},
+			"app.bsky.draft.defs.draftEmbedLocalRef": {
+				"type": "object",
+				"required": ["path"],
+				"properties": {
+					"path": {
+						"type": "string",
+						"description": "Local, on-device ref to file to be embedded. Embeds are currently device-bound for drafts.",
+						"minLength": 1,
+						"maxLength": 1024
+					}
+				}
+			},
+			"app.bsky.draft.defs.draftEmbedCaption": {
+				"type": "object",
+				"required": ["lang", "content"],
+				"properties": {
+					"lang": {
+						"type": "string",
+						"format": "language"
+					},
+					"content": {
+						"type": "string",
+						"maxLength": 10000
+					}
+				}
+			},
+			"app.bsky.draft.defs.draftEmbedImage": {
+				"type": "object",
+				"required": ["localRef"],
+				"properties": {
+					"localRef": {
+						"$ref": "#/components/schemas/app.bsky.draft.defs.draftEmbedLocalRef"
+					},
+					"alt": {
+						"type": "string"
+					}
+				}
+			},
+			"app.bsky.draft.defs.draftEmbedVideo": {
+				"type": "object",
+				"required": ["localRef"],
+				"properties": {
+					"localRef": {
+						"$ref": "#/components/schemas/app.bsky.draft.defs.draftEmbedLocalRef"
+					},
+					"alt": {
+						"type": "string"
+					},
+					"captions": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/app.bsky.draft.defs.draftEmbedCaption"
+						},
+						"maxItems": 20
+					}
+				}
+			},
+			"app.bsky.draft.defs.draftEmbedExternal": {
+				"type": "object",
+				"required": ["uri"],
+				"properties": {
+					"uri": {
+						"type": "string",
+						"format": "uri"
+					}
+				}
+			},
+			"app.bsky.draft.defs.draftEmbedRecord": {
+				"type": "object",
+				"required": ["record"],
+				"properties": {
+					"record": {
+						"$ref": "#/components/schemas/com.atproto.repo.strongRef"
 					}
 				}
 			},
@@ -28509,6 +29978,12 @@
 			"name": "com.atproto.temp"
 		},
 		{
+			"name": "com.germnetwork.declaration"
+		},
+		{
+			"name": "chat.bsky.authFullChatClient"
+		},
+		{
 			"name": "chat.bsky.moderation"
 		},
 		{
@@ -28516,6 +29991,33 @@
 		},
 		{
 			"name": "chat.bsky.convo"
+		},
+		{
+			"name": "app.bsky.authManageLabelerService"
+		},
+		{
+			"name": "app.bsky.authManageNotifications"
+		},
+		{
+			"name": "app.bsky.authDeleteContent"
+		},
+		{
+			"name": "app.bsky.authCreatePosts"
+		},
+		{
+			"name": "app.bsky.authFullApp"
+		},
+		{
+			"name": "app.bsky.authManageModeration"
+		},
+		{
+			"name": "app.bsky.authViewAll"
+		},
+		{
+			"name": "app.bsky.authManageFeedDeclarations"
+		},
+		{
+			"name": "app.bsky.authManageProfile"
 		},
 		{
 			"name": "app.bsky.labeler"
@@ -28552,6 +30054,9 @@
 		},
 		{
 			"name": "app.bsky.video"
+		},
+		{
+			"name": "app.bsky.draft"
 		},
 		{
 			"name": "tools.ozone.moderation"

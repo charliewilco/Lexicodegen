@@ -54,9 +54,8 @@ async function createDocument(
 			const identifier = name === "main" ? id : `${id}.${name}`;
 
 			// We don't want public-facing docs for unspecced endpoints
-			const containsUnspecced =
-				identifier.toLowerCase().includes("unspecced") ||
-				identifier.toLowerCase().includes(".temp.");
+			const containsUnspecced = identifier.toLowerCase().includes("unspecced");
+			// || identifier.toLowerCase().includes(".temp.");
 			const containsDeprecated =
 				def.description?.toLowerCase().startsWith("deprecated") ?? false;
 
@@ -156,6 +155,7 @@ async function createDocument(
 					);
 					break;
 				case "subscription":
+				case "permission-set":
 					// No way to represent this in OpenAPI
 					break;
 				case "token":
