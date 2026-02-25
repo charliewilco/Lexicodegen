@@ -2,19 +2,41 @@
 
 A tool to generate OpenAPI specifications from Lexicon schema files.
 
-To install dependencies:
+## Setup
+
+Install dependencies:
 
 ```bash
 bun install
 ```
 
-To run:
+## Tasks
+
+List available tasks:
 
 ```bash
-bun run main.ts
+just help
 ```
 
-then convert to yaml
+Format sources and generated artifacts:
+
+```bash
+just format
+```
+
+Refresh lexicons:
+
+```bash
+just lexicons
+```
+
+Generate OpenAPI output:
+
+```bash
+just generate
+```
+
+Convert JSON output to YAML:
 
 ```bash
 yq -Poy ./output/openapi.json > ./output/openapi.yaml

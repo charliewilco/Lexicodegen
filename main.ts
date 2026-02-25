@@ -10,6 +10,13 @@ import { calculateTag, loadLexicon } from "./lib/utils";
 
 const IGNORED_IDS: string[] = [];
 
+type PermissionSetExtension = {
+	scope: string;
+	title?: string;
+	detail?: string;
+	permissions: unknown[];
+};
+
 async function createDocument(
 	globString = "./lexicons/**/**/*.json",
 	fileName = "./output/openapi.json",
@@ -35,6 +42,7 @@ async function createDocument(
 		},
 	};
 	const tagNames = new Set<string>();
+	const permissionSets: Record<string, PermissionSetExtension> = {};
 
 	console.log(entries.scanSync());
 
@@ -155,8 +163,20 @@ async function createDocument(
 					);
 					break;
 				case "subscription":
-				case "permission-set":
 					// No way to represent this in OpenAPI
+					break;
+				case "permission-set":
+					components.schemas![identifier] =
+						Converters.convertPermissionSet(def);
+					permissionSets[identifier] = {
+						scope: `include:${identifier}`,
+						...("title" in def && def.title ? { title: def.title } : {}),
+						...("detail" in def && def.detail ? { detail: def.detail } : {}),
+						permissions:
+							"permissions" in def && Array.isArray(def.permissions)
+								? def.permissions
+								: [],
+					};
 					break;
 				case "token":
 					components.schemas![identifier] = Converters.convertToken(
@@ -186,6 +206,12 @@ async function createDocument(
 		components,
 		tags: Array.from(tagNames).map((name) => ({ name })),
 	};
+
+	if (Object.keys(permissionSets).length > 0) {
+		(api as OpenAPIV3_1.Document & { "x-atproto-permission-sets": unknown })[
+			"x-atproto-permission-sets"
+		] = permissionSets;
+	}
 
 	await fs.writeFile(
 		join(__dirname, fileName),

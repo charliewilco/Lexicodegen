@@ -1932,6 +1932,81 @@ paths:
                     const: AuthMissing
                   message:
                     type: string
+  /xrpc/com.atproto.lexicon.resolveLexicon:
+    get:
+      tags:
+        - com.atproto.lexicon
+      description: |-
+        *To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*
+
+        Resolves an atproto lexicon (NSID) to a schema.
+      operationId: com.atproto.lexicon.resolveLexicon
+      security:
+        - Bearer: []
+      parameters:
+        - name: nsid
+          in: query
+          description: The lexicon NSID to resolve.
+          required: true
+          schema:
+            type: string
+            description: The lexicon NSID to resolve.
+            format: nsid
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - uri
+                  - cid
+                  - schema
+                properties:
+                  cid:
+                    type: string
+                    description: The CID of the lexicon schema record.
+                    format: cid
+                  schema:
+                    $ref: '#/components/schemas/com.atproto.lexicon.schema.main'
+                  uri:
+                    type: string
+                    description: The AT-URI of the lexicon schema record.
+                    format: at-uri
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                  - message
+                properties:
+                  error:
+                    type: string
+                    enum:
+                      - InvalidRequest
+                      - ExpiredToken
+                      - InvalidToken
+                      - LexiconNotFound
+                  message:
+                    type: string
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                  - message
+                properties:
+                  error:
+                    const: AuthMissing
+                  message:
+                    type: string
   /xrpc/com.atproto.server.requestEmailConfirmation:
     post:
       tags:
@@ -2459,7 +2534,7 @@ paths:
 
          *To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*
 
-        Delete the current session. Requires auth.
+        Delete the current session. Requires auth using the 'refreshJwt' (not the 'accessJwt').
       operationId: com.atproto.server.deleteSession
       security:
         - Bearer: []
@@ -2482,6 +2557,8 @@ paths:
                       - InvalidRequest
                       - ExpiredToken
                       - InvalidToken
+                      - InvalidToken
+                      - ExpiredToken
                   message:
                     type: string
         "401":
@@ -2842,13 +2919,13 @@ paths:
                   did:
                     type: string
                     format: did
+                  didDoc: {}
                   email:
                     type: string
                   emailConfirmed:
                     type: boolean
                   emailAuthFactor:
                     type: boolean
-                  didDoc: {}
                   active:
                     type: boolean
                   status:
@@ -2927,6 +3004,12 @@ paths:
                     type: string
                     format: did
                   didDoc: {}
+                  email:
+                    type: string
+                  emailConfirmed:
+                    type: boolean
+                  emailAuthFactor:
+                    type: boolean
                   active:
                     type: boolean
                   status:
@@ -2953,6 +3036,8 @@ paths:
                       - ExpiredToken
                       - InvalidToken
                       - AccountTakedown
+                      - InvalidToken
+                      - ExpiredToken
                   message:
                     type: string
         "401":
@@ -5322,6 +5407,394 @@ paths:
                       - InvalidToken
                       - DidNotFound
                       - DidDeactivated
+                  message:
+                    type: string
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                  - message
+                properties:
+                  error:
+                    const: AuthMissing
+                  message:
+                    type: string
+  /xrpc/com.atproto.temp.dereferenceScope:
+    get:
+      tags:
+        - com.atproto.temp
+      description: |-
+        *To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*
+
+        Allows finding the oauth permission scope from a reference
+      operationId: com.atproto.temp.dereferenceScope
+      security:
+        - Bearer: []
+      parameters:
+        - name: scope
+          in: query
+          description: The scope reference (starts with 'ref:')
+          required: true
+          schema:
+            type: string
+            description: The scope reference (starts with 'ref:')
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - scope
+                properties:
+                  scope:
+                    type: string
+                    description: The full oauth permission scope
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                  - message
+                properties:
+                  error:
+                    type: string
+                    enum:
+                      - InvalidRequest
+                      - ExpiredToken
+                      - InvalidToken
+                      - InvalidScopeReference
+                  message:
+                    type: string
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                  - message
+                properties:
+                  error:
+                    const: AuthMissing
+                  message:
+                    type: string
+  /xrpc/com.atproto.temp.addReservedHandle:
+    post:
+      tags:
+        - com.atproto.temp
+      description: |-
+        *To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*
+
+        Add a handle to the set of reserved handles.
+      operationId: com.atproto.temp.addReservedHandle
+      security:
+        - Bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - handle
+              properties:
+                handle:
+                  type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                  - message
+                properties:
+                  error:
+                    type: string
+                    enum:
+                      - InvalidRequest
+                      - ExpiredToken
+                      - InvalidToken
+                  message:
+                    type: string
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                  - message
+                properties:
+                  error:
+                    const: AuthMissing
+                  message:
+                    type: string
+  /xrpc/com.atproto.temp.checkSignupQueue:
+    get:
+      tags:
+        - com.atproto.temp
+      description: |-
+        *To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*
+
+        Check accounts location in signup queue.
+      operationId: com.atproto.temp.checkSignupQueue
+      security:
+        - Bearer: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - activated
+                properties:
+                  activated:
+                    type: boolean
+                  placeInQueue:
+                    type: integer
+                  estimatedTimeMs:
+                    type: integer
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                  - message
+                properties:
+                  error:
+                    type: string
+                    enum:
+                      - InvalidRequest
+                      - ExpiredToken
+                      - InvalidToken
+                  message:
+                    type: string
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                  - message
+                properties:
+                  error:
+                    const: AuthMissing
+                  message:
+                    type: string
+  /xrpc/com.atproto.temp.checkHandleAvailability:
+    get:
+      tags:
+        - com.atproto.temp
+      description: |-
+        *To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*
+
+        Checks whether the provided handle is available. If the handle is not available, available suggestions will be returned. Optional inputs will be used to generate suggestions.
+      operationId: com.atproto.temp.checkHandleAvailability
+      security:
+        - Bearer: []
+      parameters:
+        - name: handle
+          in: query
+          description: Tentative handle. Will be checked for availability or used to build handle suggestions.
+          required: true
+          schema:
+            type: string
+            description: Tentative handle. Will be checked for availability or used to build handle suggestions.
+            format: handle
+        - name: email
+          in: query
+          description: User-provided email. Might be used to build handle suggestions.
+          required: false
+          schema:
+            type: string
+            description: User-provided email. Might be used to build handle suggestions.
+        - name: birthDate
+          in: query
+          description: User-provided birth date. Might be used to build handle suggestions.
+          required: false
+          schema:
+            type: string
+            description: User-provided birth date. Might be used to build handle suggestions.
+            format: date-time
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - handle
+                  - result
+                properties:
+                  handle:
+                    type: string
+                    description: Echo of the input handle.
+                    format: handle
+                  result:
+                    oneOf:
+                      - $ref: '#/components/schemas/com.atproto.temp.checkHandleAvailability.resultAvailable'
+                      - $ref: '#/components/schemas/com.atproto.temp.checkHandleAvailability.resultUnavailable'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                  - message
+                properties:
+                  error:
+                    type: string
+                    enum:
+                      - InvalidRequest
+                      - ExpiredToken
+                      - InvalidToken
+                      - InvalidEmail
+                  message:
+                    type: string
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                  - message
+                properties:
+                  error:
+                    const: AuthMissing
+                  message:
+                    type: string
+  /xrpc/com.atproto.temp.requestPhoneVerification:
+    post:
+      tags:
+        - com.atproto.temp
+      description: |-
+        *To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*
+
+        Request a verification code to be sent to the supplied phone number
+      operationId: com.atproto.temp.requestPhoneVerification
+      security:
+        - Bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - phoneNumber
+              properties:
+                phoneNumber:
+                  type: string
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                  - message
+                properties:
+                  error:
+                    type: string
+                    enum:
+                      - InvalidRequest
+                      - ExpiredToken
+                      - InvalidToken
+                  message:
+                    type: string
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                  - message
+                properties:
+                  error:
+                    const: AuthMissing
+                  message:
+                    type: string
+  /xrpc/com.atproto.temp.revokeAccountCredentials:
+    post:
+      tags:
+        - com.atproto.temp
+      description: |-
+        *To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*
+
+        Revoke sessions, password, and app passwords associated with account. May be resolved by a password reset.
+      operationId: com.atproto.temp.revokeAccountCredentials
+      security:
+        - Bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - account
+              properties:
+                account:
+                  type: string
+                  format: at-identifier
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                  - message
+                properties:
+                  error:
+                    type: string
+                    enum:
+                      - InvalidRequest
+                      - ExpiredToken
+                      - InvalidToken
                   message:
                     type: string
         "401":
@@ -9280,8 +9753,9 @@ paths:
                   isFallback:
                     type: boolean
                     description: If true, response has fallen-back to generic results, and is not scoped using relativeToDid
-                  recId:
-                    type: integer
+                  recIdStr:
+                    type: string
+                    description: Snowflake for this recommendation, use when submitting recommendation events.
         "400":
           description: Bad Request
           content:
@@ -11831,6 +12305,77 @@ paths:
                     const: AuthMissing
                   message:
                     type: string
+  /xrpc/app.bsky.contact.sendNotification:
+    post:
+      tags:
+        - app.bsky.contact
+      description: |-
+        *This endpoint is part of the Bluesky application Lexicon APIs (`app.bsky.*`). Public endpoints which don't require authentication can be made directly against the public Bluesky AppView API: https://public.api.bsky.app. Authenticated requests are usually made to the user's PDS, with automatic service proxying. Authenticated requests can be used for both public and non-public endpoints.*
+
+        *To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*
+
+        System endpoint to send notifications related to contact imports. Requires role authentication.
+      operationId: app.bsky.contact.sendNotification
+      security:
+        - Bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - from
+                - to
+              properties:
+                from:
+                  type: string
+                  description: The DID of who this notification comes from.
+                  format: did
+                to:
+                  type: string
+                  description: The DID of who this notification should go to.
+                  format: did
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                  - message
+                properties:
+                  error:
+                    type: string
+                    enum:
+                      - InvalidRequest
+                      - ExpiredToken
+                      - InvalidToken
+                  message:
+                    type: string
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                  - message
+                properties:
+                  error:
+                    const: AuthMissing
+                  message:
+                    type: string
   /xrpc/app.bsky.contact.getSyncStatus:
     get:
       tags:
@@ -11840,7 +12385,7 @@ paths:
 
         *To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*
 
-        WARNING: This is unstable and under active development, don't use it while this warning is here. Gets the user's current contact import status. Requires authentication.
+        Gets the user's current contact import status. Requires authentication.
       operationId: app.bsky.contact.getSyncStatus
       security:
         - Bearer: []
@@ -11870,7 +12415,8 @@ paths:
                       - InvalidRequest
                       - ExpiredToken
                       - InvalidToken
-                      - TODO
+                      - InvalidDid
+                      - InternalError
                   message:
                     type: string
         "401":
@@ -11896,7 +12442,7 @@ paths:
 
         *To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*
 
-        WARNING: This is unstable and under active development, don't use it while this warning is here. Starts a phone verification flow. The phone passed will receive a code via SMS that should be passed to `app.bsky.contact.verifyPhone`. Requires authentication.
+        Starts a phone verification flow. The phone passed will receive a code via SMS that should be passed to `app.bsky.contact.verifyPhone`. Requires authentication.
       operationId: app.bsky.contact.startPhoneVerification
       security:
         - Bearer: []
@@ -11936,7 +12482,10 @@ paths:
                       - InvalidRequest
                       - ExpiredToken
                       - InvalidToken
-                      - TODO
+                      - RateLimitExceeded
+                      - InvalidDid
+                      - InvalidPhone
+                      - InternalError
                   message:
                     type: string
         "401":
@@ -11962,7 +12511,7 @@ paths:
 
         *To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*
 
-        WARNING: This is unstable and under active development, don't use it while this warning is here. Returns the matched contacts (contacts that were mutually imported). Excludes dismissed matches. Requires authentication.
+        Returns the matched contacts (contacts that were mutually imported). Excludes dismissed matches. Requires authentication.
       operationId: app.bsky.contact.getMatches
       security:
         - Bearer: []
@@ -12012,7 +12561,10 @@ paths:
                       - InvalidRequest
                       - ExpiredToken
                       - InvalidToken
-                      - TODO
+                      - InvalidDid
+                      - InvalidLimit
+                      - InvalidCursor
+                      - InternalError
                   message:
                     type: string
         "401":
@@ -12038,7 +12590,7 @@ paths:
 
         *To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*
 
-        WARNING: This is unstable and under active development, don't use it while this warning is here. Import contacts for securely matching with other users. This follows the protocol explained in https://docs.bsky.app/blog/contact-import-rfc. Requires authentication.
+        Import contacts for securely matching with other users. This follows the protocol explained in https://docs.bsky.app/blog/contact-import-rfc. Requires authentication.
       operationId: app.bsky.contact.importContacts
       security:
         - Bearer: []
@@ -12090,7 +12642,11 @@ paths:
                       - InvalidRequest
                       - ExpiredToken
                       - InvalidToken
-                      - TODO
+                      - InvalidDid
+                      - InvalidContacts
+                      - TooManyContacts
+                      - InvalidToken
+                      - InternalError
                   message:
                     type: string
         "401":
@@ -12116,7 +12672,7 @@ paths:
 
         *To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*
 
-        WARNING: This is unstable and under active development, don't use it while this warning is here. Removes a match that was found via contact import. It shouldn't appear again if the same contact is re-imported. Requires authentication.
+        Removes a match that was found via contact import. It shouldn't appear again if the same contact is re-imported. Requires authentication.
       operationId: app.bsky.contact.dismissMatch
       security:
         - Bearer: []
@@ -12157,7 +12713,8 @@ paths:
                       - InvalidRequest
                       - ExpiredToken
                       - InvalidToken
-                      - TODO
+                      - InvalidDid
+                      - InternalError
                   message:
                     type: string
         "401":
@@ -12183,7 +12740,7 @@ paths:
 
         *To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*
 
-        WARNING: This is unstable and under active development, don't use it while this warning is here. Removes all stored hashes used for contact matching, existing matches, and sync status. Requires authentication.
+        Removes all stored hashes used for contact matching, existing matches, and sync status. Requires authentication.
       operationId: app.bsky.contact.removeData
       security:
         - Bearer: []
@@ -12218,7 +12775,8 @@ paths:
                       - InvalidRequest
                       - ExpiredToken
                       - InvalidToken
-                      - TODO
+                      - InvalidDid
+                      - InternalError
                   message:
                     type: string
         "401":
@@ -12244,7 +12802,7 @@ paths:
 
         *To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*
 
-        WARNING: This is unstable and under active development, don't use it while this warning is here. Verifies control over a phone number with a code received via SMS and starts a contact import session. Requires authentication.
+        Verifies control over a phone number with a code received via SMS and starts a contact import session. Requires authentication.
       operationId: app.bsky.contact.verifyPhone
       security:
         - Bearer: []
@@ -12293,7 +12851,11 @@ paths:
                       - InvalidRequest
                       - ExpiredToken
                       - InvalidToken
-                      - TODO
+                      - RateLimitExceeded
+                      - InvalidDid
+                      - InvalidPhone
+                      - InvalidCode
+                      - InternalError
                   message:
                     type: string
         "401":
@@ -12467,6 +13029,270 @@ paths:
                     type: string
                   error:
                     type: string
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                  - message
+                properties:
+                  error:
+                    type: string
+                    enum:
+                      - InvalidRequest
+                      - ExpiredToken
+                      - InvalidToken
+                  message:
+                    type: string
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                  - message
+                properties:
+                  error:
+                    const: AuthMissing
+                  message:
+                    type: string
+  /xrpc/app.bsky.draft.createDraft:
+    post:
+      tags:
+        - app.bsky.draft
+      description: |-
+        *This endpoint is part of the Bluesky application Lexicon APIs (`app.bsky.*`). Public endpoints which don't require authentication can be made directly against the public Bluesky AppView API: https://public.api.bsky.app. Authenticated requests are usually made to the user's PDS, with automatic service proxying. Authenticated requests can be used for both public and non-public endpoints.*
+
+        *To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*
+
+        Inserts a draft using private storage (stash). An upper limit of drafts might be enforced. Requires authentication.
+      operationId: app.bsky.draft.createDraft
+      security:
+        - Bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - draft
+              properties:
+                draft:
+                  $ref: '#/components/schemas/app.bsky.draft.defs.draft'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - id
+                properties:
+                  id:
+                    type: string
+                    description: The ID of the created draft.
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                  - message
+                properties:
+                  error:
+                    type: string
+                    enum:
+                      - InvalidRequest
+                      - ExpiredToken
+                      - InvalidToken
+                      - DraftLimitReached
+                  message:
+                    type: string
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                  - message
+                properties:
+                  error:
+                    const: AuthMissing
+                  message:
+                    type: string
+  /xrpc/app.bsky.draft.updateDraft:
+    post:
+      tags:
+        - app.bsky.draft
+      description: |-
+        *This endpoint is part of the Bluesky application Lexicon APIs (`app.bsky.*`). Public endpoints which don't require authentication can be made directly against the public Bluesky AppView API: https://public.api.bsky.app. Authenticated requests are usually made to the user's PDS, with automatic service proxying. Authenticated requests can be used for both public and non-public endpoints.*
+
+        *To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*
+
+        Updates a draft using private storage (stash). If the draft ID points to a non-existing ID, the update will be silently ignored. This is done because updates don't enforce draft limit, so it accepts all writes, but will ignore invalid ones. Requires authentication.
+      operationId: app.bsky.draft.updateDraft
+      security:
+        - Bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - draft
+              properties:
+                draft:
+                  $ref: '#/components/schemas/app.bsky.draft.defs.draftWithId'
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                  - message
+                properties:
+                  error:
+                    type: string
+                    enum:
+                      - InvalidRequest
+                      - ExpiredToken
+                      - InvalidToken
+                  message:
+                    type: string
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                  - message
+                properties:
+                  error:
+                    const: AuthMissing
+                  message:
+                    type: string
+  /xrpc/app.bsky.draft.getDrafts:
+    get:
+      tags:
+        - app.bsky.draft
+      description: |-
+        *This endpoint is part of the Bluesky application Lexicon APIs (`app.bsky.*`). Public endpoints which don't require authentication can be made directly against the public Bluesky AppView API: https://public.api.bsky.app. Authenticated requests are usually made to the user's PDS, with automatic service proxying. Authenticated requests can be used for both public and non-public endpoints.*
+
+        *To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*
+
+        Gets views of user drafts. Requires authentication.
+      operationId: app.bsky.draft.getDrafts
+      security:
+        - Bearer: []
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - drafts
+                properties:
+                  cursor:
+                    type: string
+                  drafts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/app.bsky.draft.defs.draftView'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                  - message
+                properties:
+                  error:
+                    type: string
+                    enum:
+                      - InvalidRequest
+                      - ExpiredToken
+                      - InvalidToken
+                  message:
+                    type: string
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                  - message
+                properties:
+                  error:
+                    const: AuthMissing
+                  message:
+                    type: string
+  /xrpc/app.bsky.draft.deleteDraft:
+    post:
+      tags:
+        - app.bsky.draft
+      description: |-
+        *This endpoint is part of the Bluesky application Lexicon APIs (`app.bsky.*`). Public endpoints which don't require authentication can be made directly against the public Bluesky AppView API: https://public.api.bsky.app. Authenticated requests are usually made to the user's PDS, with automatic service proxying. Authenticated requests can be used for both public and non-public endpoints.*
+
+        *To learn more about calling atproto API endpoints like this one, see the [API Hosts and Auth](/docs/advanced-guides/api-directory) guide.*
+
+        Deletes a draft by ID. Requires authentication.
+      operationId: app.bsky.draft.deleteDraft
+      security:
+        - Bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id
+              properties:
+                id:
+                  type: string
+                  format: tid
+      responses:
+        "200":
+          description: OK
         "400":
           description: Bad Request
           content:
@@ -17265,6 +18091,175 @@ components:
           description: The validated handle of the account; or 'handle.invalid' if the handle did not bi-directionally match the DID document.
           format: handle
         didDoc: {}
+    com.atproto.temp.checkHandleAvailability.resultAvailable:
+      type: object
+      description: Indicates the provided handle is available.
+      properties: {}
+    com.atproto.temp.checkHandleAvailability.resultUnavailable:
+      type: object
+      description: Indicates the provided handle is unavailable and gives suggestions of available handles.
+      required:
+        - suggestions
+      properties:
+        suggestions:
+          type: array
+          items:
+            $ref: '#/components/schemas/com.atproto.temp.checkHandleAvailability.suggestion'
+    com.atproto.temp.checkHandleAvailability.suggestion:
+      type: object
+      required:
+        - handle
+        - method
+      properties:
+        handle:
+          type: string
+          format: handle
+        method:
+          type: string
+          description: Method used to build this suggestion. Should be considered opaque to clients. Can be used for metrics.
+    com.germnetwork.declaration:
+      type: object
+      required:
+        - version
+        - currentKey
+      properties:
+        version:
+          type: string
+          description: Semver version number, without pre-release or build information, for the format of opaque content
+          minLength: 5
+          maxLength: 14
+        currentKey:
+          type: string
+          format: byte
+          description: Opaque value, an ed25519 public key prefixed with a byte enum
+        messageMe:
+          $ref: '#/components/schemas/com.germnetwork.declaration.messageMe'
+        keyPackage:
+          type: string
+          format: byte
+          description: Opaque value, contains MLS KeyPackage(s), and other signature data, and is signed by the currentKey
+        continuityProofs:
+          type: array
+          items:
+            type: string
+            format: byte
+          maxItems: 1000
+    com.germnetwork.declaration.messageMe:
+      type: object
+      required:
+        - showButtonTo
+        - messageMeUrl
+      properties:
+        messageMeUrl:
+          type: string
+          description: A URL to present to an account that does not have its own com.germnetwork.declaration record, must have an empty fragment component, where the app should fill in the fragment component with the DIDs of the two accounts who wish to message each other
+          format: uri
+          minLength: 1
+          maxLength: 2047
+        showButtonTo:
+          type: string
+          description: The policy of who can message the account, this value is included in the keyPackage, but is duplicated here to allow applications to decide if they should show a 'Message on Germ' button to the viewer.
+          minLength: 1
+          maxLength: 100
+          enum:
+            - none
+            - usersIFollow
+            - everyone
+    chat.bsky.authFullChatClient:
+      type: object
+      required:
+        - type
+        - permissions
+      properties:
+        type:
+          type: string
+          const: permission-set
+        title:
+          type: string
+          const: Full Chat Client (All Conversations)
+        title:lang:
+          type: object
+          additionalProperties:
+            type: string
+        detail:
+          type: string
+          const: Control of all chat conversations and configuration management.
+        detail:lang:
+          type: object
+          additionalProperties:
+            type: string
+        permissions:
+          type: array
+          minItems: 2
+          maxItems: 2
+          items:
+            oneOf:
+              - type: object
+                required:
+                  - type
+                  - resource
+                properties:
+                  type:
+                    type: string
+                    const: permission
+                  resource:
+                    type: string
+                    const: rpc
+                  lxm:
+                    type: array
+                    items:
+                      type: string
+                    enum:
+                      - - chat.bsky.actor.deleteAccount
+                        - chat.bsky.convo.acceptConvo
+                        - chat.bsky.convo.addReaction
+                        - chat.bsky.convo.deleteMessageForSelf
+                        - chat.bsky.convo.exportAccountData
+                        - chat.bsky.convo.getConvo
+                        - chat.bsky.convo.getConvoAvailability
+                        - chat.bsky.convo.getConvoForMembers
+                        - chat.bsky.convo.getLog
+                        - chat.bsky.convo.getMessages
+                        - chat.bsky.convo.leaveConvo
+                        - chat.bsky.convo.listConvos
+                        - chat.bsky.convo.muteConvo
+                        - chat.bsky.convo.removeReaction
+                        - chat.bsky.convo.sendMessage
+                        - chat.bsky.convo.sendMessageBatch
+                        - chat.bsky.convo.unmuteConvo
+                        - chat.bsky.convo.updateAllRead
+                        - chat.bsky.convo.updateRead
+                  inheritAud:
+                    type: boolean
+                    const: true
+                additionalProperties: true
+              - type: object
+                required:
+                  - type
+                  - resource
+                properties:
+                  type:
+                    type: string
+                    const: permission
+                  resource:
+                    type: string
+                    const: repo
+                  action:
+                    type: array
+                    items:
+                      type: string
+                    enum:
+                      - - create
+                        - update
+                        - delete
+                  collection:
+                    type: array
+                    items:
+                      type: string
+                    enum:
+                      - - chat.bsky.actor.declaration
+                additionalProperties: true
+      additionalProperties: false
     chat.bsky.moderation.getActorMetadata.metadata:
       type: object
       required:
@@ -17615,6 +18610,756 @@ components:
           type: string
         message:
           $ref: '#/components/schemas/chat.bsky.convo.defs.messageInput'
+    app.bsky.authManageLabelerService:
+      type: object
+      required:
+        - type
+        - permissions
+      properties:
+        type:
+          type: string
+          const: permission-set
+        title:
+          type: string
+          const: Manage Hosted Labeling Service
+        title:lang:
+          type: object
+          additionalProperties:
+            type: string
+        detail:
+          type: string
+          const: Configure labeler declaration records.
+        detail:lang:
+          type: object
+          additionalProperties:
+            type: string
+        permissions:
+          type: array
+          minItems: 1
+          maxItems: 1
+          items:
+            oneOf:
+              - type: object
+                required:
+                  - type
+                  - resource
+                properties:
+                  type:
+                    type: string
+                    const: permission
+                  resource:
+                    type: string
+                    const: repo
+                  action:
+                    type: array
+                    items:
+                      type: string
+                    enum:
+                      - - create
+                        - update
+                        - delete
+                  collection:
+                    type: array
+                    items:
+                      type: string
+                    enum:
+                      - - app.bsky.labeler.service
+                additionalProperties: true
+      additionalProperties: false
+    app.bsky.authManageNotifications:
+      type: object
+      required:
+        - type
+        - permissions
+      properties:
+        type:
+          type: string
+          const: permission-set
+        title:
+          type: string
+          const: Manage Bluesky Notifications
+        title:lang:
+          type: object
+          additionalProperties:
+            type: string
+        detail:
+          type: string
+          const: View and configure notifications for the Bluesky app.
+        detail:lang:
+          type: object
+          additionalProperties:
+            type: string
+        permissions:
+          type: array
+          minItems: 1
+          maxItems: 1
+          items:
+            oneOf:
+              - type: object
+                required:
+                  - type
+                  - resource
+                properties:
+                  type:
+                    type: string
+                    const: permission
+                  resource:
+                    type: string
+                    const: rpc
+                  lxm:
+                    type: array
+                    items:
+                      type: string
+                    enum:
+                      - - app.bsky.notification.getPreferences
+                        - app.bsky.notification.getUnreadCount
+                        - app.bsky.notification.listActivitySubscriptions
+                        - app.bsky.notification.listNotifications
+                        - app.bsky.notification.putActivitySubscription
+                        - app.bsky.notification.putPreferences
+                        - app.bsky.notification.putPreferencesV2
+                        - app.bsky.notification.registerPush
+                        - app.bsky.notification.unregisterPush
+                        - app.bsky.notification.updateSeen
+                  inheritAud:
+                    type: boolean
+                    const: true
+                additionalProperties: true
+      additionalProperties: false
+    app.bsky.authDeleteContent:
+      type: object
+      required:
+        - type
+        - permissions
+      properties:
+        type:
+          type: string
+          const: permission-set
+        title:
+          type: string
+          const: Delete Bluesky Content
+        title:lang:
+          type: object
+          additionalProperties:
+            type: string
+        detail:
+          type: string
+          const: 'Clean up public account history: posts, reposts, and likes.'
+        detail:lang:
+          type: object
+          additionalProperties:
+            type: string
+        permissions:
+          type: array
+          minItems: 1
+          maxItems: 1
+          items:
+            oneOf:
+              - type: object
+                required:
+                  - type
+                  - resource
+                properties:
+                  type:
+                    type: string
+                    const: permission
+                  resource:
+                    type: string
+                    const: repo
+                  action:
+                    type: array
+                    items:
+                      type: string
+                    enum:
+                      - - delete
+                  collection:
+                    type: array
+                    items:
+                      type: string
+                    enum:
+                      - - app.bsky.feed.like
+                        - app.bsky.feed.post
+                        - app.bsky.feed.postgate
+                        - app.bsky.feed.repost
+                        - app.bsky.feed.threadgate
+                additionalProperties: true
+      additionalProperties: false
+    app.bsky.authCreatePosts:
+      type: object
+      required:
+        - type
+        - permissions
+      properties:
+        type:
+          type: string
+          const: permission-set
+        title:
+          type: string
+          const: Create Bluesky Posts
+        title:lang:
+          type: object
+          additionalProperties:
+            type: string
+        detail:
+          type: string
+          const: Can not update or delete posts.
+        detail:lang:
+          type: object
+          additionalProperties:
+            type: string
+        permissions:
+          type: array
+          minItems: 2
+          maxItems: 2
+          items:
+            oneOf:
+              - type: object
+                required:
+                  - type
+                  - resource
+                properties:
+                  type:
+                    type: string
+                    const: permission
+                  resource:
+                    type: string
+                    const: rpc
+                  lxm:
+                    type: array
+                    items:
+                      type: string
+                    enum:
+                      - - app.bsky.video.uploadVideo
+                        - app.bsky.video.getJobStatus
+                        - app.bsky.video.getUploadLimits
+                  inheritAud:
+                    type: boolean
+                    const: true
+                additionalProperties: true
+              - type: object
+                required:
+                  - type
+                  - resource
+                properties:
+                  type:
+                    type: string
+                    const: permission
+                  resource:
+                    type: string
+                    const: repo
+                  action:
+                    type: array
+                    items:
+                      type: string
+                    enum:
+                      - - create
+                  collection:
+                    type: array
+                    items:
+                      type: string
+                    enum:
+                      - - app.bsky.feed.post
+                        - app.bsky.feed.postgate
+                        - app.bsky.feed.threadgate
+                additionalProperties: true
+      additionalProperties: false
+    app.bsky.authFullApp:
+      type: object
+      required:
+        - type
+        - permissions
+      properties:
+        type:
+          type: string
+          const: permission-set
+        title:
+          type: string
+          const: Full Bluesky Social App Permissions
+        title:lang:
+          type: object
+          additionalProperties:
+            type: string
+        detail:
+          type: string
+          const: Manage all public content and interactions, private preferences and subscriptions, and other Bluesky-specific app features and data.
+        detail:lang:
+          type: object
+          additionalProperties:
+            type: string
+        permissions:
+          type: array
+          minItems: 2
+          maxItems: 2
+          items:
+            oneOf:
+              - type: object
+                required:
+                  - type
+                  - resource
+                properties:
+                  type:
+                    type: string
+                    const: permission
+                  resource:
+                    type: string
+                    const: rpc
+                  lxm:
+                    type: array
+                    items:
+                      type: string
+                    enum:
+                      - - app.bsky.actor.getPreferences
+                        - app.bsky.actor.getProfile
+                        - app.bsky.actor.getProfiles
+                        - app.bsky.actor.getSuggestions
+                        - app.bsky.actor.putPreferences
+                        - app.bsky.actor.searchActors
+                        - app.bsky.actor.searchActorsTypeahead
+                        - app.bsky.bookmark.createBookmark
+                        - app.bsky.bookmark.deleteBookmark
+                        - app.bsky.bookmark.getBookmarks
+                        - app.bsky.contact.dismissMatch
+                        - app.bsky.contact.getMatches
+                        - app.bsky.contact.getSyncStatus
+                        - app.bsky.contact.importContacts
+                        - app.bsky.contact.removeData
+                        - app.bsky.contact.startPhoneVerification
+                        - app.bsky.contact.verifyPhone
+                        - app.bsky.feed.describeFeedGenerator
+                        - app.bsky.feed.getActorFeeds
+                        - app.bsky.feed.getActorLikes
+                        - app.bsky.feed.getAuthorFeed
+                        - app.bsky.feed.getFeed
+                        - app.bsky.feed.getFeedGenerator
+                        - app.bsky.feed.getFeedGenerators
+                        - app.bsky.feed.getFeedSkeleton
+                        - app.bsky.feed.getLikes
+                        - app.bsky.feed.getListFeed
+                        - app.bsky.feed.getPostThread
+                        - app.bsky.feed.getPosts
+                        - app.bsky.feed.getQuotes
+                        - app.bsky.feed.getRepostedBy
+                        - app.bsky.feed.getSuggestedFeeds
+                        - app.bsky.feed.getTimeline
+                        - app.bsky.feed.searchPosts
+                        - app.bsky.feed.sendInteractions
+                        - app.bsky.graph.getActorStarterPacks
+                        - app.bsky.graph.getBlocks
+                        - app.bsky.graph.getFollowers
+                        - app.bsky.graph.getFollows
+                        - app.bsky.graph.getKnownFollowers
+                        - app.bsky.graph.getList
+                        - app.bsky.graph.getListBlocks
+                        - app.bsky.graph.getListMutes
+                        - app.bsky.graph.getLists
+                        - app.bsky.graph.getListsWithMembership
+                        - app.bsky.graph.getMutes
+                        - app.bsky.graph.getRelationships
+                        - app.bsky.graph.getStarterPack
+                        - app.bsky.graph.getStarterPacks
+                        - app.bsky.graph.getStarterPacksWithMembership
+                        - app.bsky.graph.getSuggestedFollowsByActor
+                        - app.bsky.graph.muteActor
+                        - app.bsky.graph.muteActorList
+                        - app.bsky.graph.muteThread
+                        - app.bsky.graph.searchStarterPacks
+                        - app.bsky.graph.unmuteActor
+                        - app.bsky.graph.unmuteActorList
+                        - app.bsky.graph.unmuteThread
+                        - app.bsky.labeler.getServices
+                        - app.bsky.notification.getPreferences
+                        - app.bsky.notification.getUnreadCount
+                        - app.bsky.notification.listActivitySubscriptions
+                        - app.bsky.notification.listNotifications
+                        - app.bsky.notification.putActivitySubscription
+                        - app.bsky.notification.putPreferences
+                        - app.bsky.notification.putPreferencesV2
+                        - app.bsky.notification.registerPush
+                        - app.bsky.notification.unregisterPush
+                        - app.bsky.notification.updateSeen
+                        - app.bsky.unspecced.getAgeAssuranceState
+                        - app.bsky.unspecced.getConfig
+                        - app.bsky.unspecced.getOnboardingSuggestedStarterPacks
+                        - app.bsky.unspecced.getPopularFeedGenerators
+                        - app.bsky.unspecced.getPostThreadOtherV2
+                        - app.bsky.unspecced.getPostThreadV2
+                        - app.bsky.unspecced.getSuggestedFeeds
+                        - app.bsky.unspecced.getSuggestedFeedsSkeleton
+                        - app.bsky.unspecced.getSuggestedStarterPacks
+                        - app.bsky.unspecced.getSuggestedStarterPacksSkeleton
+                        - app.bsky.unspecced.getSuggestedUsers
+                        - app.bsky.unspecced.getSuggestedUsersSkeleton
+                        - app.bsky.unspecced.getSuggestionsSkeleton
+                        - app.bsky.unspecced.getTaggedSuggestions
+                        - app.bsky.unspecced.getTrendingTopics
+                        - app.bsky.unspecced.getTrends
+                        - app.bsky.unspecced.getTrendsSkeleton
+                        - app.bsky.unspecced.initAgeAssurance
+                        - app.bsky.unspecced.searchActorsSkeleton
+                        - app.bsky.unspecced.searchPostsSkeleton
+                        - app.bsky.unspecced.searchStarterPacksSkeleton
+                        - app.bsky.video.getJobStatus
+                        - app.bsky.video.getUploadLimits
+                        - app.bsky.video.uploadVideo
+                  inheritAud:
+                    type: boolean
+                    const: true
+                additionalProperties: true
+              - type: object
+                required:
+                  - type
+                  - resource
+                properties:
+                  type:
+                    type: string
+                    const: permission
+                  resource:
+                    type: string
+                    const: repo
+                  action:
+                    type: array
+                    items:
+                      type: string
+                    enum:
+                      - - create
+                        - update
+                        - delete
+                  collection:
+                    type: array
+                    items:
+                      type: string
+                    enum:
+                      - - app.bsky.actor.profile
+                        - app.bsky.actor.status
+                        - app.bsky.feed.like
+                        - app.bsky.feed.post
+                        - app.bsky.feed.postgate
+                        - app.bsky.feed.repost
+                        - app.bsky.feed.threadgate
+                        - app.bsky.graph.block
+                        - app.bsky.graph.follow
+                        - app.bsky.graph.list
+                        - app.bsky.graph.listblock
+                        - app.bsky.graph.listitem
+                        - app.bsky.graph.starterpack
+                        - app.bsky.notification.declaration
+                additionalProperties: true
+      additionalProperties: false
+    app.bsky.authManageModeration:
+      type: object
+      required:
+        - type
+        - permissions
+      properties:
+        type:
+          type: string
+          const: permission-set
+        title:
+          type: string
+          const: Manage Personal Moderation
+        title:lang:
+          type: object
+          additionalProperties:
+            type: string
+        detail:
+          type: string
+          const: Control over blocks, mutes, mod lists, mod services, and preferences.
+        detail:lang:
+          type: object
+          additionalProperties:
+            type: string
+        permissions:
+          type: array
+          minItems: 2
+          maxItems: 2
+          items:
+            oneOf:
+              - type: object
+                required:
+                  - type
+                  - resource
+                properties:
+                  type:
+                    type: string
+                    const: permission
+                  resource:
+                    type: string
+                    const: rpc
+                  lxm:
+                    type: array
+                    items:
+                      type: string
+                    enum:
+                      - - app.bsky.actor.getPreferences
+                        - app.bsky.actor.putPreferences
+                        - app.bsky.graph.muteActor
+                        - app.bsky.graph.muteActorList
+                        - app.bsky.graph.muteThread
+                        - app.bsky.graph.unmuteActor
+                        - app.bsky.graph.unmuteActorList
+                        - app.bsky.graph.unmuteThread
+                  inheritAud:
+                    type: boolean
+                    const: true
+                additionalProperties: true
+              - type: object
+                required:
+                  - type
+                  - resource
+                properties:
+                  type:
+                    type: string
+                    const: permission
+                  resource:
+                    type: string
+                    const: repo
+                  action:
+                    type: array
+                    items:
+                      type: string
+                    enum:
+                      - - create
+                        - update
+                        - delete
+                  collection:
+                    type: array
+                    items:
+                      type: string
+                    enum:
+                      - - app.bsky.graph.block
+                        - app.bsky.graph.listblock
+                additionalProperties: true
+      additionalProperties: false
+    app.bsky.authViewAll:
+      type: object
+      required:
+        - type
+        - permissions
+      properties:
+        type:
+          type: string
+          const: permission-set
+        title:
+          type: string
+          const: Read-only access to all content
+        title:lang:
+          type: object
+          additionalProperties:
+            type: string
+        detail:
+          type: string
+          const: View Bluesky network content from account perspective, and read all notifications and preferences.
+        detail:lang:
+          type: object
+          additionalProperties:
+            type: string
+        permissions:
+          type: array
+          minItems: 1
+          maxItems: 1
+          items:
+            oneOf:
+              - type: object
+                required:
+                  - type
+                  - resource
+                properties:
+                  type:
+                    type: string
+                    const: permission
+                  resource:
+                    type: string
+                    const: rpc
+                  lxm:
+                    type: array
+                    items:
+                      type: string
+                    enum:
+                      - - app.bsky.actor.getProfile
+                        - app.bsky.actor.getProfiles
+                        - app.bsky.actor.getSuggestions
+                        - app.bsky.actor.searchActors
+                        - app.bsky.actor.searchActorsTypeahead
+                        - app.bsky.bookmark.getBookmarks
+                        - app.bsky.feed.describeFeedGenerator
+                        - app.bsky.feed.getActorFeeds
+                        - app.bsky.feed.getActorLikes
+                        - app.bsky.feed.getAuthorFeed
+                        - app.bsky.feed.getFeed
+                        - app.bsky.feed.getFeedGenerator
+                        - app.bsky.feed.getFeedGenerators
+                        - app.bsky.feed.getFeedSkeleton
+                        - app.bsky.feed.getLikes
+                        - app.bsky.feed.getListFeed
+                        - app.bsky.feed.getPostThread
+                        - app.bsky.feed.getPosts
+                        - app.bsky.feed.getQuotes
+                        - app.bsky.feed.getRepostedBy
+                        - app.bsky.feed.getSuggestedFeeds
+                        - app.bsky.feed.getTimeline
+                        - app.bsky.feed.searchPosts
+                        - app.bsky.graph.getActorStarterPacks
+                        - app.bsky.graph.getBlocks
+                        - app.bsky.graph.getFollowers
+                        - app.bsky.graph.getFollows
+                        - app.bsky.graph.getKnownFollowers
+                        - app.bsky.graph.getListBlocks
+                        - app.bsky.graph.getListMutes
+                        - app.bsky.graph.getLists
+                        - app.bsky.graph.getListsWithMembership
+                        - app.bsky.graph.getMutes
+                        - app.bsky.graph.getRelationships
+                        - app.bsky.graph.getStarterPack
+                        - app.bsky.graph.getStarterPacks
+                        - app.bsky.graph.getStarterPacksWithMembership
+                        - app.bsky.graph.getSuggestedFollowsByActor
+                        - app.bsky.graph.searchStarterPacks
+                        - app.bsky.labeler.getServices
+                        - app.bsky.notification.getPreferences
+                        - app.bsky.notification.getUnreadCount
+                        - app.bsky.notification.listActivitySubscriptions
+                        - app.bsky.notification.listNotifications
+                        - app.bsky.notification.updateSeen
+                        - app.bsky.unspecced.getAgeAssuranceState
+                        - app.bsky.unspecced.getConfig
+                        - app.bsky.unspecced.getOnboardingSuggestedStarterPacks
+                        - app.bsky.unspecced.getPopularFeedGenerators
+                        - app.bsky.unspecced.getPostThreadOtherV2
+                        - app.bsky.unspecced.getPostThreadV2
+                        - app.bsky.unspecced.getSuggestedFeeds
+                        - app.bsky.unspecced.getSuggestedFeedsSkeleton
+                        - app.bsky.unspecced.getSuggestedStarterPacks
+                        - app.bsky.unspecced.getSuggestedStarterPacksSkeleton
+                        - app.bsky.unspecced.getSuggestedUsers
+                        - app.bsky.unspecced.getSuggestedUsersSkeleton
+                        - app.bsky.unspecced.getSuggestionsSkeleton
+                        - app.bsky.unspecced.getTaggedSuggestions
+                        - app.bsky.unspecced.getTrendingTopics
+                        - app.bsky.unspecced.getTrends
+                        - app.bsky.unspecced.getTrendsSkeleton
+                        - app.bsky.unspecced.searchActorsSkeleton
+                        - app.bsky.unspecced.searchPostsSkeleton
+                        - app.bsky.unspecced.searchStarterPacksSkeleton
+                        - app.bsky.video.getUploadLimits
+                  inheritAud:
+                    type: boolean
+                    const: true
+                additionalProperties: true
+      additionalProperties: false
+    app.bsky.authManageFeedDeclarations:
+      type: object
+      required:
+        - type
+        - permissions
+      properties:
+        type:
+          type: string
+          const: permission-set
+        title:
+          type: string
+          const: Manage Hosted Feeds
+        title:lang:
+          type: object
+          additionalProperties:
+            type: string
+        detail:
+          type: string
+          const: Configure feed generator declaration records.
+        detail:lang:
+          type: object
+          additionalProperties:
+            type: string
+        permissions:
+          type: array
+          minItems: 1
+          maxItems: 1
+          items:
+            oneOf:
+              - type: object
+                required:
+                  - type
+                  - resource
+                properties:
+                  type:
+                    type: string
+                    const: permission
+                  resource:
+                    type: string
+                    const: repo
+                  action:
+                    type: array
+                    items:
+                      type: string
+                    enum:
+                      - - create
+                        - update
+                        - delete
+                  collection:
+                    type: array
+                    items:
+                      type: string
+                    enum:
+                      - - app.bsky.feed.generator
+                additionalProperties: true
+      additionalProperties: false
+    app.bsky.authManageProfile:
+      type: object
+      required:
+        - type
+        - permissions
+      properties:
+        type:
+          type: string
+          const: permission-set
+        title:
+          type: string
+          const: Manage Bluesky Profile
+        title:lang:
+          type: object
+          additionalProperties:
+            type: string
+        detail:
+          type: string
+          const: Update profile data, as well as status and public chat visibility.
+        detail:lang:
+          type: object
+          additionalProperties:
+            type: string
+        permissions:
+          type: array
+          minItems: 1
+          maxItems: 1
+          items:
+            oneOf:
+              - type: object
+                required:
+                  - type
+                  - resource
+                properties:
+                  type:
+                    type: string
+                    const: permission
+                  resource:
+                    type: string
+                    const: repo
+                  action:
+                    type: array
+                    items:
+                      type: string
+                    enum:
+                      - - create
+                        - update
+                        - delete
+                  collection:
+                    type: array
+                    items:
+                      type: string
+                    enum:
+                      - - app.bsky.actor.profile
+                        - app.bsky.actor.status
+                        - app.bsky.notification.declaration
+                additionalProperties: true
+      additionalProperties: false
     app.bsky.labeler.defs.labelerView:
       type: object
       required:
@@ -17884,6 +19629,8 @@ components:
           $ref: '#/components/schemas/app.bsky.actor.defs.profileAssociatedChat'
         activitySubscription:
           $ref: '#/components/schemas/app.bsky.actor.defs.profileAssociatedActivitySubscription'
+        germ:
+          $ref: '#/components/schemas/app.bsky.actor.defs.profileAssociatedGerm'
     app.bsky.actor.defs.profileAssociatedChat:
       type: object
       required:
@@ -17895,6 +19642,20 @@ components:
             - all
             - none
             - following
+    app.bsky.actor.defs.profileAssociatedGerm:
+      type: object
+      required:
+        - showButtonTo
+        - messageMeUrl
+      properties:
+        messageMeUrl:
+          type: string
+          format: uri
+        showButtonTo:
+          type: string
+          enum:
+            - usersIFollow
+            - everyone
     app.bsky.actor.defs.profileAssociatedActivitySubscription:
       type: object
       required:
@@ -18004,6 +19765,7 @@ components:
           - $ref: '#/components/schemas/app.bsky.actor.defs.savedFeedsPref'
           - $ref: '#/components/schemas/app.bsky.actor.defs.savedFeedsPrefV2'
           - $ref: '#/components/schemas/app.bsky.actor.defs.personalDetailsPref'
+          - $ref: '#/components/schemas/app.bsky.actor.defs.declaredAgePref'
           - $ref: '#/components/schemas/app.bsky.actor.defs.feedViewPref'
           - $ref: '#/components/schemas/app.bsky.actor.defs.threadViewPref'
           - $ref: '#/components/schemas/app.bsky.actor.defs.interestsPref'
@@ -18013,6 +19775,7 @@ components:
           - $ref: '#/components/schemas/app.bsky.actor.defs.labelersPref'
           - $ref: '#/components/schemas/app.bsky.actor.defs.postInteractionSettingsPref'
           - $ref: '#/components/schemas/app.bsky.actor.defs.verificationPrefs'
+          - $ref: '#/components/schemas/app.bsky.actor.defs.liveEventPreferences'
     app.bsky.actor.defs.adultContentPref:
       type: object
       required:
@@ -18093,6 +19856,19 @@ components:
           type: string
           description: The birth date of account owner.
           format: date-time
+    app.bsky.actor.defs.declaredAgePref:
+      type: object
+      description: Read-only preference containing value(s) inferred from the user's declared birthdate. Absence of this preference object in the response indicates that the user has not made a declaration.
+      properties:
+        isOverAge13:
+          type: boolean
+          description: Indicates if the user has declared that they are over 13 years of age.
+        isOverAge16:
+          type: boolean
+          description: Indicates if the user has declared that they are over 16 years of age.
+        isOverAge18:
+          type: boolean
+          description: Indicates if the user has declared that they are over 18 years of age.
     app.bsky.actor.defs.feedViewPref:
       type: object
       required:
@@ -18263,6 +20039,17 @@ components:
         hideBadges:
           type: boolean
           description: Hide the blue check badges for verified accounts and trusted verifiers.
+    app.bsky.actor.defs.liveEventPreferences:
+      type: object
+      description: Preferences for live events.
+      properties:
+        hiddenFeedIds:
+          type: array
+          items:
+            type: string
+        hideAllFeeds:
+          type: boolean
+          description: Whether to hide all feeds from live events.
     app.bsky.actor.defs.postInteractionSettingsPref:
       type: object
       description: Default post interaction settings for the account. These values should be applied as default values when creating new posts. These refs should mirror the threadgate and postgate records exactly.
@@ -18289,6 +20076,12 @@ components:
         - status
         - record
       properties:
+        uri:
+          type: string
+          format: at-uri
+        cid:
+          type: string
+          format: cid
         status:
           type: string
           description: The status for the account.
@@ -18305,6 +20098,9 @@ components:
         isActive:
           type: boolean
           description: True if the status is not expired, false if it is expired. Only present if expiration was set.
+        isDisabled:
+          type: boolean
+          description: True if the user's go-live access has been disabled by a moderator, false otherwise.
     app.bsky.actor.status:
       type: object
       required:
@@ -18418,6 +20214,7 @@ components:
       description: The Age Assurance configuration for a specific region.
       required:
         - countryCode
+        - minAccessAge
         - rules
       properties:
         countryCode:
@@ -18426,6 +20223,8 @@ components:
         regionCode:
           type: string
           description: The ISO 3166-2 region code this configuration applies to. If omitted, the configuration applies to the entire country.
+        minAccessAge:
+          type: integer
         rules:
           type: array
           items:
@@ -19789,6 +21588,7 @@ components:
             - like-via-repost
             - repost-via-repost
             - subscribed-post
+            - contact-match
         reasonSubject:
           type: string
           format: at-uri
@@ -20019,6 +21819,12 @@ components:
           maxLength: 10000
         aspectRatio:
           $ref: '#/components/schemas/app.bsky.embed.defs.aspectRatio'
+        presentation:
+          type: string
+          description: A hint to the client about how to present the video.
+          enum:
+            - default
+            - gif
     app.bsky.embed.video.caption:
       type: object
       required:
@@ -20052,6 +21858,12 @@ components:
           maxLength: 10000
         aspectRatio:
           $ref: '#/components/schemas/app.bsky.embed.defs.aspectRatio'
+        presentation:
+          type: string
+          description: A hint to the client about how to present the video.
+          enum:
+            - default
+            - gif
     app.bsky.embed.external:
       type: object
       description: A representation of some externally linked content (eg, a URL and 'card'), embedded in a Bluesky record (eg, a post).
@@ -20152,6 +21964,21 @@ components:
         matchesCount:
           type: integer
           minimum: 0
+    app.bsky.contact.defs.notification:
+      type: object
+      description: A stash object to be sent via bsync representing a notification to be created.
+      required:
+        - from
+        - to
+      properties:
+        from:
+          type: string
+          description: The DID of who this notification comes from.
+          format: did
+        to:
+          type: string
+          description: The DID of who this notification should go to.
+          format: did
     app.bsky.video.defs.jobStatus:
       type: object
       required:
@@ -20181,6 +22008,175 @@ components:
           type: string
         message:
           type: string
+    app.bsky.draft.defs.draftWithId:
+      type: object
+      description: A draft with an identifier, used to store drafts in private storage (stash).
+      required:
+        - id
+        - draft
+      properties:
+        id:
+          type: string
+          description: A TID to be used as a draft identifier.
+          format: tid
+        draft:
+          $ref: '#/components/schemas/app.bsky.draft.defs.draft'
+    app.bsky.draft.defs.draft:
+      type: object
+      description: A draft containing an array of draft posts.
+      required:
+        - posts
+      properties:
+        deviceId:
+          type: string
+          description: UUIDv4 identifier of the device that created this draft.
+          maxLength: 100
+        deviceName:
+          type: string
+          description: The device and/or platform on which the draft was created.
+          maxLength: 100
+        posts:
+          type: array
+          items:
+            $ref: '#/components/schemas/app.bsky.draft.defs.draftPost'
+          maxItems: 100
+        langs:
+          type: array
+          items:
+            type: string
+            format: language
+          maxItems: 3
+        postgateEmbeddingRules:
+          type: array
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/app.bsky.feed.postgate.disableRule'
+          maxItems: 5
+        threadgateAllow:
+          type: array
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/app.bsky.feed.threadgate.mentionRule'
+              - $ref: '#/components/schemas/app.bsky.feed.threadgate.followerRule'
+              - $ref: '#/components/schemas/app.bsky.feed.threadgate.followingRule'
+              - $ref: '#/components/schemas/app.bsky.feed.threadgate.listRule'
+          maxItems: 5
+    app.bsky.draft.defs.draftPost:
+      type: object
+      description: One of the posts that compose a draft.
+      required:
+        - text
+      properties:
+        text:
+          type: string
+          description: The primary post content. It has a higher limit than post contents to allow storing a larger text that can later be refined into smaller posts.
+          maxLength: 10000
+        labels:
+          oneOf:
+            - $ref: '#/components/schemas/com.atproto.label.defs.selfLabels'
+        embedImages:
+          type: array
+          items:
+            $ref: '#/components/schemas/app.bsky.draft.defs.draftEmbedImage'
+          maxItems: 4
+        embedVideos:
+          type: array
+          items:
+            $ref: '#/components/schemas/app.bsky.draft.defs.draftEmbedVideo'
+          maxItems: 1
+        embedExternals:
+          type: array
+          items:
+            $ref: '#/components/schemas/app.bsky.draft.defs.draftEmbedExternal'
+          maxItems: 1
+        embedRecords:
+          type: array
+          items:
+            $ref: '#/components/schemas/app.bsky.draft.defs.draftEmbedRecord'
+          maxItems: 1
+    app.bsky.draft.defs.draftView:
+      type: object
+      description: View to present drafts data to users.
+      required:
+        - id
+        - draft
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          description: A TID to be used as a draft identifier.
+          format: tid
+        draft:
+          $ref: '#/components/schemas/app.bsky.draft.defs.draft'
+        createdAt:
+          type: string
+          description: The time the draft was created.
+          format: date-time
+        updatedAt:
+          type: string
+          description: The time the draft was last updated.
+          format: date-time
+    app.bsky.draft.defs.draftEmbedLocalRef:
+      type: object
+      required:
+        - path
+      properties:
+        path:
+          type: string
+          description: Local, on-device ref to file to be embedded. Embeds are currently device-bound for drafts.
+          minLength: 1
+          maxLength: 1024
+    app.bsky.draft.defs.draftEmbedCaption:
+      type: object
+      required:
+        - lang
+        - content
+      properties:
+        lang:
+          type: string
+          format: language
+        content:
+          type: string
+          maxLength: 10000
+    app.bsky.draft.defs.draftEmbedImage:
+      type: object
+      required:
+        - localRef
+      properties:
+        localRef:
+          $ref: '#/components/schemas/app.bsky.draft.defs.draftEmbedLocalRef'
+        alt:
+          type: string
+    app.bsky.draft.defs.draftEmbedVideo:
+      type: object
+      required:
+        - localRef
+      properties:
+        localRef:
+          $ref: '#/components/schemas/app.bsky.draft.defs.draftEmbedLocalRef'
+        alt:
+          type: string
+        captions:
+          type: array
+          items:
+            $ref: '#/components/schemas/app.bsky.draft.defs.draftEmbedCaption'
+          maxItems: 20
+    app.bsky.draft.defs.draftEmbedExternal:
+      type: object
+      required:
+        - uri
+      properties:
+        uri:
+          type: string
+          format: uri
+    app.bsky.draft.defs.draftEmbedRecord:
+      type: object
+      required:
+        - record
+      properties:
+        record:
+          $ref: '#/components/schemas/com.atproto.repo.strongRef'
     tools.ozone.moderation.cancelScheduledActions.cancellationResults:
       type: object
       required:
@@ -22078,9 +24074,20 @@ tags:
   - name: com.atproto.admin
   - name: com.atproto.identity
   - name: com.atproto.temp
+  - name: com.germnetwork.declaration
+  - name: chat.bsky.authFullChatClient
   - name: chat.bsky.moderation
   - name: chat.bsky.actor
   - name: chat.bsky.convo
+  - name: app.bsky.authManageLabelerService
+  - name: app.bsky.authManageNotifications
+  - name: app.bsky.authDeleteContent
+  - name: app.bsky.authCreatePosts
+  - name: app.bsky.authFullApp
+  - name: app.bsky.authManageModeration
+  - name: app.bsky.authViewAll
+  - name: app.bsky.authManageFeedDeclarations
+  - name: app.bsky.authManageProfile
   - name: app.bsky.labeler
   - name: app.bsky.actor
   - name: app.bsky.ageassurance
@@ -22093,6 +24100,7 @@ tags:
   - name: app.bsky.bookmark
   - name: app.bsky.contact
   - name: app.bsky.video
+  - name: app.bsky.draft
   - name: tools.ozone.moderation
   - name: tools.ozone.setting
   - name: tools.ozone.set
@@ -22104,3 +24112,359 @@ tags:
   - name: tools.ozone.verification
   - name: tools.ozone.server
   - name: tools.ozone.signature
+x-atproto-permission-sets:
+  chat.bsky.authFullChatClient:
+    scope: include:chat.bsky.authFullChatClient
+    title: Full Chat Client (All Conversations)
+    detail: Control of all chat conversations and configuration management.
+    permissions:
+      - type: permission
+        resource: rpc
+        inheritAud: true
+        lxm:
+          - chat.bsky.actor.deleteAccount
+          - chat.bsky.convo.acceptConvo
+          - chat.bsky.convo.addReaction
+          - chat.bsky.convo.deleteMessageForSelf
+          - chat.bsky.convo.exportAccountData
+          - chat.bsky.convo.getConvo
+          - chat.bsky.convo.getConvoAvailability
+          - chat.bsky.convo.getConvoForMembers
+          - chat.bsky.convo.getLog
+          - chat.bsky.convo.getMessages
+          - chat.bsky.convo.leaveConvo
+          - chat.bsky.convo.listConvos
+          - chat.bsky.convo.muteConvo
+          - chat.bsky.convo.removeReaction
+          - chat.bsky.convo.sendMessage
+          - chat.bsky.convo.sendMessageBatch
+          - chat.bsky.convo.unmuteConvo
+          - chat.bsky.convo.updateAllRead
+          - chat.bsky.convo.updateRead
+      - type: permission
+        resource: repo
+        action:
+          - create
+          - update
+          - delete
+        collection:
+          - chat.bsky.actor.declaration
+  app.bsky.authManageLabelerService:
+    scope: include:app.bsky.authManageLabelerService
+    title: Manage Hosted Labeling Service
+    detail: Configure labeler declaration records.
+    permissions:
+      - type: permission
+        resource: repo
+        action:
+          - create
+          - update
+          - delete
+        collection:
+          - app.bsky.labeler.service
+  app.bsky.authManageNotifications:
+    scope: include:app.bsky.authManageNotifications
+    title: Manage Bluesky Notifications
+    detail: View and configure notifications for the Bluesky app.
+    permissions:
+      - type: permission
+        resource: rpc
+        inheritAud: true
+        lxm:
+          - app.bsky.notification.getPreferences
+          - app.bsky.notification.getUnreadCount
+          - app.bsky.notification.listActivitySubscriptions
+          - app.bsky.notification.listNotifications
+          - app.bsky.notification.putActivitySubscription
+          - app.bsky.notification.putPreferences
+          - app.bsky.notification.putPreferencesV2
+          - app.bsky.notification.registerPush
+          - app.bsky.notification.unregisterPush
+          - app.bsky.notification.updateSeen
+  app.bsky.authDeleteContent:
+    scope: include:app.bsky.authDeleteContent
+    title: Delete Bluesky Content
+    detail: 'Clean up public account history: posts, reposts, and likes.'
+    permissions:
+      - type: permission
+        resource: repo
+        action:
+          - delete
+        collection:
+          - app.bsky.feed.like
+          - app.bsky.feed.post
+          - app.bsky.feed.postgate
+          - app.bsky.feed.repost
+          - app.bsky.feed.threadgate
+  app.bsky.authCreatePosts:
+    scope: include:app.bsky.authCreatePosts
+    title: Create Bluesky Posts
+    detail: Can not update or delete posts.
+    permissions:
+      - type: permission
+        resource: rpc
+        inheritAud: true
+        lxm:
+          - app.bsky.video.uploadVideo
+          - app.bsky.video.getJobStatus
+          - app.bsky.video.getUploadLimits
+      - type: permission
+        resource: repo
+        action:
+          - create
+        collection:
+          - app.bsky.feed.post
+          - app.bsky.feed.postgate
+          - app.bsky.feed.threadgate
+  app.bsky.authFullApp:
+    scope: include:app.bsky.authFullApp
+    title: Full Bluesky Social App Permissions
+    detail: Manage all public content and interactions, private preferences and subscriptions, and other Bluesky-specific app features and data.
+    permissions:
+      - type: permission
+        resource: rpc
+        inheritAud: true
+        lxm:
+          - app.bsky.actor.getPreferences
+          - app.bsky.actor.getProfile
+          - app.bsky.actor.getProfiles
+          - app.bsky.actor.getSuggestions
+          - app.bsky.actor.putPreferences
+          - app.bsky.actor.searchActors
+          - app.bsky.actor.searchActorsTypeahead
+          - app.bsky.bookmark.createBookmark
+          - app.bsky.bookmark.deleteBookmark
+          - app.bsky.bookmark.getBookmarks
+          - app.bsky.contact.dismissMatch
+          - app.bsky.contact.getMatches
+          - app.bsky.contact.getSyncStatus
+          - app.bsky.contact.importContacts
+          - app.bsky.contact.removeData
+          - app.bsky.contact.startPhoneVerification
+          - app.bsky.contact.verifyPhone
+          - app.bsky.feed.describeFeedGenerator
+          - app.bsky.feed.getActorFeeds
+          - app.bsky.feed.getActorLikes
+          - app.bsky.feed.getAuthorFeed
+          - app.bsky.feed.getFeed
+          - app.bsky.feed.getFeedGenerator
+          - app.bsky.feed.getFeedGenerators
+          - app.bsky.feed.getFeedSkeleton
+          - app.bsky.feed.getLikes
+          - app.bsky.feed.getListFeed
+          - app.bsky.feed.getPostThread
+          - app.bsky.feed.getPosts
+          - app.bsky.feed.getQuotes
+          - app.bsky.feed.getRepostedBy
+          - app.bsky.feed.getSuggestedFeeds
+          - app.bsky.feed.getTimeline
+          - app.bsky.feed.searchPosts
+          - app.bsky.feed.sendInteractions
+          - app.bsky.graph.getActorStarterPacks
+          - app.bsky.graph.getBlocks
+          - app.bsky.graph.getFollowers
+          - app.bsky.graph.getFollows
+          - app.bsky.graph.getKnownFollowers
+          - app.bsky.graph.getList
+          - app.bsky.graph.getListBlocks
+          - app.bsky.graph.getListMutes
+          - app.bsky.graph.getLists
+          - app.bsky.graph.getListsWithMembership
+          - app.bsky.graph.getMutes
+          - app.bsky.graph.getRelationships
+          - app.bsky.graph.getStarterPack
+          - app.bsky.graph.getStarterPacks
+          - app.bsky.graph.getStarterPacksWithMembership
+          - app.bsky.graph.getSuggestedFollowsByActor
+          - app.bsky.graph.muteActor
+          - app.bsky.graph.muteActorList
+          - app.bsky.graph.muteThread
+          - app.bsky.graph.searchStarterPacks
+          - app.bsky.graph.unmuteActor
+          - app.bsky.graph.unmuteActorList
+          - app.bsky.graph.unmuteThread
+          - app.bsky.labeler.getServices
+          - app.bsky.notification.getPreferences
+          - app.bsky.notification.getUnreadCount
+          - app.bsky.notification.listActivitySubscriptions
+          - app.bsky.notification.listNotifications
+          - app.bsky.notification.putActivitySubscription
+          - app.bsky.notification.putPreferences
+          - app.bsky.notification.putPreferencesV2
+          - app.bsky.notification.registerPush
+          - app.bsky.notification.unregisterPush
+          - app.bsky.notification.updateSeen
+          - app.bsky.unspecced.getAgeAssuranceState
+          - app.bsky.unspecced.getConfig
+          - app.bsky.unspecced.getOnboardingSuggestedStarterPacks
+          - app.bsky.unspecced.getPopularFeedGenerators
+          - app.bsky.unspecced.getPostThreadOtherV2
+          - app.bsky.unspecced.getPostThreadV2
+          - app.bsky.unspecced.getSuggestedFeeds
+          - app.bsky.unspecced.getSuggestedFeedsSkeleton
+          - app.bsky.unspecced.getSuggestedStarterPacks
+          - app.bsky.unspecced.getSuggestedStarterPacksSkeleton
+          - app.bsky.unspecced.getSuggestedUsers
+          - app.bsky.unspecced.getSuggestedUsersSkeleton
+          - app.bsky.unspecced.getSuggestionsSkeleton
+          - app.bsky.unspecced.getTaggedSuggestions
+          - app.bsky.unspecced.getTrendingTopics
+          - app.bsky.unspecced.getTrends
+          - app.bsky.unspecced.getTrendsSkeleton
+          - app.bsky.unspecced.initAgeAssurance
+          - app.bsky.unspecced.searchActorsSkeleton
+          - app.bsky.unspecced.searchPostsSkeleton
+          - app.bsky.unspecced.searchStarterPacksSkeleton
+          - app.bsky.video.getJobStatus
+          - app.bsky.video.getUploadLimits
+          - app.bsky.video.uploadVideo
+      - type: permission
+        resource: repo
+        action:
+          - create
+          - update
+          - delete
+        collection:
+          - app.bsky.actor.profile
+          - app.bsky.actor.status
+          - app.bsky.feed.like
+          - app.bsky.feed.post
+          - app.bsky.feed.postgate
+          - app.bsky.feed.repost
+          - app.bsky.feed.threadgate
+          - app.bsky.graph.block
+          - app.bsky.graph.follow
+          - app.bsky.graph.list
+          - app.bsky.graph.listblock
+          - app.bsky.graph.listitem
+          - app.bsky.graph.starterpack
+          - app.bsky.notification.declaration
+  app.bsky.authManageModeration:
+    scope: include:app.bsky.authManageModeration
+    title: Manage Personal Moderation
+    detail: Control over blocks, mutes, mod lists, mod services, and preferences.
+    permissions:
+      - type: permission
+        resource: rpc
+        inheritAud: true
+        lxm:
+          - app.bsky.actor.getPreferences
+          - app.bsky.actor.putPreferences
+          - app.bsky.graph.muteActor
+          - app.bsky.graph.muteActorList
+          - app.bsky.graph.muteThread
+          - app.bsky.graph.unmuteActor
+          - app.bsky.graph.unmuteActorList
+          - app.bsky.graph.unmuteThread
+      - type: permission
+        resource: repo
+        action:
+          - create
+          - update
+          - delete
+        collection:
+          - app.bsky.graph.block
+          - app.bsky.graph.listblock
+  app.bsky.authViewAll:
+    scope: include:app.bsky.authViewAll
+    title: Read-only access to all content
+    detail: View Bluesky network content from account perspective, and read all notifications and preferences.
+    permissions:
+      - type: permission
+        resource: rpc
+        inheritAud: true
+        lxm:
+          - app.bsky.actor.getProfile
+          - app.bsky.actor.getProfiles
+          - app.bsky.actor.getSuggestions
+          - app.bsky.actor.searchActors
+          - app.bsky.actor.searchActorsTypeahead
+          - app.bsky.bookmark.getBookmarks
+          - app.bsky.feed.describeFeedGenerator
+          - app.bsky.feed.getActorFeeds
+          - app.bsky.feed.getActorLikes
+          - app.bsky.feed.getAuthorFeed
+          - app.bsky.feed.getFeed
+          - app.bsky.feed.getFeedGenerator
+          - app.bsky.feed.getFeedGenerators
+          - app.bsky.feed.getFeedSkeleton
+          - app.bsky.feed.getLikes
+          - app.bsky.feed.getListFeed
+          - app.bsky.feed.getPostThread
+          - app.bsky.feed.getPosts
+          - app.bsky.feed.getQuotes
+          - app.bsky.feed.getRepostedBy
+          - app.bsky.feed.getSuggestedFeeds
+          - app.bsky.feed.getTimeline
+          - app.bsky.feed.searchPosts
+          - app.bsky.graph.getActorStarterPacks
+          - app.bsky.graph.getBlocks
+          - app.bsky.graph.getFollowers
+          - app.bsky.graph.getFollows
+          - app.bsky.graph.getKnownFollowers
+          - app.bsky.graph.getListBlocks
+          - app.bsky.graph.getListMutes
+          - app.bsky.graph.getLists
+          - app.bsky.graph.getListsWithMembership
+          - app.bsky.graph.getMutes
+          - app.bsky.graph.getRelationships
+          - app.bsky.graph.getStarterPack
+          - app.bsky.graph.getStarterPacks
+          - app.bsky.graph.getStarterPacksWithMembership
+          - app.bsky.graph.getSuggestedFollowsByActor
+          - app.bsky.graph.searchStarterPacks
+          - app.bsky.labeler.getServices
+          - app.bsky.notification.getPreferences
+          - app.bsky.notification.getUnreadCount
+          - app.bsky.notification.listActivitySubscriptions
+          - app.bsky.notification.listNotifications
+          - app.bsky.notification.updateSeen
+          - app.bsky.unspecced.getAgeAssuranceState
+          - app.bsky.unspecced.getConfig
+          - app.bsky.unspecced.getOnboardingSuggestedStarterPacks
+          - app.bsky.unspecced.getPopularFeedGenerators
+          - app.bsky.unspecced.getPostThreadOtherV2
+          - app.bsky.unspecced.getPostThreadV2
+          - app.bsky.unspecced.getSuggestedFeeds
+          - app.bsky.unspecced.getSuggestedFeedsSkeleton
+          - app.bsky.unspecced.getSuggestedStarterPacks
+          - app.bsky.unspecced.getSuggestedStarterPacksSkeleton
+          - app.bsky.unspecced.getSuggestedUsers
+          - app.bsky.unspecced.getSuggestedUsersSkeleton
+          - app.bsky.unspecced.getSuggestionsSkeleton
+          - app.bsky.unspecced.getTaggedSuggestions
+          - app.bsky.unspecced.getTrendingTopics
+          - app.bsky.unspecced.getTrends
+          - app.bsky.unspecced.getTrendsSkeleton
+          - app.bsky.unspecced.searchActorsSkeleton
+          - app.bsky.unspecced.searchPostsSkeleton
+          - app.bsky.unspecced.searchStarterPacksSkeleton
+          - app.bsky.video.getUploadLimits
+  app.bsky.authManageFeedDeclarations:
+    scope: include:app.bsky.authManageFeedDeclarations
+    title: Manage Hosted Feeds
+    detail: Configure feed generator declaration records.
+    permissions:
+      - type: permission
+        resource: repo
+        action:
+          - create
+          - update
+          - delete
+        collection:
+          - app.bsky.feed.generator
+  app.bsky.authManageProfile:
+    scope: include:app.bsky.authManageProfile
+    title: Manage Bluesky Profile
+    detail: Update profile data, as well as status and public chat visibility.
+    permissions:
+      - type: permission
+        resource: repo
+        action:
+          - create
+          - update
+          - delete
+        collection:
+          - app.bsky.actor.profile
+          - app.bsky.actor.status
+          - app.bsky.notification.declaration
