@@ -7,7 +7,7 @@ build:
 
 # Format generated OpenAPI, lexicon JSON files, and TypeScript sources.
 format:
-	bunx biome format --write ./output/*.json ./lexicons/**/**/**/*.json ./lib/**/*.ts ./main.ts
+	bunx biome format --write .
 
 # Refresh lexicon JSON files from upstream sources.
 lexicons:
@@ -23,4 +23,4 @@ yaml: generate
 
 # Run full generation flow (JSON + YAML), then format all tracked artifacts.
 all: yaml
-	bunx biome format --write ./output/*.json ./lexicons/**/**/**/*.json ./lib/**/*.ts ./main.ts
+	bunx biome format --write .
