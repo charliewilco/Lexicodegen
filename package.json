@@ -7,7 +7,7 @@
 	},
 	"private": true,
 	"scripts": {
-		"build": "bun build --compile --minify --outfile lexicodegen main.ts",
+		"build": "bun build --compile --minify --outfile ./lexicodegen ./main.ts",
 		"generate": "./lexicodegen ./lexicons --output ./output/swift",
 		"postgenerate": "bunx biome format --write ./output/**/*.swift ./lexicons/**/**/**/*.json",
 		"dev": "bun --watch run ./main.ts",
@@ -16,12 +16,12 @@
 	},
 	"dependencies": {
 		"@atproto/lexicon": "^0.6.1",
-		"ejs": "^3.1.10",
-		"openapi-types": "^12.1.3"
+		"ejs": "4.0.1"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.3.8",
 		"@types/bun": "latest",
+		"@types/ejs": "3.1.5",
 		"lefthook": "^2.0.8"
 	},
 	"peerDependencies": {

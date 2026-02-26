@@ -57,6 +57,33 @@ This compiles a single-file executable at:
 ./lexicodegen
 ```
 
+## Install executable globally
+
+If you want `lexicodegen` available from any terminal session, install the package globally after building the binary:
+
+```bash
+bun run build
+bun install -g .
+```
+
+Verify:
+
+```bash
+lexicodegen --help
+```
+
+For local development, you can also use `bun link`:
+
+```bash
+bun link
+lexicodegen ./lexicons --output ./output/swift
+```
+
+Notes:
+
+- `bun install -g .` expects an executable at `./lexicodegen` in the installed package.
+- Re-run `bun run build` and re-install globally when the CLI behavior changes.
+
 ## Development mode
 
 You can run the generator directly from source:
