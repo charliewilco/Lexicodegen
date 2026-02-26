@@ -1,37 +1,49 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `main.ts`: entrypoint that scans `lexicons/` and generates OpenAPI output.
-- `lib/converters/`: schema and endpoint conversion logic (`array.ts`, `object.ts`, `query.ts`, `procedure.ts`, etc.).
-- `lib/utils.ts`: shared helpers for lexicon loading and tag calculation.
-- `lexicons/`: source lexicon JSON files (fetched/updated from upstream).
-- `output/`: generated artifacts (`openapi.json`, optional `openapi.yaml`).
+- `main.ts`: entrypoint (`load -> IR -> target emitters`) for Swift generation.
+- `lib/lexicon-ir.ts`: namespace-agnostic intermediate representation (IR).
+- `lib/lexicon-loader.ts`: source loading (`local`, `http`, `git-archive`) and filtering.
+- `lib/config.ts`: CLI/config parsing and defaults.
+- `lib/emitter/swift.ts`: Swift emitter (primary output for model workflows).
+- `lib/utils.ts`: shared helpers for tag calculation and legacy compatibility checks.
+- `lexicons/`: source lexicon JSON files (fetched/updated from upstream or configured sources).
+- `output/`: generated artifacts (`swift/*.generated.swift`, etc.).
 - `scripts/get-lexicons.sh`: pulls lexicon files used as generation input.
 
 ## Build, Test, and Development Commands
 - `bun install`: install dependencies.
 - `just help`: list available project tasks.
+- `bun test`: run Bun unit tests.
+- `bunx tsc --noEmit`: typecheck TypeScript.
+- `bunx biome check .`: validate format/lint.
 - `just format`: run Biome formatting on source and generated files.
 - `just lexicons`: refresh local lexicon snapshots.
-- `just generate`: refresh lexicons, then regenerate OpenAPI JSON.
+- `just generate`: refresh lexicons, then regenerate Swift models.
 - `bun run dev`: run generator in watch mode during converter changes.
 - Optional checks:
   - `bunx biome check .` for lint/style checks.
-  - `bunx tsc --noEmit` for type-checking (note: current repo has some pre-existing TS issues).
+  - `bunx tsc --noEmit` for type-checking.
+  - `bun test` for regression coverage.
+  - `bunx biome format --write .` for formatting after generated file updates.
 
 ## Coding Style & Naming Conventions
 - Language: TypeScript (ESM, strict mode).
 - Formatting: Biome (`biome.json`) with tab indentation and double quotes.
-- Keep converter modules focused by lexicon/openapi concern (one converter per schema family).
+- Keep converter modules focused by lexicon concern (one converter per schema family).
 - Use descriptive camelCase function/variable names; keep file names lowercase (`query.ts`, `record.ts`).
 - Avoid broad refactors when making generator-specific fixes; keep changes narrow and reviewable.
 
 ## Testing Guidelines
-- There is no formal test suite yet.
-- Validate changes by running:
-  1. `just generate`
-  2. `just format`
-  3. spot-checking `output/openapi.json` for expected schema/endpoint changes.
+- Unit tests use Bun’s built-in test runner with files under `test/*.test.ts`.
+- Validate feature changes by running:
+  1. `bun test`
+  2. `bunx tsc --noEmit`
+  3. `bunx biome check .`
+  4. `bun run build`
+- For end-to-end generation checks:
+  1. `./lexicodegen ./lexicons --output ./output/swift`
+  2. `bunx biome format --write .` if formatting changed
 - For feature work, include at least one concrete verification example in the PR description (e.g., a generated schema path).
 
 ## Commit & Pull Request Guidelines

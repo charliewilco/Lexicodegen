@@ -1,0 +1,85 @@
+import Foundation
+
+public enum ATProtocolAny: Codable {
+    case string(String)
+    case int(Int)
+    case bool(Bool)
+    case object([String: ATProtocolAny])
+    case array([ATProtocolAny])
+    case null
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+
+        if let value = try? container.decode(String.self) {
+            self = .string(value)
+        } else if let value = try? container.decode(Int.self) {
+            self = .int(value)
+        } else if let value = try? container.decode(Bool.self) {
+            self = .bool(value)
+        } else if let value = try? container.decode([ATProtocolAny].self) {
+            self = .array(value)
+        } else if let value = try? container.decode([String: ATProtocolAny].self) {
+            self = .object(value)
+        } else if container.decodeNil() {
+            self = .null
+        } else {
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unsupported ATProtocolAny payload")
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+
+        switch self {
+        case .string(let value):
+            try container.encode(value)
+        case .int(let value):
+            try container.encode(value)
+        case .bool(let value):
+            try container.encode(value)
+        case .object(let value):
+            try container.encode(value)
+        case .array(let value):
+            try container.encode(value)
+        case .null:
+            try container.encodeNil()
+        }
+    }
+}
+
+public enum NotImplementedError: Error {
+    case unsupported
+}
+
+public protocol LexiconTransport {
+    func execute<T: Decodable>(method: String, path: String, body: Data?) async throws -> T
+}
+
+public final class XRPCClient {
+    private let transport: LexiconTransport?
+    private let encoder: JSONEncoder
+
+    public init(transport: LexiconTransport? = nil, encoder: JSONEncoder = JSONEncoder()) {
+        self.transport = transport
+        self.encoder = encoder
+    }
+
+    public func request<T: Decodable>(
+        method: String,
+        path: String,
+        body: Data? = nil,
+    ) async throws -> T {
+        guard let transport else {
+            throw NotImplementedError.unsupported
+        }
+        return try await transport.execute(method: method, path: path, body: body)
+    }
+
+    public func encodedBody<T: Encodable>(_ value: T?) throws -> Data? {
+        guard let value else {
+            return nil
+        }
+        return try encoder.encode(value)
+    }
+}

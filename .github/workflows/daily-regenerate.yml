@@ -40,9 +40,9 @@ jobs:
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "chore: daily regenerate lexicons and OpenAPI"
-          title: "chore: daily regenerate lexicons and OpenAPI"
+          commit-message: "chore: daily regenerate lexicons and Swift models"
+          title: "chore: daily regenerate lexicons and Swift models"
           body: |
-            Automated daily regeneration of lexicons and OpenAPI output.
+            Automated daily regeneration of lexicons and Swift model output.
           branch: "codex/daily-regenerate"
           delete-branch: true

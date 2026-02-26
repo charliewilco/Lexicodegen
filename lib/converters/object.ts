@@ -23,6 +23,7 @@ export function convertObject(
 			id === "chat.bsky.actor.deleteAccount" ||
 			id === "tools.ozone.set.deleteSet" ||
 			id === "tools.ozone.setting.removeOptions") &&
+		properties != null &&
 		Object.keys(properties).length === 0
 	) {
 		properties = {
@@ -89,7 +90,7 @@ export function convertProperty(
 				// Force them to be a union instead
 				return convertProperty(id, name, {
 					type: "union",
-					refs: property.knownValues!,
+					refs: property.knownValues ?? [],
 				});
 			}
 

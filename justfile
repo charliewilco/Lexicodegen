@@ -3,24 +3,43 @@ help:
 	@just --list
 
 build:
-	bun build ./main.ts --outfile ./dist/main.js --target "bun" --outfile ./dist/main.js --minify
+	bun build --compile --minify --outfile ./lexicodegen ./main.ts
 
-# Format generated OpenAPI, lexicon JSON files, and TypeScript sources.
+# Run TypeScript type-checking.
+typecheck:
+	bunx tsc --noEmit
+
+# Format generated Swift files, lexicon JSON files, and TypeScript sources.
 format:
 	bunx biome format --write .
+
+# Run Biome checks without writing.
+lint:
+	bunx biome check .
 
 # Refresh lexicon JSON files from upstream sources.
 lexicons:
 	sh ./scripts/get-lexicons.sh
 
-# Generate fresh OpenAPI JSON after syncing lexicons.
-generate: lexicons
-	bun run ./main.ts
+test:
+	bun test
 
-# Generate OpenAPI YAML from the generated JSON output.
-yaml: generate
-	yq -Poy ./output/openapi.json > ./output/openapi.yaml
+test-ci:
+	bun test --coverage
 
-# Run full generation flow (JSON + YAML), then format all tracked artifacts.
-all: yaml
+ci:
+	just typecheck
+	just lint
+	bun test
+	bun run build
+
+# Generate from installed executable and current local lexicons.
+generate:
+	./lexicodegen ./lexicons --output ./output/swift
+
+# Refresh upstream lexicons, then regenerate.
+regenerate: lexicons generate
+
+# Run full generation flow, then format all tracked artifacts.
+all: regenerate
 	bunx biome format --write .

@@ -1,0 +1,15 @@
+import Foundation
+
+public extension XRPCClient {
+    <% for (const endpoint of endpoints) { %>
+    public func <%= endpoint.functionName %>(<% if (endpoint.inputType) { %>input: <%= endpoint.inputType %>? = nil<% } %>) async throws -> <%= endpoint.outputType %> {
+        <% if (endpoint.method === "POST") { %>
+        let encodedBody = try encodedBody(input)
+        return try await request(method: "<%= endpoint.method %>", path: "<%= endpoint.path %>", body: encodedBody)
+        <% } else { %>
+        return try await request(method: "<%= endpoint.method %>", path: "<%= endpoint.path %>")
+        <% } %>
+    }
+
+    <% } %>
+}

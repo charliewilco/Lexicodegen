@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import type { LexiconDoc } from "@atproto/lexicon";
 
 export async function loadLexicon(entry: string): Promise<LexiconDoc> {
-	const file = await fs.readFile(entry);
+	const file = await fs.readFile(entry, "utf8");
 	const lexicon = JSON.parse(file) as LexiconDoc;
 
 	return lexicon;
@@ -14,6 +14,14 @@ export function isEmptyObject(object: Record<string, unknown>) {
 
 export function calculateTag(id: string): string {
 	return id.split(".").slice(0, 3).join(".");
+}
+
+export function isGlobPattern(path: string): boolean {
+	return /[*?[\]]/.test(path);
+}
+
+export function isDeprecatedDefinition(description?: string): boolean {
+	return description?.toLowerCase().trim().startsWith("deprecated") ?? false;
 }
 
 export enum Endpoint {

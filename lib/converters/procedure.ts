@@ -1,19 +1,19 @@
 import type { LexXrpcProcedure } from "@atproto/lexicon";
 import type { OpenAPIV3_1 } from "openapi-types";
-import { calculateTag, Endpoint } from "../utils";
+import { calculateTag } from "../utils";
 import { convertObject, convertProperty } from "./object";
 
 export async function convertProcedure(
 	id: string,
 	name: string,
 	procedure: LexXrpcProcedure,
-): Promise<OpenAPIV3_1.OperationObject<"POST"> | undefined> {
+): Promise<OpenAPIV3_1.OperationObject | undefined> {
 	const post = {
 		tags: [calculateTag(id)],
 		...(procedure.description && { description: procedure.description }),
 		operationId: id,
-		security: [{ Bearer: [] }],
-	} as OpenAPIV3_1.OperationObject<"POST">;
+		security: [{ Bearer: [] as string[] }],
+	} as OpenAPIV3_1.OperationObject;
 
 	if (procedure.input) {
 		const input = procedure.input;
@@ -25,13 +25,17 @@ export async function convertProcedure(
 			mediaType.schema =
 				schema.type === "object"
 					? convertObject(id, name, schema)
-					: convertProperty(id, name, schema);
+					: (convertProperty(
+							id,
+							name,
+							schema,
+						) as unknown as OpenAPIV3_1.SchemaObject);
 		}
 
 		const requestBody: OpenAPIV3_1.RequestBodyObject = {
 			required: true,
 			content: {
-				[procedure.input!.encoding]: mediaType,
+				[procedure.input?.encoding ?? "application/json"]: mediaType,
 			},
 		};
 
@@ -50,13 +54,17 @@ export async function convertProcedure(
 			mediaType.schema =
 				schema.type === "object"
 					? convertObject(id, name, schema)
-					: convertProperty(id, name, schema);
+					: (convertProperty(
+							id,
+							name,
+							schema,
+						) as unknown as OpenAPIV3_1.SchemaObject);
 		}
 
 		responses["200"] = {
 			description: "OK",
 			content: {
-				[procedure.output.encoding]: mediaType,
+				[procedure.output.encoding ?? "application/json"]: mediaType,
 			},
 		};
 	} else {

@@ -7,13 +7,13 @@ export async function convertQuery(
 	id: string,
 	name: string,
 	query: LexXrpcQuery,
-): Promise<OpenAPIV3_1.OperationObject<"GET"> | undefined> {
+): Promise<OpenAPIV3_1.OperationObject | undefined> {
 	const get = {
 		tags: [calculateTag(id)],
 		...(query.description && { description: query.description }),
 		operationId: id,
-		security: [{ Bearer: [] }],
-	} as unknown as OpenAPIV3_1.OperationObject<"GET">;
+		security: [{ Bearer: [] as string[] }],
+	} as OpenAPIV3_1.OperationObject;
 
 	if (query.parameters && !isEmptyObject(query.parameters.properties)) {
 		const properties = query.parameters.properties;
@@ -26,16 +26,14 @@ export async function convertQuery(
 			if (containsDeprecated) {
 				continue;
 			}
-			const parameter: OpenAPIV3_1.ParameterObject = {
+			const parameter = {
 				name,
 				in: "query",
 				...(property.description && { description: property.description }),
 				required: required.has(name),
-				// @ts-expect-error FIXME: We know this will never be an ArraySchemaObject
-				// but TypeScript doesn't. Probably just gotta break out the inner parts
-				// of convertProperty more.
-				schema: convertProperty(id, name, property),
-			};
+				// eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+				schema: convertProperty(id, name, property) as unknown,
+			} as OpenAPIV3_1.ParameterObject;
 
 			parameters.push(parameter);
 		}
@@ -58,10 +56,11 @@ export async function convertQuery(
 					: convertProperty(id, name, schema);
 		}
 
+		const responseEncoding = query.output.encoding ?? "application/json";
 		responses["200"] = {
 			description: "OK",
 			content: {
-				[query.output.encoding]: mediaType,
+				[responseEncoding]: mediaType,
 			},
 		};
 	}

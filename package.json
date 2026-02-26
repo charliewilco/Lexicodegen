@@ -1,15 +1,22 @@
 {
-	"name": "lexicon-openapi-generator",
+	"name": "lexicodegen",
 	"module": "main.ts",
 	"type": "module",
+	"bin": {
+		"lexicodegen": "./lexicodegen"
+	},
 	"private": true,
 	"scripts": {
-		"generate": "bun run ./main.ts",
-		"postgenerate": "bunx biome format --write ./output/*.json ./lexicons/**/**/**/*.json",
-		"dev": "bun --watch run ./main.ts"
+		"build": "bun build --compile --minify --outfile lexicodegen main.ts",
+		"generate": "./lexicodegen ./lexicons --output ./output/swift",
+		"postgenerate": "bunx biome format --write ./output/**/*.swift ./lexicons/**/**/**/*.json",
+		"dev": "bun --watch run ./main.ts",
+		"test": "bun test",
+		"test:ci": "bun test --coverage"
 	},
 	"dependencies": {
 		"@atproto/lexicon": "^0.6.1",
+		"ejs": "^3.1.10",
 		"openapi-types": "^12.1.3"
 	},
 	"devDependencies": {
@@ -19,5 +26,6 @@
 	},
 	"peerDependencies": {
 		"typescript": "^5"
-	}
+	},
+	"packageManager": "bun@1.3.9"
 }
