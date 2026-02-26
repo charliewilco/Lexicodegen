@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   regenerate:
@@ -35,24 +36,13 @@ jobs:
       - name: Run full regeneration
         run: just all
 
-      - name: Commit and push changes
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          if git diff --quiet && git diff --cached --quiet; then
-            echo "No changes to commit"
-            exit 0
-          fi
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          git add -A
-
-          if git diff --cached --quiet; then
-            echo "No staged changes to commit"
-            exit 0
-          fi
-
-          git commit -m "chore: daily regenerate lexicons and OpenAPI"
-          git push
+      - name: Create pull request when changes exist
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: daily regenerate lexicons and OpenAPI"
+          title: "chore: daily regenerate lexicons and OpenAPI"
+          body: |
+            Automated daily regeneration of lexicons and OpenAPI output.
+          branch: "codex/daily-regenerate"
+          delete-branch: true

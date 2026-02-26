@@ -6,9 +6,9 @@ import type { OpenAPIV3_1 } from "openapi-types";
 import * as Converters from "./lib/converters/mod";
 import { calculateTag, loadLexicon } from "./lib/utils";
 
-// const IGNORED_IDS = ["com.atproto.lexicon.resolveLexicon"];
+const IGNORED_IDS = ["com.atproto.lexicon.resolveLexicon"];
 
-const IGNORED_IDS: string[] = [];
+// const IGNORED_IDS: string[] = ["com.atproto.lexicon.schema.main"];
 
 type PermissionSetExtension = {
 	scope: string;
