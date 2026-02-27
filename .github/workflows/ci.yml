@@ -20,6 +20,11 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
 
+      - name: Setup Swift
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: "6.0"
+
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
@@ -34,3 +39,15 @@ jobs:
 
       - name: Build executable
         run: bun run build
+
+      - name: Generate Swift output from current lexicons
+        run: ./lexicodegen ./lexicons --output ./output/swift
+
+      - name: Verify generated Swift parses
+        run: |
+          GENERATED_FILES=$(find ./output/swift -name "*.swift")
+          if [ -z "$GENERATED_FILES" ]; then
+            echo "No generated Swift files found"
+            exit 1
+          fi
+          swiftc -parse $GENERATED_FILES
