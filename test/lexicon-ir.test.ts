@@ -75,16 +75,24 @@ describe("buildLexiconIR", () => {
 			},
 		);
 
-		expect(ir.documents.map((doc) => doc.id)).toEqual(["app.bsky.feed.getFeed"]);
+		expect(ir.documents.map((doc) => doc.id)).toEqual([
+			"app.bsky.feed.getFeed",
+		]);
 		expect(ir.endpoints.map((endpoint) => endpoint.fullName)).toEqual([
 			"app.bsky.feed.getFeed.main",
 		]);
 		expect(ir.namedTypes.map((named) => named.fullName)).toEqual([
 			"app.bsky.feed.getFeed.recordType",
 		]);
-		expect(ir.definitionIndex.has("app.bsky.feed.getFeed.recordType")).toBeTrue();
-		expect(ir.definitionIndex.has("app.bsky.feed.getFeed.unspeccedThing")).toBeFalse();
-		expect(ir.definitionIndex.has("app.bsky.feed.getFeed.deprecatedThing")).toBeFalse();
+		expect(
+			ir.definitionIndex.has("app.bsky.feed.getFeed.recordType"),
+		).toBeTrue();
+		expect(
+			ir.definitionIndex.has("app.bsky.feed.getFeed.unspeccedThing"),
+		).toBeFalse();
+		expect(
+			ir.definitionIndex.has("app.bsky.feed.getFeed.deprecatedThing"),
+		).toBeFalse();
 	});
 
 	test("returns deterministic ordering for unsorted documents and definitions", () => {

@@ -7,10 +7,8 @@ function withMockedFetch(
 	const original = globalThis.fetch;
 
 	beforeEach(() => {
-		globalThis.fetch = ((
-			input: RequestInfo | URL,
-			init?: RequestInit,
-		) => Promise.resolve(handler(input, init))) as typeof fetch;
+		globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) =>
+			Promise.resolve(handler(input, init))) as typeof fetch;
 	});
 
 	afterEach(() => {

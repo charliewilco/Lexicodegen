@@ -1,10 +1,10 @@
 import { describe, expect, test } from "bun:test";
+import { spawnSync } from "node:child_process";
 import fs from "node:fs/promises";
 import os from "node:os";
-import { spawnSync } from "node:child_process";
 import path from "node:path";
-import type { IREndpoint, IRNamedType, LexiconIR } from "../lib/lexicon-ir";
 import { emitSwiftFromIR } from "../lib/emitter/swift";
+import type { IREndpoint, IRNamedType, LexiconIR } from "../lib/lexicon-ir";
 
 const mockEndpoint = (
 	fullName: string,
@@ -29,7 +29,7 @@ const mockEndpoint = (
 					output: {
 						schema: { type: "ref", ref: "app.bsky.feed.status" },
 					},
-			  }
+				}
 			: {
 					type: "procedure",
 					input: {
@@ -41,7 +41,7 @@ const mockEndpoint = (
 					output: {
 						schema: { type: "ref", ref: "app.bsky.feed.status" },
 					},
-			  },
+				},
 	method,
 	source: "app.bsky.feed",
 	tag: "app.bsky.feed",
@@ -57,7 +57,9 @@ function hasSwiftCompiler(): boolean {
 
 describe("emitSwiftFromIR", () => {
 	test("writes runtime, grouped models, and endpoints for a basic IR", async () => {
-		const outputDir = await fs.mkdtemp(path.join(os.tmpdir(), "lexicodegen-swift-out-"));
+		const outputDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), "lexicodegen-swift-out-"),
+		);
 		await fs.writeFile(
 			path.join(outputDir, "Legacy.generated.swift"),
 			"stale",
@@ -127,9 +129,7 @@ describe("emitSwiftFromIR", () => {
 			"utf8",
 		);
 
-		expect(appBskyFeed).toContain(
-			"public struct AppBskyFeedPost: Codable",
-		);
+		expect(appBskyFeed).toContain("public struct AppBskyFeedPost: Codable");
 		expect(appBskyFeed).toContain(
 			"public enum AppBskyFeedStatus: String, Codable",
 		);
@@ -139,11 +139,9 @@ describe("emitSwiftFromIR", () => {
 			"utf8",
 		);
 
-		expect(endpoints).toContain(
-			`let encodedBody = try encodedBody(input)`,
-		);
-		expect(endpoints).toContain('public func appbskyfeedget(');
-		expect(endpoints).toContain('public func appbskyfeedcreate(');
+		expect(endpoints).toContain(`let encodedBody = try encodedBody(input)`);
+		expect(endpoints).toContain("public func appbskyfeedget(");
+		expect(endpoints).toContain("public func appbskyfeedcreate(");
 		expect(endpoints).toContain('path: "/xrpc/app.bsky.feed.get"');
 		expect(endpoints).toContain('path: "/xrpc/app.bsky.feed.create"');
 	});
@@ -200,9 +198,7 @@ describe("emitSwiftFromIR", () => {
 						path: "/xrpc/app.bsky.feed.get",
 					},
 				],
-				definitionIndex: new Map([
-					["app.bsky.feed.post", irNamedTypes[0]],
-				]),
+				definitionIndex: new Map([["app.bsky.feed.post", irNamedTypes[0]]]),
 			};
 
 			await emitSwiftFromIR(ir, outputDir);

@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import {
-	Endpoint,
 	calculateTag,
 	checkEndpoint,
+	Endpoint,
 	isDeprecatedDefinition,
 	isEmptyObject,
 	isGlobPattern,
@@ -11,7 +11,9 @@ import {
 describe("utility helpers", () => {
 	test("calculates a tag from lexicon identifier", () => {
 		expect(calculateTag("app.bsky.feed.post")).toBe("app.bsky.feed");
-		expect(calculateTag("com.atproto.admin.reputation")).toBe("com.atproto.admin");
+		expect(calculateTag("com.atproto.admin.reputation")).toBe(
+			"com.atproto.admin",
+		);
 		expect(calculateTag("single")).toBe("single");
 	});
 
@@ -58,7 +60,9 @@ describe("checkEndpoint", () => {
 		}) as typeof fetch;
 
 		expect(await checkEndpoint("exists")).toBe(Endpoint.Public);
-		expect(await checkEndpoint("unauthorized")).toBe(Endpoint.NeedsAuthentication);
+		expect(await checkEndpoint("unauthorized")).toBe(
+			Endpoint.NeedsAuthentication,
+		);
 		expect(await checkEndpoint("missing")).toBe(Endpoint.DoesNotExist);
 	});
 });
