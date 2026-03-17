@@ -4,6 +4,19 @@ Generate Swift `Codable` models and API client stubs from AT Protocol lexicons u
 
 If you come back to this repo after a long pause, this README is the “single source of truth” for how to run, configure, and maintain the project.
 
+## Current build status
+
+As of 2026-03-16, the repository is only partially green:
+
+- `bun run build` passes and emits `dist/main.mjs`.
+- `bun test` fails with 3 test failures:
+  - `test/lexicon-loader.http.test.ts`: 2 async rejection assertions are written incorrectly for Bun’s matcher API.
+  - `test/lexicon-ir.test.ts`: 1 filter expectation no longer matches current IR behavior.
+- `bunx tsc --noEmit` fails in test files with lexicon fixture typing issues and Fetch API type mismatches.
+- `bunx biome check .` completes with 1 warning for an unused `path` parameter in `test/utils.test.ts`.
+
+Treat `bun run build` as the current reliable build signal. `just ci` and the GitHub Actions CI workflow are configured correctly, but they are not currently green because the repo baseline has test and typecheck failures.
+
 ## Why this exists
 
 `lexicon-openapi-generator` evolved from an OpenAPI-first implementation into a **Swift-first** workflow:
@@ -54,8 +67,10 @@ bun run build
 This compiles a single-file executable at:
 
 ```bash
-./lexicodegen
+./dist/main.mjs
 ```
+
+Current state: this command passes.
 
 ## Install executable globally
 
@@ -273,7 +288,7 @@ just help
 # run unit tests
 bun test
 
-# lint/check
+# typecheck + lint/check
 bunx tsc --noEmit
 bunx biome check .
 
@@ -301,6 +316,12 @@ just ci
 - `just test`: runs Bun test suite
 - `just ci`: runs typecheck + lint + tests + build
 
+Current state:
+
+- `just build` equivalent (`bun run build`) passes
+- `just test` currently fails
+- `just ci` currently fails before completion because typecheck/tests are red
+
 ## CI / CD
 
 GitHub Actions is configured for automated checks:
@@ -310,9 +331,16 @@ GitHub Actions is configured for automated checks:
   - Biome checks
   - Bun tests
   - Compile executable
+  - Generate Swift output
+  - Parse generated Swift with `swiftc`
 - `.github/workflows/daily-regenerate.yml`
   - Scheduled + manual trigger
   - Runs `just all` and opens a regeneration PR when changes are detected
+
+Current state:
+
+- The CI workflow reflects the intended verification pipeline.
+- The workflow is expected to fail until the local `bun test` and `bunx tsc --noEmit` failures are fixed.
 
 ## Troubleshooting
 
