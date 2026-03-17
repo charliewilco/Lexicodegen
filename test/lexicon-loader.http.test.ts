@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { afterEach, beforeEach, expect, test } from "bun:test";
 import { loadLexiconsFromSources } from "../lib/lexicon-loader";
 
 function withMockedFetch(
