@@ -149,6 +149,278 @@ describe("emitSwiftFromIR", () => {
 		expect(endpoints).toContain('path: "/xrpc/app.bsky.feed.create"');
 	});
 
+	test("resolves relative refs from named defs against the lexicon id", async () => {
+		const outputDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), "lexicodegen-swift-relative-ref-"),
+		);
+
+		const namedTypes: IRNamedType[] = [
+			{
+				id: "tools.ozone.safelink.defs",
+				name: "event",
+				fullName: "tools.ozone.safelink.defs.event",
+				definition: {
+					type: "object",
+					required: ["action"],
+					properties: {
+						action: {
+							type: "ref",
+							ref: "#actionType",
+						},
+					},
+				},
+				source: "tools.ozone.safelink.defs",
+				tag: "tools.ozone.safelink",
+				type: "object",
+			},
+			{
+				id: "tools.ozone.safelink.defs",
+				name: "actionType",
+				fullName: "tools.ozone.safelink.defs.actionType",
+				definition: {
+					type: "string",
+					knownValues: ["block", "warn"],
+				},
+				source: "tools.ozone.safelink.defs",
+				tag: "tools.ozone.safelink",
+				type: "string",
+			},
+		];
+
+		const ir: LexiconIR = {
+			documents: [],
+			namedTypes,
+			endpoints: [],
+			definitionIndex: new Map<string, IRNamedType>(
+				namedTypes.map((namedType): [string, IRNamedType] => [
+					namedType.fullName,
+					namedType,
+				]),
+			),
+		};
+
+		await emitSwiftFromIR(ir, outputDir);
+
+		const safelinkModels = await fs.readFile(
+			path.join(outputDir, "ToolsOzoneSafelink.generated.swift"),
+			"utf8",
+		);
+
+		expect(safelinkModels).toContain(
+			"public let action: ToolsOzoneSafelinkDefsActionType",
+		);
+		expect(safelinkModels).not.toContain("public let action: ATProtocolAny");
+	});
+
+	test("emits concrete inline union and permission-set models instead of ATProtocolAny aliases", async () => {
+		const outputDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), "lexicodegen-swift-specific-"),
+		);
+
+		const namedTypes: IRNamedType[] = [
+			{
+				id: "app.bsky.embed.images",
+				name: "main",
+				fullName: "app.bsky.embed.images",
+				definition: {
+					type: "object",
+					required: ["images"],
+					properties: {
+						images: {
+							type: "array",
+							items: { type: "string" },
+						},
+					},
+				},
+				source: "app.bsky.embed",
+				tag: "app.bsky.embed",
+				type: "object",
+			},
+			{
+				id: "app.bsky.embed.external",
+				name: "main",
+				fullName: "app.bsky.embed.external",
+				definition: {
+					type: "object",
+					required: ["uri"],
+					properties: {
+						uri: { type: "string" },
+					},
+				},
+				source: "app.bsky.embed",
+				tag: "app.bsky.embed",
+				type: "object",
+			},
+			{
+				id: "app.bsky.feed.post",
+				name: "main",
+				fullName: "app.bsky.feed.post",
+				definition: {
+					type: "record",
+					record: {
+						type: "object",
+						required: ["createdAt"],
+						properties: {
+							embed: {
+								type: "union",
+								refs: ["app.bsky.embed.images", "app.bsky.embed.external"],
+							},
+							createdAt: { type: "string" },
+						},
+					},
+				},
+				source: "app.bsky.feed",
+				tag: "app.bsky.feed",
+				type: "record",
+			},
+			{
+				id: "app.bsky.authViewAll",
+				name: "main",
+				fullName: "app.bsky.authViewAll",
+				definition: {
+					type: "permission-set",
+				},
+				source: "app.bsky.authViewAll",
+				tag: "app.bsky.authViewAll",
+				type: "permission-set",
+			},
+		];
+
+		const ir: LexiconIR = {
+			documents: [],
+			namedTypes,
+			endpoints: [],
+			definitionIndex: new Map<string, IRNamedType>(
+				namedTypes.map((namedType): [string, IRNamedType] => [
+					namedType.fullName,
+					namedType,
+				]),
+			),
+		};
+
+		await emitSwiftFromIR(ir, outputDir);
+
+		const feedModels = await fs.readFile(
+			path.join(outputDir, "AppBskyFeed.generated.swift"),
+			"utf8",
+		);
+		expect(feedModels).toContain("public enum AppBskyFeedPostEmbed: Codable");
+		expect(feedModels).toContain("public let embed: AppBskyFeedPostEmbed?");
+		expect(feedModels).toContain("case option0(AppBskyEmbedImages)");
+		expect(feedModels).toContain("case option1(AppBskyEmbedExternal)");
+
+		const authModels = await fs.readFile(
+			path.join(outputDir, "AppBskyAuthViewAll.generated.swift"),
+			"utf8",
+		);
+		expect(authModels).toContain("public struct AppBskyAuthViewAll: Codable");
+		expect(authModels).toContain(
+			"public let permissions: [AppBskyAuthViewAllPermission]",
+		);
+		expect(authModels).not.toContain(
+			"typealias AppBskyAuthViewAll = ATProtocolAny",
+		);
+
+		const runtime = await fs.readFile(
+			path.join(outputDir, "Models.swift"),
+			"utf8",
+		);
+		expect(runtime).toContain("public enum ATProtocolPermissionValue: Codable");
+	});
+
+	test("emits params models and empty objects without widening to ATProtocolAny", async () => {
+		const outputDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), "lexicodegen-swift-params-"),
+		);
+
+		const namedTypes: IRNamedType[] = [
+			{
+				id: "com.example.defs",
+				name: "target",
+				fullName: "com.example.defs.target",
+				definition: {
+					type: "object",
+					required: ["id"],
+					properties: {
+						id: { type: "string" },
+					},
+				},
+				source: "com.example.defs",
+				tag: "com.example.defs",
+				type: "object",
+			},
+			{
+				id: "com.example.defs",
+				name: "empty",
+				fullName: "com.example.defs.empty",
+				definition: {
+					type: "object",
+					properties: {},
+				},
+				source: "com.example.defs",
+				tag: "com.example.defs",
+				type: "object",
+			},
+		];
+
+		const ir: LexiconIR = {
+			documents: [],
+			namedTypes,
+			endpoints: [
+				{
+					id: "com.example.query",
+					name: "main",
+					fullName: "com.example.query",
+					definition: {
+						type: "query",
+						parameters: {
+							type: "params",
+							required: ["subject"],
+							properties: {
+								subject: { type: "ref", ref: "com.example.defs#target" },
+							},
+						},
+					},
+					method: "query",
+					source: "com.example.query",
+					tag: "com.example.query",
+					path: "/xrpc/com.example.query",
+				},
+			],
+			definitionIndex: new Map<string, IRNamedType>(
+				namedTypes.map((namedType): [string, IRNamedType] => [
+					namedType.fullName,
+					namedType,
+				]),
+			),
+		};
+
+		await emitSwiftFromIR(ir, outputDir);
+
+		const exampleDefs = await fs.readFile(
+			path.join(outputDir, "ComExampleDefs.generated.swift"),
+			"utf8",
+		);
+		expect(exampleDefs).toContain(
+			"public struct ComExampleDefsEmpty: Codable {}",
+		);
+		expect(exampleDefs).not.toContain(
+			"typealias ComExampleDefsEmpty = [String: ATProtocolAny]",
+		);
+
+		const endpoints = await fs.readFile(
+			path.join(outputDir, "Endpoints.swift"),
+			"utf8",
+		);
+		expect(endpoints).toContain("input: ComExampleQueryParameters? = nil");
+
+		const queryModels = await fs.readFile(
+			path.join(outputDir, "ComExampleQuery.generated.swift"),
+			"utf8",
+		);
+		expect(queryModels).toContain("public let subject: ComExampleDefsTarget");
+	});
+
 	(hasSwiftCompiler() ? test : test.skip)(
 		"generates compilable swift output",
 		async () => {
@@ -170,6 +442,10 @@ describe("emitSwiftFromIR", () => {
 							count: {
 								type: "integer",
 							},
+							embed: {
+								type: "union",
+								refs: ["app.bsky.feed.image", "app.bsky.feed.link"],
+							},
 						},
 						required: ["title"],
 					},
@@ -177,12 +453,49 @@ describe("emitSwiftFromIR", () => {
 					tag: "app.bsky.feed",
 					type: "object",
 				},
+				{
+					id: "app.bsky.feed",
+					name: "image",
+					fullName: "app.bsky.feed.image",
+					definition: {
+						type: "object",
+						required: ["url"],
+						properties: {
+							url: { type: "string" },
+						},
+					},
+					source: "app.bsky.feed",
+					tag: "app.bsky.feed",
+					type: "object",
+				},
+				{
+					id: "app.bsky.feed",
+					name: "link",
+					fullName: "app.bsky.feed.link",
+					definition: {
+						type: "object",
+						required: ["href"],
+						properties: {
+							href: { type: "string" },
+						},
+					},
+					source: "app.bsky.feed",
+					tag: "app.bsky.feed",
+					type: "object",
+				},
+				{
+					id: "app.bsky.authViewAll",
+					name: "main",
+					fullName: "app.bsky.authViewAll",
+					definition: {
+						type: "permission-set",
+					},
+					source: "app.bsky.authViewAll",
+					tag: "app.bsky.authViewAll",
+					type: "permission-set",
+				},
 			];
 
-			const [n] = irNamedTypes;
-			if (!n) {
-				throw new Error("expected at least one named type");
-			}
 			const ir: LexiconIR = {
 				documents: [],
 				namedTypes: irNamedTypes,
@@ -206,7 +519,12 @@ describe("emitSwiftFromIR", () => {
 						path: "/xrpc/app.bsky.feed.get",
 					},
 				],
-				definitionIndex: new Map([["app.bsky.feed.post", n]]),
+				definitionIndex: new Map(
+					irNamedTypes.map((namedType): [string, IRNamedType] => [
+						namedType.fullName,
+						namedType,
+					]),
+				),
 			};
 
 			await emitSwiftFromIR(ir, outputDir);

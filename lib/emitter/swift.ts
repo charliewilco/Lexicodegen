@@ -9,11 +9,13 @@ type RawLexiconSchema = {
 	type: string;
 	description?: string;
 	required?: string[];
+	nullable?: string[];
 	properties?: Record<string, RawLexiconSchema>;
 	items?: RawLexiconSchema;
 	knownValues?: string[];
 	refs?: string[];
 	record?: RawLexiconSchema;
+	permissions?: RawLexiconSchema[];
 };
 
 type SwiftModel = {
@@ -146,7 +148,8 @@ function primitiveSwiftType(schema: RawLexiconSchema): string {
 
 function mapSchemaToSwiftType(
 	schema: RawLexiconSchema | undefined,
-	currentId: string,
+	refBase: string,
+	nameContext: string,
 	group: string,
 	definitions: Map<string, IRNamedType>,
 	generated: Map<string, SwiftModel>,
@@ -156,14 +159,15 @@ function mapSchemaToSwiftType(
 	}
 
 	if (schema.type === "ref" && "ref" in schema) {
-		const target = normalizeRef((schema as { ref: string }).ref, currentId);
+		const target = normalizeRef((schema as { ref: string }).ref, refBase);
 		return definitions.has(target) ? modelName(target) : unknownType();
 	}
 
 	if (schema.type === "array" && schema.items) {
 		return `[${mapSchemaToSwiftType(
 			schema.items,
-			currentId,
+			refBase,
+			`${nameContext} Item`,
 			group,
 			definitions,
 			generated,
@@ -171,10 +175,10 @@ function mapSchemaToSwiftType(
 	}
 
 	if (schema.type === "record" && schema.record) {
-		const nested = `RecordFor${toPascalCase(currentId)}`;
 		return mapSchemaToSwiftType(
 			schema.record,
-			nested,
+			refBase,
+			`${nameContext} Record`,
 			group,
 			definitions,
 			generated,
@@ -182,12 +186,28 @@ function mapSchemaToSwiftType(
 	}
 
 	if (schema.type === "union") {
-		return unknownType();
+		return buildUnionDeclaration(
+			nameContext,
+			schema.refs ?? [],
+			refBase,
+			group,
+			definitions,
+			generated,
+		);
 	}
 
-	if (schema.type === "object" && schema.properties) {
-		const name = toPascalCase(`${currentId}Properties`);
-		return buildObjectDeclaration(name, schema, group, definitions, generated);
+	if (
+		(schema.type === "object" || schema.type === "params") &&
+		schema.properties
+	) {
+		return buildObjectDeclaration(
+			`${nameContext}Properties`,
+			schema,
+			refBase,
+			group,
+			definitions,
+			generated,
+		);
 	}
 
 	if (
@@ -196,7 +216,7 @@ function mapSchemaToSwiftType(
 		schema.knownValues.length > 0
 	) {
 		const unionName = toPascalCase(
-			`${currentId} ${schema.knownValues.join(" ").slice(0, 8)}`,
+			`${nameContext} ${schema.knownValues.join(" ").slice(0, 8)}`,
 		);
 		return ensureAlias(
 			generated,
@@ -217,6 +237,7 @@ function mapSchemaToSwiftType(
 function buildObjectDeclaration(
 	fullName: string,
 	schema: RawLexiconSchema,
+	refBase: string,
 	group: string,
 	definitions: Map<string, IRNamedType>,
 	generated: Map<string, SwiftModel>,
@@ -224,13 +245,14 @@ function buildObjectDeclaration(
 	const name = modelName(fullName);
 	const properties = schema.properties ?? {};
 	const required = new Set(schema.required ?? []);
+	const nullable = new Set(schema.nullable ?? []);
 	const keys = Object.keys(properties).sort();
 
 	if (keys.length === 0) {
 		return ensureAlias(
 			generated,
 			name,
-			`public typealias ${name} = [String: ATProtocolAny]`,
+			`public struct ${name}: Codable {}`,
 			group,
 		);
 	}
@@ -247,13 +269,14 @@ function buildObjectDeclaration(
 
 		const swiftType = mapSchemaToSwiftType(
 			property,
-			fullName,
+			refBase,
+			`${fullName} ${key}`,
 			group,
 			definitions,
 			generated,
 		);
 		const propertyName = toSwiftSafeIdentifier(toCamelCase(key));
-		const optionalSuffix = required.has(key) ? "" : "?";
+		const optionalSuffix = required.has(key) && !nullable.has(key) ? "" : "?";
 		return [`\tpublic let ${propertyName}: ${swiftType}${optionalSuffix}`];
 	});
 
@@ -299,6 +322,7 @@ function buildRecordDeclaration(
 	return buildObjectDeclaration(
 		named.fullName,
 		record.record,
+		named.id,
 		group,
 		definitions,
 		generated,
@@ -308,6 +332,7 @@ function buildRecordDeclaration(
 function buildUnionDeclaration(
 	fullName: string,
 	refs: string[],
+	refBase: string,
 	group: string,
 	definitions: Map<string, IRNamedType>,
 	generated: Map<string, SwiftModel>,
@@ -323,21 +348,129 @@ function buildUnionDeclaration(
 	}
 
 	const cases = refs.map((ref, index) => {
-		const target = normalizeRef(ref, fullName);
+		const target = normalizeRef(ref, refBase);
 		const caseType = definitions.has(target)
 			? modelName(target)
 			: unknownType();
 		return `\tcase option${index}(${caseType})`;
 	});
 
+	const decoderBranches = refs.map((ref, index) => {
+		const target = normalizeRef(ref, refBase);
+		const caseType = definitions.has(target)
+			? modelName(target)
+			: unknownType();
+		return `\t\tif let value = try? container.decode(${caseType}.self) {\n\t\t\tself = .option${index}(value)\n\t\t\treturn\n\t\t}`;
+	});
+
+	const encoderBranches = refs.map(
+		(_, index) =>
+			`\t\tcase .option${index}(let value):\n\t\t\ttry container.encode(value)`,
+	);
+
 	const body = [
 		`public enum ${name}: Codable {`,
 		...cases,
 		"\tcase unknown(ATProtocolAny)",
+		"",
+		"\tpublic init(from decoder: Decoder) throws {",
+		"\t\tlet container = try decoder.singleValueContainer()",
+		"",
+		...decoderBranches,
+		"",
+		"\t\tself = .unknown(try container.decode(ATProtocolAny.self))",
+		"\t}",
+		"",
+		"\tpublic func encode(to encoder: Encoder) throws {",
+		"\t\tvar container = encoder.singleValueContainer()",
+		"",
+		"\t\tswitch self {",
+		...encoderBranches,
+		"\t\tcase .unknown(let value):",
+		"\t\t\ttry container.encode(value)",
+		"\t\t}",
+		"\t}",
 		"}",
 	].join("\n");
 
 	return ensureAlias(generated, name, body, group);
+}
+
+function buildPermissionSetDeclaration(
+	named: IRNamedType,
+	group: string,
+	generated: Map<string, SwiftModel>,
+): string {
+	const name = modelName(named.fullName);
+	const permissionName = `${name}Permission`;
+
+	ensureAlias(
+		generated,
+		permissionName,
+		[
+			`public struct ${permissionName}: Codable {`,
+			"\tpublic let type: String",
+			"\tpublic let resource: String",
+			"\tpublic let additionalProperties: [String: ATProtocolPermissionValue]",
+			"",
+			"\tprivate enum CodingKeys: String, CodingKey {",
+			'\t\tcase type = "type"',
+			'\t\tcase resource = "resource"',
+			"\t}",
+			"",
+			"\tpublic init(from decoder: Decoder) throws {",
+			"\t\tlet container = try decoder.container(keyedBy: CodingKeys.self)",
+			"\t\ttype = try container.decode(String.self, forKey: .type)",
+			"\t\tresource = try container.decode(String.self, forKey: .resource)",
+			"",
+			"\t\tlet dynamicContainer = try decoder.container(keyedBy: ATProtocolDynamicCodingKey.self)",
+			"\t\tvar extras: [String: ATProtocolPermissionValue] = [:]",
+			"\t\tfor key in dynamicContainer.allKeys where CodingKeys(stringValue: key.stringValue) == nil {",
+			"\t\t\textras[key.stringValue] = try dynamicContainer.decode(ATProtocolPermissionValue.self, forKey: key)",
+			"\t\t}",
+			"\t\tadditionalProperties = extras",
+			"\t}",
+			"",
+			"\tpublic func encode(to encoder: Encoder) throws {",
+			"\t\tvar container = encoder.container(keyedBy: CodingKeys.self)",
+			"\t\ttry container.encode(type, forKey: .type)",
+			"\t\ttry container.encode(resource, forKey: .resource)",
+			"",
+			"\t\tvar dynamicContainer = encoder.container(keyedBy: ATProtocolDynamicCodingKey.self)",
+			"\t\tfor (key, value) in additionalProperties {",
+			"\t\t\tguard let codingKey = ATProtocolDynamicCodingKey(stringValue: key) else { continue }",
+			"\t\t\ttry dynamicContainer.encode(value, forKey: codingKey)",
+			"\t\t}",
+			"\t}",
+			"}",
+		].join("\n"),
+		group,
+	);
+
+	return ensureAlias(
+		generated,
+		name,
+		[
+			`public struct ${name}: Codable {`,
+			"\tpublic let description: String?",
+			"\tpublic let title: String?",
+			"\tpublic let titleLang: [String: String]?",
+			"\tpublic let detail: String?",
+			"\tpublic let detailLang: [String: String]?",
+			`\tpublic let permissions: [${permissionName}]`,
+			"",
+			"\tprivate enum CodingKeys: String, CodingKey {",
+			'\t\tcase description = "description"',
+			'\t\tcase title = "title"',
+			'\t\tcase titleLang = "title:lang"',
+			'\t\tcase detail = "detail"',
+			'\t\tcase detailLang = "detail:lang"',
+			'\t\tcase permissions = "permissions"',
+			"\t}",
+			"}",
+		].join("\n"),
+		group,
+	);
 }
 
 function emitNamedType(
@@ -356,6 +489,7 @@ function emitNamedType(
 			return buildObjectDeclaration(
 				named.fullName,
 				named.definition as RawLexiconSchema,
+				named.id,
 				group,
 				definitions,
 				generated,
@@ -364,7 +498,8 @@ function emitNamedType(
 			const schema = named.definition as RawLexiconSchema;
 			const element = mapSchemaToSwiftType(
 				schema.items,
-				named.fullName,
+				named.id,
+				`${named.fullName} Item`,
 				group,
 				definitions,
 				generated,
@@ -413,17 +548,13 @@ function emitNamedType(
 			return buildUnionDeclaration(
 				named.fullName,
 				(named.definition as RawLexiconSchema).refs ?? [],
+				named.id,
 				group,
 				definitions,
 				generated,
 			);
 		case "permission-set":
-			return ensureAlias(
-				generated,
-				modelName(named.fullName),
-				`public typealias ${modelName(named.fullName)} = ATProtocolAny`,
-				group,
-			);
+			return buildPermissionSetDeclaration(named, group, generated);
 		default:
 			return ensureAlias(
 				generated,
@@ -447,9 +578,19 @@ function schemaFromEndpointInput(
 		return null;
 	}
 
-	if (container.type === "object" && container.properties) {
+	if (
+		(container.type === "object" || container.type === "params") &&
+		container.properties
+	) {
 		const target = modelName(`${endpointName} ${typePrefix}`);
-		buildObjectDeclaration(target, container, group, definitions, generated);
+		buildObjectDeclaration(
+			target,
+			container,
+			normalizedBase,
+			group,
+			definitions,
+			generated,
+		);
 		return target;
 	}
 
@@ -458,6 +599,7 @@ function schemaFromEndpointInput(
 		buildObjectDeclaration(
 			target,
 			container.record,
+			normalizedBase,
 			group,
 			definitions,
 			generated,
@@ -469,6 +611,7 @@ function schemaFromEndpointInput(
 		const element = mapSchemaToSwiftType(
 			container.items,
 			normalizedBase,
+			`${endpointName} ${typePrefix} Item`,
 			group,
 			definitions,
 			generated,
@@ -485,6 +628,7 @@ function schemaFromEndpointInput(
 	return mapSchemaToSwiftType(
 		container,
 		normalizedBase,
+		`${endpointName} ${typePrefix}`,
 		group,
 		definitions,
 		generated,
@@ -519,7 +663,7 @@ function buildEndpointModel(
 		inputContainer,
 		endpoint.fullName,
 		group,
-		base,
+		endpoint.id,
 		definitions,
 		generated,
 		endpoint.method === "query" ? "Parameters" : "Input",
@@ -529,6 +673,7 @@ function buildEndpointModel(
 		? mapSchemaToSwiftType(
 				def.output.schema,
 				endpoint.id,
+				`${endpoint.fullName} Output`,
 				group,
 				definitions,
 				generated,
