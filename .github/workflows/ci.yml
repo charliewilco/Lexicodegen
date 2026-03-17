@@ -23,7 +23,7 @@ jobs:
       - name: Setup Swift
         uses: swift-actions/setup-swift@v2
         with:
-          swift-version: "6.0"
+          swift-version: "6.2"
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -41,7 +41,7 @@ jobs:
         run: bun run build
 
       - name: Generate Swift output from current lexicons
-        run: ./lexicodegen ./lexicons --output ./output/swift
+        run: bun run generate
 
       - name: Verify generated Swift parses
         run: |

@@ -3,19 +3,19 @@
 	"module": "main.ts",
 	"type": "module",
 	"bin": {
-		"lexicodegen": "./lexicodegen"
+		"lexicodegen": "./main.ts"
 	},
 	"private": true,
 	"scripts": {
-		"build": "bun build --compile --minify --outfile ./lexicodegen ./main.ts",
-		"generate": "./lexicodegen ./lexicons --output ./output/swift",
+		"build": "bun build ./main.ts --target bun --outfile ./dist/main.mjs",
+		"generate": "bun ./main.ts ./lexicons --output ./output/swift",
 		"postgenerate": "bunx biome format --write ./output/**/*.swift ./lexicons/**/**/**/*.json",
 		"dev": "bun --watch run ./main.ts",
 		"test": "bun test",
 		"test:ci": "bun test --coverage"
 	},
 	"dependencies": {
-		"@atproto/lexicon": "^0.6.1",
+		"@atproto/lexicon": "^0.6.2",
 		"ejs": "4.0.1"
 	},
 	"devDependencies": {

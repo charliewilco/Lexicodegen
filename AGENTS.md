@@ -21,6 +21,11 @@
 - `just lexicons`: refresh local lexicon snapshots.
 - `just generate`: refresh lexicons, then regenerate Swift models.
 - `bun run dev`: run generator in watch mode during converter changes.
+- Current baseline as of `2026-03-16`:
+  - `bun run build` passes.
+  - `bun test` fails with 3 test failures in `test/lexicon-loader.http.test.ts` and `test/lexicon-ir.test.ts`.
+  - `bunx tsc --noEmit` fails in test files due to fixture typing and Fetch API type issues.
+  - `bunx biome check .` reports 1 warning in `test/utils.test.ts` for an unused parameter.
 - Optional checks:
   - `bunx biome check .` for lint/style checks.
   - `bunx tsc --noEmit` for type-checking.
@@ -41,6 +46,9 @@
   2. `bunx tsc --noEmit`
   3. `bunx biome check .`
   4. `bun run build`
+- Repository status note:
+  - Do not assume the baseline is green. Today, only `bun run build` is passing cleanly.
+  - If your change is documentation-only, you can skip checks, but if you do run them, report the known baseline failures separately from regressions introduced by your work.
 - For end-to-end generation checks:
   1. `./lexicodegen ./lexicons --output ./output/swift`
   2. `bunx biome format --write .` if formatting changed

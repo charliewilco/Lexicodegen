@@ -3,7 +3,7 @@ help:
 	@just --list
 
 build:
-	bun build --compile --minify --outfile ./lexicodegen ./main.ts
+	bun build ./main.ts --target bun --outfile ./dist/main.mjs
 
 # Run TypeScript type-checking.
 typecheck:
@@ -35,7 +35,7 @@ ci:
 
 # Generate from installed executable and current local lexicons.
 generate:
-	./lexicodegen ./lexicons --output ./output/swift
+	bun ./main.ts ./lexicons --output ./output/swift
 
 # Refresh upstream lexicons, then regenerate.
 regenerate: lexicons generate
@@ -43,3 +43,7 @@ regenerate: lexicons generate
 # Run full generation flow, then format all tracked artifacts.
 all: regenerate
 	bunx biome format --write .
+
+clean:
+	rm -rf ./dist
+	rm -rf ./output/swift

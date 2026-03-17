@@ -41,7 +41,7 @@ async function collectFromHttp(url: string): Promise<LexiconDoc[]> {
 	const contentType = response.headers.get("content-type") ?? "";
 	const body = await response.text();
 
-	if (!contentType.includes("json") && contentType === "") {
+	if (!contentType.includes("json")) {
 		throw new Error(
 			`Expected JSON response from ${url} but got ${contentType}`,
 		);

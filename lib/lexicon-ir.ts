@@ -176,6 +176,10 @@ export function buildLexiconIR(
 			}
 		}
 
+		if (docNamedTypes.length === 0 && docEndpoints.length === 0) {
+			continue;
+		}
+
 		byLexicon.push({
 			id: doc.id,
 			source: doc.id,
