@@ -38,7 +38,7 @@ describe("utility helpers", () => {
 describe("checkEndpoint", () => {
 	const originalFetch = globalThis.fetch;
 
-	const mocked = (path: string, status: number) =>
+	const mocked = (_path: string, status: number) =>
 		new Response(null, {
 			status,
 		});
@@ -49,7 +49,8 @@ describe("checkEndpoint", () => {
 
 	test("maps status codes to Endpoint enum values", async () => {
 		globalThis.fetch = (async (input) => {
-			const request = new Request(input);
+			const request =
+				input instanceof Request ? input : new Request(String(input));
 			if (request.url.endsWith("/xrpc/exists")) {
 				return mocked(request.url, 200);
 			}

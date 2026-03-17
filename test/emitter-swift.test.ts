@@ -111,8 +111,11 @@ describe("emitSwiftFromIR", () => {
 				mockEndpoint("app.bsky.feed.get", "query"),
 				mockEndpoint("app.bsky.feed.create", "procedure"),
 			],
-			definitionIndex: new Map(
-				namedTypes.map((namedType) => [namedType.fullName, namedType]),
+			definitionIndex: new Map<string, IRNamedType>(
+				namedTypes.map((namedType): [string, IRNamedType] => [
+					namedType.fullName,
+					namedType,
+				]),
 			),
 		};
 
@@ -152,6 +155,7 @@ describe("emitSwiftFromIR", () => {
 			const outputDir = await fs.mkdtemp(
 				path.join(os.tmpdir(), "lexicodegen-swift-compile-"),
 			);
+
 			const irNamedTypes: IRNamedType[] = [
 				{
 					id: "app.bsky.feed.post",
@@ -175,6 +179,10 @@ describe("emitSwiftFromIR", () => {
 				},
 			];
 
+			const [n] = irNamedTypes;
+			if (!n) {
+				throw new Error("expected at least one named type");
+			}
 			const ir: LexiconIR = {
 				documents: [],
 				namedTypes: irNamedTypes,
@@ -198,7 +206,7 @@ describe("emitSwiftFromIR", () => {
 						path: "/xrpc/app.bsky.feed.get",
 					},
 				],
-				definitionIndex: new Map([["app.bsky.feed.post", irNamedTypes[0]]]),
+				definitionIndex: new Map([["app.bsky.feed.post", n]]),
 			};
 
 			await emitSwiftFromIR(ir, outputDir);

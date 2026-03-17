@@ -1,13 +1,15 @@
 import { afterEach, beforeEach, expect, test } from "bun:test";
 import { loadLexiconsFromSources } from "../lib/lexicon-loader";
 
+type FetchInput = Parameters<typeof fetch>[0];
+
 function withMockedFetch(
-	handler: (_input: RequestInfo | URL, _init?: RequestInit) => Response,
+	handler: (_input: FetchInput, _init?: RequestInit) => Response,
 ) {
 	const original = globalThis.fetch;
 
 	beforeEach(() => {
-		globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) =>
+		globalThis.fetch = ((input: FetchInput, init?: RequestInit) =>
 			Promise.resolve(handler(input, init))) as typeof fetch;
 	});
 
@@ -62,21 +64,21 @@ test("loads lexicons from HTTP source and parses array payloads", async () => {
 });
 
 test("throws with a wrapped error for failed HTTP source responses", async () => {
-	await expect(async () => {
-		await loadLexiconsFromSources([
+	await expect(
+		loadLexiconsFromSources([
 			{ kind: "http", url: "https://example.com/not-found.json" },
-		]);
-	}).rejects.toThrow(
+		]),
+	).rejects.toThrow(
 		"Failed to load source http: Failed to load https://example.com/not-found.json",
 	);
 });
 
 test("throws with a wrapped error for non-json payloads", async () => {
-	await expect(async () => {
-		await loadLexiconsFromSources([
+	await expect(
+		loadLexiconsFromSources([
 			{ kind: "http", url: "https://example.com/non-json" },
-		]);
-	}).rejects.toThrow(
+		]),
+	).rejects.toThrow(
 		"Failed to load source http: Expected JSON response from https://example.com/non-json but got ",
 	);
 });
