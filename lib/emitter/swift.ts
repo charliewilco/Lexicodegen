@@ -2,19 +2,13 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import ejs from "ejs";
 
-import type { IREndpoint, IRNamedType, LexiconIR } from "../lexicon-ir";
+import type {
+	IREndpoint,
+	IRNamedType,
+	LexiconIR,
+	RawLexiconSchema,
+} from "../lexicon-ir";
 import { normalizeRef } from "../lexicon-ir";
-
-type RawLexiconSchema = {
-	type: string;
-	description?: string;
-	required?: string[];
-	properties?: Record<string, RawLexiconSchema>;
-	items?: RawLexiconSchema;
-	knownValues?: string[];
-	refs?: string[];
-	record?: RawLexiconSchema;
-};
 
 type SwiftModel = {
 	name: string;
@@ -22,13 +16,35 @@ type SwiftModel = {
 	group: string;
 };
 
-type EndpointModel = {
+type GeneratedContext = {
+	definitions: Map<string, IRNamedType>;
+	models: Map<string, SwiftModel>;
+};
+
+type EndpointSurface = {
 	id: string;
+	namespaceSegments: string[];
+	functionName: string;
 	method: "GET" | "POST";
 	path: string;
-	functionName: string;
+	kind: "query" | "procedure" | "subscription";
 	inputType: string | null;
-	outputType: string;
+	outputType: string | null;
+	errorType: string | null;
+	inputEncoding?: string;
+};
+
+type NamespaceNode = {
+	segment: string;
+	prefix: string[];
+	children: Map<string, NamespaceNode>;
+	endpoints: EndpointSurface[];
+};
+
+type ObjectDeclarationOptions = {
+	typeIdentifier?: string;
+	queryEncodable?: boolean;
+	protocols?: string[];
 };
 
 const SWIFT_RESERVED_WORDS = new Set([
@@ -70,38 +86,43 @@ function toSwiftSafeIdentifier(input: string): string {
 		.replace(/[^a-zA-Z0-9_]/g, "_")
 		.replace(/^([0-9])/, "_$1");
 	if (SWIFT_RESERVED_WORDS.has(replaced)) {
-		return `${replaced}_`;
+		return `\`${replaced}\``;
 	}
 	return replaced;
 }
 
 function toPascalCase(input: string): string {
 	const parts = input
-		.split(/[^a-zA-Z0-9]+/)
+		.replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+		.split(/[^a-zA-Z0-9]+|\s+/)
 		.filter((part) => part.length > 0)
 		.map((part) => part.charAt(0).toUpperCase() + part.slice(1));
-	return toSwiftSafeIdentifier(parts.join("") || "Item");
+	return parts.join("") || "Item";
 }
 
 function toCamelCase(input: string): string {
 	const parts = input
-		.split(/[^a-zA-Z0-9]+/)
+		.replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+		.split(/[^a-zA-Z0-9]+|\s+/)
 		.filter((part) => part.length > 0)
 		.map((part) => part.toLowerCase());
-	if (parts.length === 0) return "item";
-	const head = parts.shift();
-	if (!head) {
+
+	if (parts.length === 0) {
 		return "item";
 	}
-	return `${head}${parts.map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join("")}`;
+
+	const [head, ...tail] = parts;
+	return toSwiftSafeIdentifier(
+		`${head}${tail.map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join("")}`,
+	);
 }
 
 function modelName(fullName: string): string {
 	return fullName.split(".").map(toPascalCase).join("");
 }
 
-function unknownType(): string {
-	return "ATProtocolAny";
+function typealiasBody(name: string, target: string): string {
+	return `public typealias ${name} = ${target}`;
 }
 
 function modelGroupFromId(id: string): string {
@@ -113,19 +134,62 @@ function modelFileName(group: string): string {
 	return `${toPascalCase(group)}.generated.swift`;
 }
 
-function ensureAlias(
-	names: Map<string, SwiftModel>,
+function ensureModel(
+	models: Map<string, SwiftModel>,
 	name: string,
 	body: string,
 	group: string,
 ): string {
-	if (!names.has(name)) {
-		names.set(name, { name, body, group });
+	if (!models.has(name)) {
+		models.set(name, { name, body, group });
 	}
 	return name;
 }
 
+function propertySwiftName(key: string): string {
+	if (key === "$type") {
+		return "typeIdentifier";
+	}
+	return toCamelCase(key);
+}
+
+function isRequired(schema: RawLexiconSchema, key: string): boolean {
+	return (schema.required ?? []).includes(key);
+}
+
+function isNullable(schema: RawLexiconSchema, key: string): boolean {
+	return (schema.nullable ?? []).includes(key);
+}
+
 function primitiveSwiftType(schema: RawLexiconSchema): string {
+	const format =
+		typeof schema.format === "string" ? schema.format.toLowerCase() : undefined;
+
+	if (schema.type === "string") {
+		switch (format) {
+			case "cid":
+				return "CID";
+			case "datetime":
+				return "ATProtocolDate";
+			case "did":
+				return "DID";
+			case "handle":
+				return "Handle";
+			case "tid":
+				return "TID";
+			case "at-identifier":
+				return "ATIdentifier";
+			case "at-uri":
+				return "ATURI";
+			case "nsid":
+				return "NSID";
+			case "record-key":
+				return "RecordKey";
+			default:
+				return "String";
+		}
+	}
+
 	switch (schema.type) {
 		case "integer":
 			return "Int";
@@ -133,416 +197,775 @@ function primitiveSwiftType(schema: RawLexiconSchema): string {
 			return "Bool";
 		case "number":
 			return "Double";
-		case "bytes":
 		case "blob":
+			return "Blob";
+		case "bytes":
+			return "Bytes";
 		case "cid-link":
+			return "CID";
 		case "token":
-		case "string":
 			return "String";
+		case "unknown":
+			return "ATProtocolValueContainer";
 		default:
-			return unknownType();
+			return "ATProtocolValueContainer";
 	}
+}
+
+function typeIdentifierForNamedType(named: IRNamedType): string {
+	return named.name === "main" ? named.id : `${named.id}#${named.name}`;
+}
+
+function uniqueCaseName(existing: Set<string>, input: string): string {
+	let candidate = toCamelCase(input);
+	if (!existing.has(candidate)) {
+		existing.add(candidate);
+		return candidate;
+	}
+
+	let index = 2;
+	while (existing.has(`${candidate}${index}`)) {
+		index += 1;
+	}
+	candidate = `${candidate}${index}`;
+	existing.add(candidate);
+	return candidate;
 }
 
 function mapSchemaToSwiftType(
 	schema: RawLexiconSchema | undefined,
-	currentId: string,
+	fullName: string,
+	referenceBase: string,
 	group: string,
-	definitions: Map<string, IRNamedType>,
-	generated: Map<string, SwiftModel>,
+	context: GeneratedContext,
+	options: {
+		typeIdentifier?: string;
+		queryEncodable?: boolean;
+	} = {},
 ): string {
 	if (!schema) {
-		return unknownType();
+		return "ATProtocolValueContainer";
 	}
 
-	if (schema.type === "ref" && "ref" in schema) {
-		const target = normalizeRef((schema as { ref: string }).ref, currentId);
-		return definitions.has(target) ? modelName(target) : unknownType();
+	if (schema.type === "ref" && typeof schema.ref === "string") {
+		const target = normalizeRef(schema.ref, referenceBase);
+		return context.definitions.has(target)
+			? modelName(target)
+			: "ATProtocolValueContainer";
 	}
 
 	if (schema.type === "array" && schema.items) {
 		return `[${mapSchemaToSwiftType(
 			schema.items,
-			currentId,
+			`${fullName}.item`,
+			referenceBase,
 			group,
-			definitions,
-			generated,
+			context,
 		)}]`;
 	}
 
-	if (schema.type === "record" && schema.record) {
-		const nested = `RecordFor${toPascalCase(currentId)}`;
-		return mapSchemaToSwiftType(
-			schema.record,
-			nested,
+	if (schema.type === "union") {
+		return buildUnionDeclaration(
+			fullName,
+			referenceBase,
+			schema.refs ?? [],
 			group,
-			definitions,
-			generated,
+			context,
 		);
 	}
 
-	if (schema.type === "union") {
-		return unknownType();
+	if (schema.type === "object" || schema.type === "params") {
+		return buildObjectDeclaration(
+			fullName,
+			referenceBase,
+			schema,
+			group,
+			context,
+			{
+				typeIdentifier: options.typeIdentifier,
+				queryEncodable: options.queryEncodable || schema.type === "params",
+			},
+		);
 	}
 
-	if (schema.type === "object" && schema.properties) {
-		const name = toPascalCase(`${currentId}Properties`);
-		return buildObjectDeclaration(name, schema, group, definitions, generated);
+	if (schema.type === "record" && schema.record) {
+		return buildObjectDeclaration(
+			fullName,
+			referenceBase,
+			schema.record,
+			group,
+			context,
+			{
+				typeIdentifier: options.typeIdentifier,
+			},
+		);
 	}
 
 	if (
 		schema.type === "string" &&
-		schema.knownValues &&
+		Array.isArray(schema.knownValues) &&
 		schema.knownValues.length > 0
 	) {
-		const unionName = toPascalCase(
-			`${currentId} ${schema.knownValues.join(" ").slice(0, 8)}`,
-		);
-		return ensureAlias(
-			generated,
-			unionName,
-			`public enum ${unionName}: String, Codable {\n${schema.knownValues
-				.map(
-					(entry) =>
-						`\tcase ${toSwiftSafeIdentifier(toCamelCase(entry))} = "${entry}"`,
-				)
-				.join("\n")}\n}`,
-			group,
-		);
+		return buildKnownValueEnum(fullName, schema.knownValues, group, context);
 	}
 
 	return primitiveSwiftType(schema);
 }
 
-function buildObjectDeclaration(
+function buildKnownValueEnum(
 	fullName: string,
-	schema: RawLexiconSchema,
+	values: string[],
 	group: string,
-	definitions: Map<string, IRNamedType>,
-	generated: Map<string, SwiftModel>,
+	context: GeneratedContext,
 ): string {
 	const name = modelName(fullName);
-	const properties = schema.properties ?? {};
-	const required = new Set(schema.required ?? []);
-	const keys = Object.keys(properties).sort();
-
-	if (keys.length === 0) {
-		return ensureAlias(
-			generated,
-			name,
-			`public typealias ${name} = [String: ATProtocolAny]`,
-			group,
-		);
-	}
-
-	const declarations = keys.flatMap((key) => {
-		const property = properties[key];
-		if (property == null) {
-			return [];
-		}
-
-		if (property.description?.toLowerCase().includes("deprecated")) {
-			return [];
-		}
-
-		const swiftType = mapSchemaToSwiftType(
-			property,
-			fullName,
-			group,
-			definitions,
-			generated,
-		);
-		const propertyName = toSwiftSafeIdentifier(toCamelCase(key));
-		const optionalSuffix = required.has(key) ? "" : "?";
-		return [`\tpublic let ${propertyName}: ${swiftType}${optionalSuffix}`];
-	});
-
-	const codingKeys = [
-		"\tprivate enum CodingKeys: String, CodingKey {",
-		...keys.map((key) => {
-			const keyName = toSwiftSafeIdentifier(toCamelCase(key));
-			return `\t\tcase ${keyName} = "${key}"`;
-		}),
-		"\t}",
-	];
-
-	return ensureAlias(
-		generated,
+	const uniqueValues = [...new Set(values)];
+	return ensureModel(
+		context.models,
 		name,
 		[
-			`public struct ${name}: Codable {`,
-			...declarations,
-			"",
-			...codingKeys,
+			`public enum ${name}: String, Codable, CaseIterable, Sendable {`,
+			...uniqueValues.map((entry) => {
+				const identifier = toSwiftSafeIdentifier(toCamelCase(entry));
+				return `\tcase ${identifier} = "${entry}"`;
+			}),
 			"}",
 		].join("\n"),
 		group,
 	);
 }
 
-function buildRecordDeclaration(
-	named: IRNamedType,
+function buildObjectDeclaration(
+	fullName: string,
+	referenceBase: string,
+	schema: RawLexiconSchema,
 	group: string,
-	definitions: Map<string, IRNamedType>,
-	generated: Map<string, SwiftModel>,
+	context: GeneratedContext,
+	options: ObjectDeclarationOptions = {},
 ): string {
-	const record = named.definition as { record?: RawLexiconSchema };
-	if (!record.record) {
-		return ensureAlias(
-			generated,
-			modelName(named.fullName),
-			`public typealias ${modelName(named.fullName)} = ATProtocolAny`,
+	const name = modelName(fullName);
+	if (context.models.has(name)) {
+		return name;
+	}
+	context.models.set(name, { name, body: "", group });
+
+	const properties = schema.properties ?? {};
+	const keys = Object.keys(properties)
+		.filter((key) => key !== "$type")
+		.sort();
+
+	if (keys.length === 0 && !options.typeIdentifier) {
+		return ensureModel(
+			context.models,
+			name,
+			typealiasBody(name, "[String: ATProtocolValueContainer]"),
 			group,
 		);
 	}
 
-	return buildObjectDeclaration(
-		named.fullName,
-		record.record,
-		group,
-		definitions,
-		generated,
+	const protocols = options.protocols ?? ["Codable", "Sendable", "Equatable"];
+	const storedProperties = keys.map((key) => {
+		const property = properties[key];
+		if (!property) {
+			return null;
+		}
+		const type = mapSchemaToSwiftType(
+			property,
+			`${fullName}.${key}`,
+			referenceBase,
+			group,
+			context,
+		);
+		const optional = !isRequired(schema, key) || isNullable(schema, key);
+		return {
+			key,
+			swiftName: propertySwiftName(key),
+			type,
+			optional,
+		};
+	});
+
+	const usableProperties = storedProperties.filter(
+		(
+			property,
+		): property is {
+			key: string;
+			swiftName: string;
+			type: string;
+			optional: boolean;
+		} => property != null,
 	);
+
+	const typeIdentifierKey = options.typeIdentifier
+		? '\t\tcase typeIdentifier = "$type"'
+		: null;
+	const propertyDecls = usableProperties.map(
+		(property) =>
+			`\tpublic let ${property.swiftName}: ${property.type}${property.optional ? "?" : ""}`,
+	);
+	const initializerParams = usableProperties.map(
+		(property) =>
+			`\t\t${property.swiftName}: ${property.type}${property.optional ? "? = nil" : ""}`,
+	);
+	const initializerBody = usableProperties.map(
+		(property) => `\t\tself.${property.swiftName} = ${property.swiftName}`,
+	);
+	const decodeLines = usableProperties.map((property) => {
+		const decoderCall = property.optional ? "decodeIfPresent" : "decode";
+		return `\t\t${property.swiftName} = try container.${decoderCall}(${property.type}.self, forKey: .${property.swiftName})`;
+	});
+	const encodeLines = usableProperties.map((property) => {
+		const encoderCall = property.optional ? "encodeIfPresent" : "encode";
+		return `\t\ttry container.${encoderCall}(${property.swiftName}, forKey: .${property.swiftName})`;
+	});
+	const codingKeys = [
+		"\tprivate enum CodingKeys: String, CodingKey {",
+		...(typeIdentifierKey ? [typeIdentifierKey] : []),
+		...usableProperties.map(
+			(property) => `\t\tcase ${property.swiftName} = "${property.key}"`,
+		),
+		"\t}",
+	];
+
+	const queryItemsMethod = options.queryEncodable
+		? [
+				"",
+				"\tpublic func asQueryItems() -> [URLQueryItem] {",
+				"\t\tvar items: [URLQueryItem] = []",
+				...usableProperties.flatMap((property) => {
+					if (property.optional) {
+						return [
+							`\t\tif let value = ${property.swiftName} {`,
+							`\t\t\tvalue.appendQueryItems(named: "${property.key}", to: &items)`,
+							"\t\t}",
+						];
+					}
+
+					return [
+						`\t\t${property.swiftName}.appendQueryItems(named: "${property.key}", to: &items)`,
+					];
+				}),
+				"\t\treturn items",
+				"\t}",
+			]
+		: [];
+
+	const body = [
+		`public struct ${name}: ${protocols.join(", ")} {`,
+		...(options.typeIdentifier
+			? [`\tpublic static let typeIdentifier = "${options.typeIdentifier}"`, ""]
+			: []),
+		...propertyDecls,
+		"",
+		`\tpublic init(`,
+		initializerParams.join(",\n"),
+		"\t) {",
+		...initializerBody,
+		"\t}",
+		"",
+		"\tpublic init(from decoder: Decoder) throws {",
+		"\t\tlet container = try decoder.container(keyedBy: CodingKeys.self)",
+		...(options.typeIdentifier
+			? [
+					"\t\t_ = try container.decodeIfPresent(String.self, forKey: .typeIdentifier)",
+				]
+			: []),
+		...decodeLines,
+		"\t}",
+		"",
+		"\tpublic func encode(to encoder: Encoder) throws {",
+		"\t\tvar container = encoder.container(keyedBy: CodingKeys.self)",
+		...(options.typeIdentifier
+			? [
+					"\t\ttry container.encode(Self.typeIdentifier, forKey: .typeIdentifier)",
+				]
+			: []),
+		...encodeLines,
+		"\t}",
+		...queryItemsMethod,
+		"",
+		...codingKeys,
+		"}",
+	].join("\n");
+
+	context.models.set(name, { name, body, group });
+	return name;
 }
 
 function buildUnionDeclaration(
 	fullName: string,
+	referenceBase: string,
 	refs: string[],
 	group: string,
-	definitions: Map<string, IRNamedType>,
-	generated: Map<string, SwiftModel>,
+	context: GeneratedContext,
 ): string {
 	const name = modelName(fullName);
+	if (context.models.has(name)) {
+		return name;
+	}
+	context.models.set(name, { name, body: "", group });
+
 	if (refs.length === 0) {
-		return ensureAlias(
-			generated,
+		context.models.set(name, {
 			name,
-			`public typealias ${name} = ATProtocolAny`,
+			body: typealiasBody(name, "ATProtocolValueContainer"),
 			group,
-		);
+		});
+		return name;
 	}
 
-	const cases = refs.map((ref, index) => {
-		const target = normalizeRef(ref, fullName);
-		const caseType = definitions.has(target)
-			? modelName(target)
-			: unknownType();
-		return `\tcase option${index}(${caseType})`;
+	const usedCaseNames = new Set<string>();
+	const cases = refs.flatMap((ref) => {
+		const target = normalizeRef(ref, referenceBase);
+		const definition = context.definitions.get(target);
+		if (!definition) {
+			return [];
+		}
+
+		const caseName = uniqueCaseName(
+			usedCaseNames,
+			definition.name === "main"
+				? (definition.id.split(".").at(-1) ?? "value")
+				: definition.name,
+		);
+		const caseType = modelName(target);
+		const typeIdentifier = typeIdentifierForNamedType(definition);
+
+		if (definition.type === "object") {
+			buildObjectDeclaration(
+				target,
+				definition.id,
+				definition.definition,
+				group,
+				context,
+				{
+					typeIdentifier,
+				},
+			);
+		}
+
+		if (definition.type === "record" && definition.definition.record) {
+			buildObjectDeclaration(
+				target,
+				definition.id,
+				definition.definition.record,
+				group,
+				context,
+				{ typeIdentifier },
+			);
+		}
+
+		return [
+			{
+				caseName,
+				caseType,
+				typeIdentifier,
+			},
+		];
 	});
 
 	const body = [
-		`public enum ${name}: Codable {`,
-		...cases,
-		"\tcase unknown(ATProtocolAny)",
+		`public enum ${name}: Codable, Sendable, Equatable {`,
+		...cases.map((entry) => `\tcase ${entry.caseName}(${entry.caseType})`),
+		"\tcase unexpected(ATProtocolValueContainer)",
+		"",
+		"\tpublic init(from decoder: Decoder) throws {",
+		"\t\tlet typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)",
+		"\t\tswitch typeIdentifier {",
+		...cases.map(
+			(entry) =>
+				`\t\tcase "${entry.typeIdentifier}": self = .${entry.caseName}(try ${entry.caseType}(from: decoder))`,
+		),
+		"\t\tdefault: self = .unexpected(try ATProtocolValueContainer(from: decoder))",
+		"\t\t}",
+		"\t}",
+		"",
+		"\tpublic func encode(to encoder: Encoder) throws {",
+		"\t\tswitch self {",
+		...cases.map(
+			(entry) =>
+				`\t\tcase .${entry.caseName}(let value): try value.encode(to: encoder)`,
+		),
+		"\t\tcase .unexpected(let value): try value.encode(to: encoder)",
+		"\t\t}",
+		"\t}",
 		"}",
 	].join("\n");
 
-	return ensureAlias(generated, name, body, group);
+	context.models.set(name, { name, body, group });
+	return name;
 }
 
-function emitNamedType(
-	named: IRNamedType,
-	group: string,
-	definitions: Map<string, IRNamedType>,
-	generated: Map<string, SwiftModel>,
-): string {
-	const type =
-		typeof named.definition.type === "string"
-			? named.definition.type
-			: "unknown";
-
-	switch (type) {
+function buildNamedType(named: IRNamedType, context: GeneratedContext): string {
+	const group = modelGroupFromId(named.source);
+	switch (named.type) {
 		case "object":
 			return buildObjectDeclaration(
 				named.fullName,
-				named.definition as RawLexiconSchema,
+				named.id,
+				named.definition,
 				group,
-				definitions,
-				generated,
+				context,
+				{ typeIdentifier: typeIdentifierForNamedType(named) },
 			);
-		case "array": {
-			const schema = named.definition as RawLexiconSchema;
-			const element = mapSchemaToSwiftType(
-				schema.items,
+		case "params":
+			return buildObjectDeclaration(
 				named.fullName,
+				named.id,
+				named.definition,
 				group,
-				definitions,
-				generated,
+				context,
+				{ queryEncodable: true },
 			);
-			return ensureAlias(
-				generated,
-				modelName(named.fullName),
-				`public typealias ${modelName(named.fullName)} = [${element}]`,
-				group,
-			);
-		}
 		case "record":
-			return buildRecordDeclaration(named, group, definitions, generated);
-		case "string": {
-			const values = (named.definition as RawLexiconSchema).knownValues;
-			if (values && values.length > 0) {
-				return ensureAlias(
-					generated,
-					modelName(named.fullName),
-					[
-						`public enum ${modelName(named.fullName)}: String, Codable {`,
-						...values.map(
-							(entry) =>
-								`\tcase ${toSwiftSafeIdentifier(toCamelCase(entry))} = "${entry}"`,
-						),
-						"}",
-					].join("\n"),
+			if (named.definition.record) {
+				return buildObjectDeclaration(
+					named.fullName,
+					named.id,
+					named.definition.record,
 					group,
+					context,
+					{ typeIdentifier: typeIdentifierForNamedType(named) },
 				);
 			}
-			return ensureAlias(
-				generated,
+			return ensureModel(
+				context.models,
 				modelName(named.fullName),
-				`public typealias ${modelName(named.fullName)} = String`,
+				typealiasBody(modelName(named.fullName), "ATProtocolValueContainer"),
 				group,
 			);
-		}
-		case "token":
-			return ensureAlias(
-				generated,
+		case "string":
+			if (
+				Array.isArray(named.definition.knownValues) &&
+				named.definition.knownValues.length > 0
+			) {
+				return buildKnownValueEnum(
+					named.fullName,
+					named.definition.knownValues,
+					group,
+					context,
+				);
+			}
+			return ensureModel(
+				context.models,
 				modelName(named.fullName),
-				`public typealias ${modelName(named.fullName)} = String`,
+				typealiasBody(
+					modelName(named.fullName),
+					primitiveSwiftType(named.definition),
+				),
+				group,
+			);
+		case "array":
+			return ensureModel(
+				context.models,
+				modelName(named.fullName),
+				typealiasBody(
+					modelName(named.fullName),
+					`[${mapSchemaToSwiftType(named.definition.items, `${named.fullName}.item`, named.id, group, context)}]`,
+				),
 				group,
 			);
 		case "union":
 			return buildUnionDeclaration(
 				named.fullName,
-				(named.definition as RawLexiconSchema).refs ?? [],
+				named.id,
+				named.definition.refs ?? [],
 				group,
-				definitions,
-				generated,
+				context,
 			);
 		case "permission-set":
-			return ensureAlias(
-				generated,
+			return ensureModel(
+				context.models,
 				modelName(named.fullName),
-				`public typealias ${modelName(named.fullName)} = ATProtocolAny`,
+				typealiasBody(modelName(named.fullName), "[String]"),
 				group,
 			);
 		default:
-			return ensureAlias(
-				generated,
+			return ensureModel(
+				context.models,
 				modelName(named.fullName),
-				`public typealias ${modelName(named.fullName)} = ATProtocolAny`,
+				typealiasBody(
+					modelName(named.fullName),
+					primitiveSwiftType(named.definition),
+				),
 				group,
 			);
 	}
 }
 
-function schemaFromEndpointInput(
-	container: RawLexiconSchema | undefined,
-	endpointName: string,
-	group: string,
-	normalizedBase: string,
-	definitions: Map<string, IRNamedType>,
-	generated: Map<string, SwiftModel>,
-	typePrefix: "Parameters" | "Input",
+function buildEndpointHelperType(
+	endpoint: IREndpoint,
+	suffix: "Parameters" | "Input" | "Output" | "Message",
+	schema: RawLexiconSchema | undefined,
+	context: GeneratedContext,
+	options: {
+		queryEncodable?: boolean;
+		binaryInput?: boolean;
+	} = {},
 ): string | null {
-	if (!container) {
+	if (suffix === "Input" && options.binaryInput) {
+		const fullName = `${endpoint.fullName}.${suffix}`;
+		const name = modelName(fullName);
+		return ensureModel(
+			context.models,
+			name,
+			[
+				`public struct ${name}: Sendable, Equatable {`,
+				"\tpublic let data: Data",
+				"\tpublic let contentType: String",
+				"",
+				'\tpublic init(data: Data, contentType: String = "application/octet-stream") {',
+				"\t\tself.data = data",
+				"\t\tself.contentType = contentType",
+				"\t}",
+				"}",
+			].join("\n"),
+			modelGroupFromId(endpoint.source),
+		);
+	}
+
+	if (!schema) {
 		return null;
 	}
 
-	if (container.type === "object" && container.properties) {
-		const target = modelName(`${endpointName} ${typePrefix}`);
-		buildObjectDeclaration(target, container, group, definitions, generated);
-		return target;
-	}
-
-	if (container.type === "record" && container.record) {
-		const target = modelName(`${endpointName} ${typePrefix}`);
-		buildObjectDeclaration(
-			target,
-			container.record,
-			group,
-			definitions,
-			generated,
-		);
-		return target;
-	}
-
-	if (container.type === "array" && container.items) {
-		const element = mapSchemaToSwiftType(
-			container.items,
-			normalizedBase,
-			group,
-			definitions,
-			generated,
-		);
-		const alias = modelName(`${endpointName} ${typePrefix}`);
-		return ensureAlias(
-			generated,
-			alias,
-			`public typealias ${alias} = [${element}]`,
+	const fullName = `${endpoint.fullName}.${suffix}`;
+	const group = modelGroupFromId(endpoint.source);
+	if (schema.type === "ref" && typeof schema.ref === "string") {
+		const target = normalizeRef(schema.ref, endpoint.id);
+		const targetType = context.definitions.has(target)
+			? modelName(target)
+			: "ATProtocolValueContainer";
+		return ensureModel(
+			context.models,
+			modelName(fullName),
+			typealiasBody(modelName(fullName), targetType),
 			group,
 		);
 	}
 
-	return mapSchemaToSwiftType(
-		container,
-		normalizedBase,
+	return mapSchemaToSwiftType(schema, fullName, endpoint.id, group, context, {
+		queryEncodable: options.queryEncodable,
+	});
+}
+
+function buildEndpointErrorType(
+	endpoint: IREndpoint,
+	context: GeneratedContext,
+): string | null {
+	const errors = endpoint.errors ?? [];
+	if (errors.length === 0) {
+		return null;
+	}
+
+	const fullName = `${endpoint.fullName}.Error`;
+	const name = modelName(fullName);
+	const group = modelGroupFromId(endpoint.source);
+	return ensureModel(
+		context.models,
+		name,
+		[
+			`public enum ${name}: String, Swift.Error, CaseIterable, Sendable {`,
+			...errors.map((error) => {
+				const identifier = toSwiftSafeIdentifier(toCamelCase(error.name));
+				return `\tcase ${identifier} = "${error.name}"`;
+			}),
+			"}",
+		].join("\n"),
 		group,
-		definitions,
-		generated,
 	);
 }
 
-function buildEndpointModel(
+function buildEndpointModels(
 	endpoint: IREndpoint,
-	group: string,
-	definitions: Map<string, IRNamedType>,
-	generated: Map<string, SwiftModel>,
-): EndpointModel {
-	const base = modelName(endpoint.fullName);
-	const def = endpoint.definition as {
-		parameters?: {
-			type?: string;
-			schema?: RawLexiconSchema;
-			record?: RawLexiconSchema;
-		};
-		input?: {
-			type?: string;
-			schema?: RawLexiconSchema;
-			record?: RawLexiconSchema;
-		};
-		output?: { schema?: RawLexiconSchema };
-	};
-	const inputContainer =
-		endpoint.method === "query"
-			? (def.parameters as RawLexiconSchema | undefined)
-			: (def.input?.schema as RawLexiconSchema | undefined);
-	const inputType = schemaFromEndpointInput(
-		inputContainer,
-		endpoint.fullName,
-		group,
-		base,
-		definitions,
-		generated,
-		endpoint.method === "query" ? "Parameters" : "Input",
-	);
-
-	const outputType = def.output?.schema
-		? mapSchemaToSwiftType(
-				def.output.schema,
-				endpoint.id,
-				group,
-				definitions,
-				generated,
+	context: GeneratedContext,
+): EndpointSurface {
+	const binaryInput =
+		endpoint.method === "procedure" && endpoint.inputEncoding === "*/*";
+	const parametersType =
+		endpoint.method === "query" || endpoint.method === "subscription"
+			? buildEndpointHelperType(
+					endpoint,
+					"Parameters",
+					endpoint.parametersSchema,
+					context,
+					{ queryEncodable: true },
+				)
+			: null;
+	const inputType =
+		endpoint.method === "procedure"
+			? buildEndpointHelperType(
+					endpoint,
+					"Input",
+					endpoint.inputSchema,
+					context,
+					{
+						binaryInput,
+					},
+				)
+			: parametersType;
+	const outputType = endpoint.outputSchema
+		? buildEndpointHelperType(
+				endpoint,
+				"Output",
+				endpoint.outputSchema,
+				context,
 			)
-		: unknownType();
+		: null;
+	const messageType =
+		endpoint.method === "subscription"
+			? buildEndpointHelperType(
+					endpoint,
+					"Message",
+					endpoint.messageSchema,
+					context,
+				)
+			: null;
+	const errorType = buildEndpointErrorType(endpoint, context);
+	const segments = endpoint.id.split(".");
 
 	return {
 		id: endpoint.fullName,
+		namespaceSegments: segments.slice(0, -1),
+		functionName: toCamelCase(segments.at(-1) ?? endpoint.name),
 		method: endpoint.method === "query" ? "GET" : "POST",
 		path: endpoint.path,
-		functionName: toCamelCase(base),
+		kind: endpoint.method,
 		inputType,
-		outputType,
+		outputType: endpoint.method === "subscription" ? messageType : outputType,
+		errorType,
+		inputEncoding: endpoint.inputEncoding,
 	};
+}
+
+function namespaceNode(segment: string, prefix: string[]): NamespaceNode {
+	return {
+		segment,
+		prefix,
+		children: new Map<string, NamespaceNode>(),
+		endpoints: [],
+	};
+}
+
+function buildNamespaceTree(endpoints: EndpointSurface[]): NamespaceNode {
+	const root = namespaceNode("", []);
+	for (const endpoint of endpoints) {
+		let current = root;
+		for (const segment of endpoint.namespaceSegments) {
+			let child = current.children.get(segment);
+			if (!child) {
+				child = namespaceNode(segment, [...current.prefix, segment]);
+				current.children.set(segment, child);
+			}
+			current = child;
+		}
+		current.endpoints.push(endpoint);
+	}
+	return root;
+}
+
+function namespaceStructName(prefix: string[]): string {
+	return `${prefix.map(toPascalCase).join("")}Namespace`;
+}
+
+function renderEndpointMethod(endpoint: EndpointSurface): string[] {
+	if (endpoint.kind === "subscription") {
+		const args = endpoint.inputType ? `input: ${endpoint.inputType}` : "";
+		const queryItems = endpoint.inputType ? "input.asQueryItems()" : "[]";
+		return [
+			`\tpublic func ${endpoint.functionName}(${args}) -> AsyncThrowingStream<${endpoint.outputType ?? "ATProtocolValueContainer"}, Error> {`,
+			`\t\tclient.subscribe(path: "${endpoint.path}", queryItems: ${queryItems}, responseType: ${endpoint.outputType ?? "ATProtocolValueContainer"}.self)`,
+			"\t}",
+		];
+	}
+
+	if (endpoint.method === "GET") {
+		const signature = endpoint.inputType ? `input: ${endpoint.inputType}` : "";
+		const queryItems = endpoint.inputType ? "input.asQueryItems()" : "[]";
+		return [
+			`\tpublic func ${endpoint.functionName}(${signature}) async throws -> ${endpoint.outputType ?? "ATProtocolValueContainer"} {`,
+			`\t\ttry await client.request(method: "GET", path: "${endpoint.path}", queryItems: ${queryItems}, responseType: ${endpoint.outputType ?? "ATProtocolValueContainer"}.self)`,
+			"\t}",
+		];
+	}
+
+	const signature = endpoint.inputType ? `input: ${endpoint.inputType}` : "";
+	if (endpoint.inputEncoding === "*/*" && endpoint.inputType) {
+		return [
+			`\tpublic func ${endpoint.functionName}(${signature}) async throws -> ${endpoint.outputType ?? "ATProtocolValueContainer"} {`,
+			`\t\ttry await client.request(method: "POST", path: "${endpoint.path}", body: input.data, queryItems: [], headers: ["Content-Type": input.contentType], responseType: ${endpoint.outputType ?? "ATProtocolValueContainer"}.self)`,
+			"\t}",
+		];
+	}
+
+	const body = endpoint.inputType ? "try client.encodedBody(input)" : "nil";
+	return [
+		`\tpublic func ${endpoint.functionName}(${signature}) async throws -> ${endpoint.outputType ?? "ATProtocolValueContainer"} {`,
+		`\t\ttry await client.request(method: "POST", path: "${endpoint.path}", body: ${body}, queryItems: [], headers: ${endpoint.inputType ? '["Content-Type": "application/json"]' : "[:]"}, responseType: ${endpoint.outputType ?? "ATProtocolValueContainer"}.self)`,
+		"\t}",
+	];
+}
+
+function renderNamespaceNode(node: NamespaceNode): string[] {
+	const output: string[] = [];
+	if (node.prefix.length > 0) {
+		const structName = namespaceStructName(node.prefix);
+		output.push(`public struct ${structName} {`);
+		output.push("\tfileprivate let client: ATProtoClient");
+		output.push("");
+		output.push("\tfileprivate init(client: ATProtoClient) {");
+		output.push("\t\tself.client = client");
+		output.push("\t}");
+
+		for (const child of Array.from(node.children.values()).sort((left, right) =>
+			left.segment.localeCompare(right.segment),
+		)) {
+			output.push("");
+			output.push(
+				`\tpublic var ${toCamelCase(child.segment)}: ${namespaceStructName(child.prefix)} {`,
+			);
+			output.push(`\t\t${namespaceStructName(child.prefix)}(client: client)`);
+			output.push("\t}");
+		}
+
+		for (const endpoint of [...node.endpoints].sort((left, right) =>
+			left.functionName.localeCompare(right.functionName),
+		)) {
+			output.push("");
+			output.push(...renderEndpointMethod(endpoint));
+		}
+
+		output.push("}");
+		output.push("");
+	}
+
+	for (const child of Array.from(node.children.values()).sort((left, right) =>
+		left.segment.localeCompare(right.segment),
+	)) {
+		output.push(...renderNamespaceNode(child));
+	}
+
+	return output;
+}
+
+function renderEndpointNamespaces(endpoints: EndpointSurface[]): string {
+	const root = buildNamespaceTree(endpoints);
+	const topLevel = Array.from(root.children.values()).sort((left, right) =>
+		left.segment.localeCompare(right.segment),
+	);
+	const lines: string[] = ["import Foundation", ""];
+
+	lines.push("public extension ATProtoClient {");
+	for (const child of topLevel) {
+		lines.push(
+			`\tvar ${toCamelCase(child.segment)}: ${namespaceStructName(child.prefix)} {`,
+		);
+		lines.push(`\t\t${namespaceStructName(child.prefix)}(client: self)`);
+		lines.push("\t}");
+	}
+	lines.push("}");
+	lines.push("");
+	lines.push(...renderNamespaceNode(root));
+	return lines.join("\n");
 }
 
 export async function emitSwiftFromIR(
@@ -552,57 +975,55 @@ export async function emitSwiftFromIR(
 	const outDir = path.resolve(outputDir);
 	await fs.mkdir(outDir, { recursive: true });
 
-	const generated = new Map<string, SwiftModel>();
+	const context: GeneratedContext = {
+		definitions: ir.definitionIndex,
+		models: new Map(),
+	};
+
 	for (const named of ir.namedTypes) {
-		const group = modelGroupFromId(named.source);
-		emitNamedType(named, group, ir.definitionIndex, generated);
+		buildNamedType(named, context);
 	}
 
-	const endpointModels = ir.endpoints.map((endpoint) =>
-		buildEndpointModel(
-			endpoint,
-			modelGroupFromId(endpoint.source || endpoint.id),
-			ir.definitionIndex,
-			generated,
-		),
+	const endpointSurfaces = ir.endpoints.map((endpoint) =>
+		buildEndpointModels(endpoint, context),
 	);
+
 	const groupedModels = new Map<string, SwiftModel[]>();
-	for (const model of generated.values()) {
-		const group = model.group;
-		if (!groupedModels.has(group)) {
-			groupedModels.set(group, []);
+	for (const model of context.models.values()) {
+		if (!groupedModels.has(model.group)) {
+			groupedModels.set(model.group, []);
 		}
-		groupedModels.get(group)?.push(model);
+		groupedModels.get(model.group)?.push(model);
 	}
 
 	for (const models of groupedModels.values()) {
-		models.sort((a, b) => a.name.localeCompare(b.name));
+		models.sort((left, right) => left.name.localeCompare(right.name));
 	}
 
 	const templatesDir = path.join(process.cwd(), "templates", "swift");
 	const modelsTemplate = path.join(templatesDir, "models.ejs");
 	const runtimeTemplate = path.join(templatesDir, "runtime.ejs");
-	const endpointsTemplate = path.join(templatesDir, "endpoints.ejs");
-
-	const [modelsTemplateText, runtimeTemplateText, endpointsTemplateText] =
-		await Promise.all([
-			fs.readFile(modelsTemplate, "utf8"),
-			fs.readFile(runtimeTemplate, "utf8"),
-			fs.readFile(endpointsTemplate, "utf8"),
-		]);
+	const [modelsTemplateText, runtimeTemplateText] = await Promise.all([
+		fs.readFile(modelsTemplate, "utf8"),
+		fs.readFile(runtimeTemplate, "utf8"),
+	]);
 
 	const existingGenerated = await fs.readdir(outDir);
 	await Promise.all(
 		existingGenerated
-			.filter((file) => file.endsWith(".generated.swift"))
+			.filter((file) => file.endsWith(".swift"))
 			.map((file) => fs.rm(path.join(outDir, file), { force: true })),
 	);
 
+	const runtimeText = ejs.render(
+		runtimeTemplateText,
+		{},
+		{ filename: runtimeTemplate },
+	);
+	const endpointsText = renderEndpointNamespaces(endpointSurfaces);
+
 	await Promise.all([
-		fs.writeFile(
-			path.join(outDir, "Models.swift"),
-			ejs.render(runtimeTemplateText, {}, { filename: runtimeTemplate }),
-		),
+		fs.writeFile(path.join(outDir, "Models.swift"), runtimeText),
 		...Array.from(groupedModels.entries()).map(([group, models]) =>
 			fs.writeFile(
 				path.join(outDir, modelFileName(group)),
@@ -613,13 +1034,6 @@ export async function emitSwiftFromIR(
 				),
 			),
 		),
-		fs.writeFile(
-			path.join(outDir, "Endpoints.swift"),
-			ejs.render(
-				endpointsTemplateText,
-				{ endpoints: endpointModels },
-				{ filename: endpointsTemplate },
-			),
-		),
+		fs.writeFile(path.join(outDir, "Endpoints.swift"), endpointsText),
 	]);
 }
