@@ -14,28 +14,28 @@ public struct XRPCRequest: Sendable {
 	public let queryItems: [URLQueryItem]
 	public let body: Data?
 	public let headers: [String: String]
+	public let responseKind: XRPCResponseKind
 
 	public init(
 		method: String,
 		path: String,
 		queryItems: [URLQueryItem] = [],
 		body: Data? = nil,
-		headers: [String: String] = [:]
+		headers: [String: String] = [:],
+		responseKind: XRPCResponseKind = .json
 	) {
 		self.method = method
 		self.path = path
 		self.queryItems = queryItems
 		self.body = body
 		self.headers = headers
+		self.responseKind = responseKind
 	}
 }
 
 public protocol LexiconTransport {
-	func execute<T: Decodable>(
-		_ request: XRPCRequest,
-		responseType: T.Type
-	) async throws -> T
-	func subscribe(_ request: XRPCRequest) -> AsyncThrowingStream<Data, Error>
+	func execute(_ request: XRPCRequest) async throws -> XRPCResponse
+	func subscribe(_ request: XRPCRequest) -> AsyncThrowingStream<XRPCSubscriptionFrame, Error>
 }
 
 public enum LexiconRuntimeError: Error {
@@ -47,6 +47,34 @@ public struct XRPCErrorPayload: Codable, Sendable, Equatable {
 	public let message: String?
 }
 
+public struct XRPCResponse: Sendable, Equatable {
+	public let statusCode: Int?
+	public let body: Data
+
+	public init(statusCode: Int? = nil, body: Data) {
+		self.statusCode = statusCode
+		self.body = body
+	}
+}
+
+public enum XRPCResponseKind: Sendable {
+	case json
+	case binary
+	case jsonl
+	case car
+	case subscription
+}
+
+public enum XRPCSubscriptionFrame: Sendable, Equatable {
+	case message(Data)
+	case error(XRPCErrorPayload)
+}
+
+public enum XRPCSubscriptionEvent<Message: Sendable>: Sendable {
+	case message(Message)
+	case error(XRPCErrorPayload)
+}
+
 public struct XRPCTransportError: Error, Sendable, Equatable {
 	public let statusCode: Int?
 	public let payload: XRPCErrorPayload?
@@ -54,6 +82,47 @@ public struct XRPCTransportError: Error, Sendable, Equatable {
 	public init(statusCode: Int? = nil, payload: XRPCErrorPayload? = nil) {
 		self.statusCode = statusCode
 		self.payload = payload
+	}
+
+	public init(statusCode: Int? = nil, body: Data, decoder: JSONDecoder = JSONDecoder()) {
+		self.statusCode = statusCode
+		self.payload = try? decoder.decode(XRPCErrorPayload.self, from: body)
+	}
+}
+
+public struct EmptyResponse: Codable, Hashable, Sendable {
+	public init() {}
+
+	public init(from decoder: Decoder) throws {
+		if let container = try? decoder.container(keyedBy: DynamicCodingKey.self) {
+			guard container.allKeys.isEmpty else {
+				throw DecodingError.dataCorrupted(
+					DecodingError.Context(
+						codingPath: decoder.codingPath,
+						debugDescription: "Expected an empty object for EmptyResponse"
+					)
+				)
+			}
+			return
+		}
+
+		if var container = try? decoder.unkeyedContainer(), container.isAtEnd {
+			return
+		}
+
+		let container = try decoder.singleValueContainer()
+		if container.decodeNil() {
+			return
+		}
+
+		throw DecodingError.dataCorruptedError(
+			in: container,
+			debugDescription: "Expected an empty payload for EmptyResponse"
+		)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		_ = encoder.container(keyedBy: DynamicCodingKey.self)
 	}
 }
 
@@ -143,6 +212,27 @@ public enum ATProtocolDecoder {
 	public static func decodeTypeIdentifier(from decoder: Decoder) throws -> String? {
 		let container = try decoder.container(keyedBy: DynamicCodingKey.self)
 		return try container.decodeIfPresent(String.self, forKey: DynamicCodingKey("$type"))
+	}
+}
+
+public enum ATProtocolEncoder {
+	public static func encodeTagged<T: Encodable>(
+		_ value: T,
+		typeIdentifier: String,
+		to encoder: Encoder
+	) throws {
+		let encoded = try JSONEncoder().encode(value)
+		let jsonObject = try JSONSerialization.jsonObject(with: encoded)
+		guard var object = jsonObject as? [String: Any] else {
+			var container = encoder.singleValueContainer()
+			try container.encode(value)
+			return
+		}
+
+		object["$type"] = typeIdentifier
+		let taggedData = try JSONSerialization.data(withJSONObject: object)
+		let taggedValue = try JSONDecoder().decode(ATProtocolValueContainer.self, from: taggedData)
+		try taggedValue.encode(to: encoder)
 	}
 }
 
@@ -350,14 +440,14 @@ public final class ATProtoClient {
 		self.decoder = decoder
 	}
 
-	public func request<T: Decodable>(
+	private func execute(
 		method: String,
 		path: String,
 		body: Data? = nil,
 		queryItems: [URLQueryItem] = [],
 		headers: [String: String] = [:],
-		responseType: T.Type
-	) async throws -> T {
+		responseKind: XRPCResponseKind = .json
+	) async throws -> XRPCResponse {
 		guard let transport else {
 			throw LexiconRuntimeError.unsupported
 		}
@@ -368,17 +458,59 @@ public final class ATProtoClient {
 				path: path,
 				queryItems: queryItems,
 				body: body,
-				headers: headers
-			),
-			responseType: responseType
+				headers: headers,
+				responseKind: responseKind
+			)
 		)
+	}
+
+	public func requestJSON<T: Decodable>(
+		method: String,
+		path: String,
+		body: Data? = nil,
+		queryItems: [URLQueryItem] = [],
+		headers: [String: String] = [:],
+		responseType: T.Type
+	) async throws -> T {
+		let response = try await execute(
+			method: method,
+			path: path,
+			body: body,
+			queryItems: queryItems,
+			headers: headers
+			,
+			responseKind: .json
+		)
+		if response.body.isEmpty, responseType == EmptyResponse.self {
+			return EmptyResponse() as! T
+		}
+		return try decoder.decode(responseType, from: response.body)
+	}
+
+	public func requestData(
+		method: String,
+		path: String,
+		body: Data? = nil,
+		queryItems: [URLQueryItem] = [],
+		headers: [String: String] = [:],
+		responseKind: XRPCResponseKind = .binary
+	) async throws -> Data {
+		let response = try await execute(
+			method: method,
+			path: path,
+			body: body,
+			queryItems: queryItems,
+			headers: headers,
+			responseKind: responseKind
+		)
+		return response.body
 	}
 
 	public func subscribe<T: Decodable>(
 		path: String,
 		queryItems: [URLQueryItem] = [],
 		responseType: T.Type
-	) -> AsyncThrowingStream<T, Error> {
+	) -> AsyncThrowingStream<XRPCSubscriptionEvent<T>, Error> where T: Sendable {
 		guard let transport else {
 			return AsyncThrowingStream { continuation in
 				continuation.finish(throwing: LexiconRuntimeError.unsupported)
@@ -386,14 +518,26 @@ public final class ATProtoClient {
 		}
 
 		let baseStream = transport.subscribe(
-			XRPCRequest(method: "GET", path: path, queryItems: queryItems)
+			XRPCRequest(
+				method: "GET",
+				path: path,
+				queryItems: queryItems,
+				responseKind: .subscription
+			)
 		)
 		let decoder = self.decoder
 		return AsyncThrowingStream { continuation in
 			Task {
 				do {
-					for try await payload in baseStream {
-						continuation.yield(try decoder.decode(T.self, from: payload))
+					for try await frame in baseStream {
+						switch frame {
+						case .message(let payload):
+							continuation.yield(
+								.message(try decoder.decode(T.self, from: payload))
+							)
+						case .error(let payload):
+							continuation.yield(.error(payload))
+						}
 					}
 					continuation.finish()
 				} catch {

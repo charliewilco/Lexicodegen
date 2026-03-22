@@ -19,6 +19,35 @@ function hasSwiftCompiler(): boolean {
 	return check.status === 0;
 }
 
+async function loadPhase3RegressionDocs() {
+	return Promise.all([
+		loadLexicon("lexicons/com/atproto/repo/applyWrites.json"),
+		loadLexicon("lexicons/com/atproto/repo/defs.json"),
+		loadLexicon("lexicons/com/atproto/repo/uploadBlob.json"),
+		loadLexicon("lexicons/com/atproto/repo/importRepo.json"),
+		loadLexicon("lexicons/com/atproto/sync/subscribeRepos.json"),
+		loadLexicon("lexicons/com/atproto/sync/getRepo.json"),
+		loadLexicon("lexicons/com/atproto/sync/getRecord.json"),
+		loadLexicon("lexicons/com/atproto/sync/getBlocks.json"),
+		loadLexicon("lexicons/com/atproto/sync/getCheckout.json"),
+		loadLexicon("lexicons/com/atproto/sync/getBlob.json"),
+		loadLexicon("lexicons/com/atproto/identity/resolveIdentity.json"),
+		loadLexicon("lexicons/com/atproto/identity/defs.json"),
+		loadLexicon("lexicons/app/bsky/graph/list.json"),
+		loadLexicon("lexicons/app/bsky/graph/defs.json"),
+		loadLexicon("lexicons/app/bsky/authViewAll.json"),
+		loadLexicon("lexicons/app/bsky/video/uploadVideo.json"),
+		loadLexicon("lexicons/app/bsky/embed/record.json"),
+		loadLexicon("lexicons/app/bsky/notification/listNotifications.json"),
+		loadLexicon("lexicons/com/atproto/label/defs.json"),
+		loadLexicon("lexicons/app/bsky/richtext/facet.json"),
+		loadLexicon("lexicons/chat/bsky/actor/exportAccountData.json"),
+		loadLexicon("lexicons/tools/ozone/moderation/defs.json"),
+		loadLexicon("lexicons/tools/ozone/setting/defs.json"),
+		loadLexicon("lexicons/tools/ozone/setting/upsertOption.json"),
+	]);
+}
+
 function basicEndpoint(
 	fullName: string,
 	method: "query" | "procedure",
@@ -154,10 +183,15 @@ describe("emitSwiftFromIR", () => {
 		expect(runtime).toContain("public protocol QueryParameterValue");
 		expect(runtime).toContain("public struct CID: RawRepresentable");
 		expect(runtime).toContain("public struct ATProtocolDate: RawRepresentable");
+		expect(runtime).toContain("public struct XRPCResponse");
+		expect(runtime).toContain("public struct EmptyResponse");
+		expect(runtime).toContain("public enum XRPCSubscriptionEvent");
+		expect(runtime).toContain("public func requestJSON<T: Decodable>(");
+		expect(runtime).toContain("public func requestData(");
 		expect(runtime).toContain("public final class ATProtoClient");
 
 		expect(grouped).toContain("public struct AppBskyFeedDefsPostView");
-		expect(grouped).toContain(
+		expect(grouped).not.toContain(
 			'public static let typeIdentifier = "app.bsky.feed.defs#postView"',
 		);
 		expect(grouped).toContain("public struct AppBskyFeedGetTimelineParameters");
@@ -171,24 +205,14 @@ describe("emitSwiftFromIR", () => {
 			"public func getTimeline(input: AppBskyFeedGetTimelineParameters) async throws -> AppBskyFeedGetTimelineOutput",
 		);
 		expect(endpoints).toContain("queryItems: input.asQueryItems()");
+		expect(endpoints).toContain('client.requestJSON(method: "GET"');
 		expect(endpoints).toContain(
 			'headers: ["Content-Type": "application/json"]',
 		);
 	});
 
 	test("handles real lexicon regressions for unions, records, subscriptions, binary input, and errors", async () => {
-		const docs = await Promise.all([
-			loadLexicon("lexicons/com/atproto/repo/applyWrites.json"),
-			loadLexicon("lexicons/com/atproto/repo/defs.json"),
-			loadLexicon("lexicons/com/atproto/repo/uploadBlob.json"),
-			loadLexicon("lexicons/com/atproto/sync/subscribeRepos.json"),
-			loadLexicon("lexicons/com/atproto/identity/resolveIdentity.json"),
-			loadLexicon("lexicons/com/atproto/identity/defs.json"),
-			loadLexicon("lexicons/app/bsky/graph/list.json"),
-			loadLexicon("lexicons/app/bsky/graph/defs.json"),
-			loadLexicon("lexicons/com/atproto/label/defs.json"),
-			loadLexicon("lexicons/app/bsky/richtext/facet.json"),
-		]);
+		const docs = await loadPhase3RegressionDocs();
 
 		const ir = buildLexiconIR(docs, {
 			allowPrefixes: [],
@@ -214,8 +238,28 @@ describe("emitSwiftFromIR", () => {
 			path.join(outputDir, "AppBskyGraph.generated.swift"),
 			"utf8",
 		);
+		const appFile = await fs.readFile(
+			path.join(outputDir, "AppBskyAuthViewAll.generated.swift"),
+			"utf8",
+		);
+		const embedFile = await fs.readFile(
+			path.join(outputDir, "AppBskyEmbed.generated.swift"),
+			"utf8",
+		);
+		const notificationFile = await fs.readFile(
+			path.join(outputDir, "AppBskyNotification.generated.swift"),
+			"utf8",
+		);
 		const identityFile = await fs.readFile(
 			path.join(outputDir, "ComAtprotoIdentity.generated.swift"),
+			"utf8",
+		);
+		const ozoneModerationFile = await fs.readFile(
+			path.join(outputDir, "ToolsOzoneModeration.generated.swift"),
+			"utf8",
+		);
+		const ozoneSettingFile = await fs.readFile(
+			path.join(outputDir, "ToolsOzoneSetting.generated.swift"),
 			"utf8",
 		);
 		const endpoints = await fs.readFile(
@@ -234,9 +278,24 @@ describe("emitSwiftFromIR", () => {
 			"public struct ComAtprotoRepoUploadBlobInput: Sendable, Equatable",
 		);
 		expect(repoFile).toContain(
-			'public init(data: Data, contentType: String = "application/octet-stream")',
+			'public init(data: Data, contentType: String = "*/*")',
+		);
+		expect(repoFile).toContain(
+			'public init(data: Data, contentType: String = "application/vnd.ipld.car")',
 		);
 		expect(repoFile).toContain("public enum ComAtprotoRepoApplyWritesError");
+		expect(repoFile).toContain(
+			"public enum ComAtprotoRepoApplyWritesCreateResultValidationStatus",
+		);
+		expect(repoFile).not.toContain(
+			"public enum ComAtprotoRepoApplyWritesUpdateResultValidationStatus",
+		);
+		expect(repoFile).toContain(
+			"public let validationStatus: ComAtprotoRepoApplyWritesCreateResultValidationStatus?",
+		);
+		expect(repoFile).toContain(
+			"public struct ComAtprotoRepoApplyWritesDeleteResult",
+		);
 
 		expect(syncFile).toContain(
 			"public enum ComAtprotoSyncSubscribeReposMessage",
@@ -249,6 +308,10 @@ describe("emitSwiftFromIR", () => {
 		);
 		expect(syncFile).toContain("public let blocks: Bytes");
 		expect(syncFile).toContain("public let commit: CID");
+		expect(syncFile).toContain("public enum ComAtprotoSyncGetRepoError");
+		expect(syncFile).toContain("public enum ComAtprotoSyncGetBlobError");
+		expect(syncFile).toContain("public enum ComAtprotoSyncGetRecordError");
+		expect(syncFile).toContain("public enum ComAtprotoSyncGetBlocksError");
 
 		expect(graphFile).toContain(
 			'public static let typeIdentifier = "app.bsky.graph.list"',
@@ -269,31 +332,136 @@ describe("emitSwiftFromIR", () => {
 		expect(identityFile).toContain(
 			"public let didDoc: ATProtocolValueContainer",
 		);
+		expect(identityFile).toContain(
+			"public init?(transportError: XRPCTransportError)",
+		);
+
+		expect(appFile).toContain("public struct AppBskyAuthViewAllMethod");
+		expect(appFile).toContain("public struct AppBskyAuthViewAll");
+		expect(appFile).toContain(
+			'public static let title: String? = "Read-only access to all content"',
+		);
+		expect(appFile).toContain("public static let appBskyActorGetProfile");
+		expect(appFile).toContain(
+			"public static let knownMethods: [AppBskyAuthViewAllMethod] = [",
+		);
+		expect(appFile).toContain(
+			"public let grantedMethods: [AppBskyAuthViewAllMethod]",
+		);
+		expect(appFile).not.toContain(
+			"public typealias AppBskyAuthViewAll = [String]",
+		);
+		expect(appFile).not.toContain(
+			"public let grantedMethods: [ATProtocolValueContainer]",
+		);
+
+		expect(embedFile).toContain("public let record: ATProtocolValueContainer");
+		expect(notificationFile).toContain(
+			"public let record: ATProtocolValueContainer",
+		);
+		expect(ozoneModerationFile).toContain(
+			"public let value: ATProtocolValueContainer",
+		);
+		expect(ozoneModerationFile).toContain(
+			"public let meta: ATProtocolValueContainer?",
+		);
+		expect(ozoneSettingFile).toContain(
+			"public let value: ATProtocolValueContainer",
+		);
 
 		expect(endpoints).toContain(
 			"public func uploadBlob(input: ComAtprotoRepoUploadBlobInput) async throws -> ComAtprotoRepoUploadBlobOutput",
 		);
 		expect(endpoints).toContain('headers: ["Content-Type": input.contentType]');
 		expect(endpoints).toContain(
-			"public func subscribeRepos(input: ComAtprotoSyncSubscribeReposParameters) -> AsyncThrowingStream<ComAtprotoSyncSubscribeReposMessage, Error>",
+			"public func importRepo(input: ComAtprotoRepoImportRepoInput) async throws -> EmptyResponse",
 		);
+		expect(endpoints).toContain(
+			"public func uploadVideo(input: AppBskyVideoUploadVideoInput) async throws -> AppBskyVideoUploadVideoOutput",
+		);
+		expect(endpoints).toContain(
+			"public func subscribeRepos(input: ComAtprotoSyncSubscribeReposParameters) -> AsyncThrowingStream<XRPCSubscriptionEvent<ComAtprotoSyncSubscribeReposMessage>, Error>",
+		);
+		expect(endpoints).toContain(
+			"public func getRepo(input: ComAtprotoSyncGetRepoParameters) async throws -> Data",
+		);
+		expect(endpoints).toContain(
+			"public func getRecord(input: ComAtprotoSyncGetRecordParameters) async throws -> Data",
+		);
+		expect(endpoints).toContain(
+			"public func getBlocks(input: ComAtprotoSyncGetBlocksParameters) async throws -> Data",
+		);
+		expect(endpoints).toContain(
+			"public func getCheckout(input: ComAtprotoSyncGetCheckoutParameters) async throws -> Data",
+		);
+		expect(endpoints).toContain(
+			"public func getBlob(input: ComAtprotoSyncGetBlobParameters) async throws -> Data",
+		);
+		expect(endpoints).toContain(
+			'client.requestData(method: "GET", path: "/xrpc/com.atproto.sync.getRepo", queryItems: input.asQueryItems(), responseKind: .car)',
+		);
+		expect(endpoints).toContain(
+			'client.requestData(method: "GET", path: "/xrpc/com.atproto.sync.getRecord", queryItems: input.asQueryItems(), responseKind: .car)',
+		);
+		expect(endpoints).toContain(
+			'client.requestData(method: "GET", path: "/xrpc/com.atproto.sync.getBlocks", queryItems: input.asQueryItems(), responseKind: .car)',
+		);
+		expect(endpoints).toContain(
+			'client.requestData(method: "GET", path: "/xrpc/com.atproto.sync.getCheckout", queryItems: input.asQueryItems(), responseKind: .car)',
+		);
+		expect(endpoints).toContain(
+			'client.requestData(method: "GET", path: "/xrpc/com.atproto.sync.getBlob", queryItems: input.asQueryItems(), responseKind: .binary)',
+		);
+		expect(endpoints).toContain(
+			"public func exportAccountData() async throws -> Data",
+		);
+		expect(endpoints).toContain(
+			'client.requestData(method: "GET", path: "/xrpc/chat.bsky.actor.exportAccountData", queryItems: [], responseKind: .jsonl)',
+		);
+		expect(endpoints).toContain(
+			"if let typedError = ComAtprotoIdentityResolveIdentityError(transportError: error)",
+		);
+	});
+
+	test("emits stable Swift output for the same lexicon set", async () => {
+		const docs = await loadPhase3RegressionDocs();
+		const ir = buildLexiconIR(docs, {
+			allowPrefixes: [],
+			denyPrefixes: [],
+			denyUnspecced: false,
+			denyDeprecated: false,
+		});
+
+		const leftDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), "lexicodegen-swift-stable-left-"),
+		);
+		const rightDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), "lexicodegen-swift-stable-right-"),
+		);
+
+		await emitSwiftFromIR(ir, leftDir);
+		await emitSwiftFromIR(ir, rightDir);
+
+		const leftFiles = (await fs.readdir(leftDir)).filter((file) =>
+			file.endsWith(".swift"),
+		);
+		const rightFiles = (await fs.readdir(rightDir)).filter((file) =>
+			file.endsWith(".swift"),
+		);
+
+		expect(leftFiles.sort()).toEqual(rightFiles.sort());
+
+		for (const file of leftFiles) {
+			expect(await fs.readFile(path.join(leftDir, file), "utf8")).toBe(
+				await fs.readFile(path.join(rightDir, file), "utf8"),
+			);
+		}
 	});
 
 	(hasSwiftCompiler() ? test : test.skip)(
 		"generates compilable Swift output from real lexicons",
 		async () => {
-			const docs = await Promise.all([
-				loadLexicon("lexicons/com/atproto/repo/applyWrites.json"),
-				loadLexicon("lexicons/com/atproto/repo/defs.json"),
-				loadLexicon("lexicons/com/atproto/repo/uploadBlob.json"),
-				loadLexicon("lexicons/com/atproto/sync/subscribeRepos.json"),
-				loadLexicon("lexicons/com/atproto/identity/resolveIdentity.json"),
-				loadLexicon("lexicons/com/atproto/identity/defs.json"),
-				loadLexicon("lexicons/app/bsky/graph/list.json"),
-				loadLexicon("lexicons/app/bsky/graph/defs.json"),
-				loadLexicon("lexicons/com/atproto/label/defs.json"),
-				loadLexicon("lexicons/app/bsky/richtext/facet.json"),
-			]);
+			const docs = await loadPhase3RegressionDocs();
 
 			const ir = buildLexiconIR(docs, {
 				allowPrefixes: [],

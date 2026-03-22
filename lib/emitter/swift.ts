@@ -19,7 +19,11 @@ type SwiftModel = {
 type GeneratedContext = {
 	definitions: Map<string, IRNamedType>;
 	models: Map<string, SwiftModel>;
+	knownValueEnums: Map<string, string>;
+	inlineUnions: Map<string, string>;
 };
+
+type EndpointOutputKind = "json" | "binary" | "jsonl" | "car";
 
 type EndpointSurface = {
 	id: string;
@@ -32,6 +36,9 @@ type EndpointSurface = {
 	outputType: string | null;
 	errorType: string | null;
 	inputEncoding?: string;
+	outputEncoding?: string;
+	outputKind: EndpointOutputKind;
+	binaryInput: boolean;
 };
 
 type NamespaceNode = {
@@ -212,8 +219,49 @@ function primitiveSwiftType(schema: RawLexiconSchema): string {
 	}
 }
 
+function classifyOutputKind(
+	encoding: string | undefined,
+): EndpointSurface["outputKind"] {
+	switch (encoding?.toLowerCase()) {
+		case undefined:
+		case "application/json":
+			return "json";
+		case "application/jsonl":
+			return "jsonl";
+		case "application/vnd.ipld.car":
+			return "car";
+		default:
+			return "binary";
+	}
+}
+
+function isBinaryInputEncoding(encoding: string | undefined): boolean {
+	const normalized = encoding?.toLowerCase();
+	return normalized != null && normalized !== "application/json";
+}
+
+function defaultBinaryContentType(encoding: string | undefined): string {
+	return encoding ?? "application/octet-stream";
+}
+
 function typeIdentifierForNamedType(named: IRNamedType): string {
 	return named.name === "main" ? named.id : `${named.id}#${named.name}`;
+}
+
+function knownValueEnumKey(group: string, values: string[]): string {
+	return `${group}\u0000${[...new Set(values)].join("\u0001")}`;
+}
+
+function inlineUnionKey(group: string, refs: string[]): string {
+	return `${group}\u0000${refs.join("\u0001")}`;
+}
+
+function quotedSwiftString(value: string | undefined): string {
+	return value == null ? "nil" : JSON.stringify(value);
+}
+
+function permissionMethodName(value: string): string {
+	return toSwiftSafeIdentifier(toCamelCase(value));
 }
 
 function uniqueCaseName(existing: Set<string>, input: string): string {
@@ -265,12 +313,18 @@ function mapSchemaToSwiftType(
 	}
 
 	if (schema.type === "union") {
+		const normalizedRefs = (schema.refs ?? []).map((ref) =>
+			normalizeRef(ref, referenceBase),
+		);
 		return buildUnionDeclaration(
 			fullName,
 			referenceBase,
 			schema.refs ?? [],
 			group,
 			context,
+			{
+				canonicalKey: inlineUnionKey(group, normalizedRefs),
+			},
 		);
 	}
 
@@ -306,7 +360,9 @@ function mapSchemaToSwiftType(
 		Array.isArray(schema.knownValues) &&
 		schema.knownValues.length > 0
 	) {
-		return buildKnownValueEnum(fullName, schema.knownValues, group, context);
+		return buildKnownValueEnum(fullName, schema.knownValues, group, context, {
+			canonicalKey: knownValueEnumKey(group, schema.knownValues),
+		});
 	}
 
 	return primitiveSwiftType(schema);
@@ -317,10 +373,22 @@ function buildKnownValueEnum(
 	values: string[],
 	group: string,
 	context: GeneratedContext,
+	options: {
+		canonicalKey?: string;
+	} = {},
 ): string {
+	if (
+		options.canonicalKey &&
+		context.knownValueEnums.has(options.canonicalKey)
+	) {
+		return (
+			context.knownValueEnums.get(options.canonicalKey) ?? modelName(fullName)
+		);
+	}
+
 	const name = modelName(fullName);
 	const uniqueValues = [...new Set(values)];
-	return ensureModel(
+	const resolvedName = ensureModel(
 		context.models,
 		name,
 		[
@@ -333,6 +401,10 @@ function buildKnownValueEnum(
 		].join("\n"),
 		group,
 	);
+	if (options.canonicalKey) {
+		context.knownValueEnums.set(options.canonicalKey, resolvedName);
+	}
+	return resolvedName;
 }
 
 function buildObjectDeclaration(
@@ -353,15 +425,6 @@ function buildObjectDeclaration(
 	const keys = Object.keys(properties)
 		.filter((key) => key !== "$type")
 		.sort();
-
-	if (keys.length === 0 && !options.typeIdentifier) {
-		return ensureModel(
-			context.models,
-			name,
-			typealiasBody(name, "[String: ATProtocolValueContainer]"),
-			group,
-		);
-	}
 
 	const protocols = options.protocols ?? ["Codable", "Sendable", "Equatable"];
 	const storedProperties = keys.map((key) => {
@@ -450,6 +513,18 @@ function buildObjectDeclaration(
 			]
 		: [];
 
+	const initializer =
+		usableProperties.length === 0
+			? ["\tpublic init() {}", ""]
+			: [
+					"\tpublic init(",
+					initializerParams.join(",\n"),
+					"\t) {",
+					...initializerBody,
+					"\t}",
+					"",
+				];
+
 	const body = [
 		`public struct ${name}: ${protocols.join(", ")} {`,
 		...(options.typeIdentifier
@@ -457,12 +532,7 @@ function buildObjectDeclaration(
 			: []),
 		...propertyDecls,
 		"",
-		`\tpublic init(`,
-		initializerParams.join(",\n"),
-		"\t) {",
-		...initializerBody,
-		"\t}",
-		"",
+		...initializer,
 		"\tpublic init(from decoder: Decoder) throws {",
 		"\t\tlet container = try decoder.container(keyedBy: CodingKeys.self)",
 		...(options.typeIdentifier
@@ -498,7 +568,16 @@ function buildUnionDeclaration(
 	refs: string[],
 	group: string,
 	context: GeneratedContext,
+	options: {
+		canonicalKey?: string;
+	} = {},
 ): string {
+	if (options.canonicalKey && context.inlineUnions.has(options.canonicalKey)) {
+		return (
+			context.inlineUnions.get(options.canonicalKey) ?? modelName(fullName)
+		);
+	}
+
 	const name = modelName(fullName);
 	if (context.models.has(name)) {
 		return name;
@@ -531,19 +610,6 @@ function buildUnionDeclaration(
 		const caseType = modelName(target);
 		const typeIdentifier = typeIdentifierForNamedType(definition);
 
-		if (definition.type === "object") {
-			buildObjectDeclaration(
-				target,
-				definition.id,
-				definition.definition,
-				group,
-				context,
-				{
-					typeIdentifier,
-				},
-			);
-		}
-
 		if (definition.type === "record" && definition.definition.record) {
 			buildObjectDeclaration(
 				target,
@@ -560,6 +626,9 @@ function buildUnionDeclaration(
 				caseName,
 				caseType,
 				typeIdentifier,
+				requiresTaggedEncoding:
+					definition.type === "object" || definition.type === "record",
+				isRecord: definition.type === "record",
 			},
 		];
 	});
@@ -582,9 +651,10 @@ function buildUnionDeclaration(
 		"",
 		"\tpublic func encode(to encoder: Encoder) throws {",
 		"\t\tswitch self {",
-		...cases.map(
-			(entry) =>
-				`\t\tcase .${entry.caseName}(let value): try value.encode(to: encoder)`,
+		...cases.map((entry) =>
+			entry.requiresTaggedEncoding && !entry.isRecord
+				? `\t\tcase .${entry.caseName}(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: ${JSON.stringify(entry.typeIdentifier)}, to: encoder)`
+				: `\t\tcase .${entry.caseName}(let value): try value.encode(to: encoder)`,
 		),
 		"\t\tcase .unexpected(let value): try value.encode(to: encoder)",
 		"\t\t}",
@@ -593,7 +663,94 @@ function buildUnionDeclaration(
 	].join("\n");
 
 	context.models.set(name, { name, body, group });
+	if (options.canonicalKey) {
+		context.inlineUnions.set(options.canonicalKey, name);
+	}
 	return name;
+}
+
+function buildPermissionSetDeclaration(
+	named: IRNamedType,
+	context: GeneratedContext,
+): string {
+	const group = modelGroupFromId(named.source);
+	const name = modelName(named.fullName);
+	const methodName = `${name}Method`;
+	const permissions = Array.isArray(named.definition.permissions)
+		? named.definition.permissions
+		: [];
+	const knownMethods = [
+		...new Set(
+			permissions.flatMap((permission) =>
+				Array.isArray(permission?.lxm)
+					? permission.lxm.filter(
+							(value): value is string => typeof value === "string",
+						)
+					: [],
+			),
+		),
+	];
+
+	ensureModel(
+		context.models,
+		methodName,
+		[
+			`public struct ${methodName}: RawRepresentable, Codable, Hashable, Sendable {`,
+			"\tpublic let rawValue: String",
+			"",
+			"\tpublic init(rawValue: String) {",
+			"\t\tself.rawValue = rawValue",
+			"\t}",
+			...(knownMethods.length > 0
+				? [
+						"",
+						...knownMethods.map(
+							(value) =>
+								`\tpublic static let ${permissionMethodName(value)} = Self(rawValue: ${JSON.stringify(value)})`,
+						),
+					]
+				: []),
+			"}",
+		].join("\n"),
+		group,
+	);
+
+	return ensureModel(
+		context.models,
+		name,
+		[
+			`public struct ${name}: Codable, Sendable, Equatable {`,
+			`\tpublic static let title: String? = ${quotedSwiftString(named.definition.title)}`,
+			`\tpublic static let detail: String? = ${quotedSwiftString(named.definition.detail)}`,
+			`\tpublic static let knownMethods: [${methodName}] = [${knownMethods
+				.map((value) => `.${permissionMethodName(value)}`)
+				.join(", ")}]`,
+			"",
+			`\tpublic let grantedMethods: [${methodName}]`,
+			"",
+			`\tpublic init(grantedMethods: [${methodName}] = []) {`,
+			"\t\tself.grantedMethods = grantedMethods",
+			"\t}",
+			"",
+			"\tpublic init(from decoder: Decoder) throws {",
+			"\t\tvar container = try decoder.unkeyedContainer()",
+			`\t\tvar grantedMethods: [${methodName}] = []`,
+			"\t\twhile !container.isAtEnd {",
+			`\t\t\tgrantedMethods.append(${methodName}(rawValue: try container.decode(String.self)))`,
+			"\t\t}",
+			"\t\tself.grantedMethods = grantedMethods",
+			"\t}",
+			"",
+			"\tpublic func encode(to encoder: Encoder) throws {",
+			"\t\tvar container = encoder.unkeyedContainer()",
+			"\t\tfor method in grantedMethods {",
+			"\t\t\ttry container.encode(method.rawValue)",
+			"\t\t}",
+			"\t}",
+			"}",
+		].join("\n"),
+		group,
+	);
 }
 
 function buildNamedType(named: IRNamedType, context: GeneratedContext): string {
@@ -606,7 +763,6 @@ function buildNamedType(named: IRNamedType, context: GeneratedContext): string {
 				named.definition,
 				group,
 				context,
-				{ typeIdentifier: typeIdentifierForNamedType(named) },
 			);
 		case "params":
 			return buildObjectDeclaration(
@@ -674,12 +830,7 @@ function buildNamedType(named: IRNamedType, context: GeneratedContext): string {
 				context,
 			);
 		case "permission-set":
-			return ensureModel(
-				context.models,
-				modelName(named.fullName),
-				typealiasBody(modelName(named.fullName), "[String]"),
-				group,
-			);
+			return buildPermissionSetDeclaration(named, context);
 		default:
 			return ensureModel(
 				context.models,
@@ -701,6 +852,7 @@ function buildEndpointHelperType(
 	options: {
 		queryEncodable?: boolean;
 		binaryInput?: boolean;
+		contentType?: string;
 	} = {},
 ): string | null {
 	if (suffix === "Input" && options.binaryInput) {
@@ -714,7 +866,7 @@ function buildEndpointHelperType(
 				"\tpublic let data: Data",
 				"\tpublic let contentType: String",
 				"",
-				'\tpublic init(data: Data, contentType: String = "application/octet-stream") {',
+				`\tpublic init(data: Data, contentType: String = ${JSON.stringify(options.contentType ?? "application/octet-stream")}) {`,
 				"\t\tself.data = data",
 				"\t\tself.contentType = contentType",
 				"\t}",
@@ -769,6 +921,13 @@ function buildEndpointErrorType(
 				const identifier = toSwiftSafeIdentifier(toCamelCase(error.name));
 				return `\tcase ${identifier} = "${error.name}"`;
 			}),
+			"",
+			"\tpublic init?(transportError: XRPCTransportError) {",
+			"\t\tguard let rawValue = transportError.payload?.error else {",
+			"\t\t\treturn nil",
+			"\t\t}",
+			"\t\tself.init(rawValue: rawValue)",
+			"\t}",
 			"}",
 		].join("\n"),
 		group,
@@ -780,7 +939,9 @@ function buildEndpointModels(
 	context: GeneratedContext,
 ): EndpointSurface {
 	const binaryInput =
-		endpoint.method === "procedure" && endpoint.inputEncoding === "*/*";
+		endpoint.method === "procedure" &&
+		isBinaryInputEncoding(endpoint.inputEncoding);
+	const outputKind = classifyOutputKind(endpoint.outputEncoding);
 	const parametersType =
 		endpoint.method === "query" || endpoint.method === "subscription"
 			? buildEndpointHelperType(
@@ -800,17 +961,23 @@ function buildEndpointModels(
 					context,
 					{
 						binaryInput,
+						contentType: defaultBinaryContentType(endpoint.inputEncoding),
 					},
 				)
 			: parametersType;
-	const outputType = endpoint.outputSchema
-		? buildEndpointHelperType(
-				endpoint,
-				"Output",
-				endpoint.outputSchema,
-				context,
-			)
-		: null;
+	const outputType =
+		endpoint.method === "subscription"
+			? null
+			: outputKind === "json"
+				? endpoint.outputSchema
+					? buildEndpointHelperType(
+							endpoint,
+							"Output",
+							endpoint.outputSchema,
+							context,
+						)
+					: "EmptyResponse"
+				: null;
 	const messageType =
 		endpoint.method === "subscription"
 			? buildEndpointHelperType(
@@ -834,6 +1001,9 @@ function buildEndpointModels(
 		outputType: endpoint.method === "subscription" ? messageType : outputType,
 		errorType,
 		inputEncoding: endpoint.inputEncoding,
+		outputEncoding: endpoint.outputEncoding,
+		outputKind,
+		binaryInput,
 	};
 }
 
@@ -867,42 +1037,81 @@ function namespaceStructName(prefix: string[]): string {
 	return `${prefix.map(toPascalCase).join("")}Namespace`;
 }
 
+function endpointReturnType(endpoint: EndpointSurface): string {
+	if (endpoint.kind === "subscription") {
+		return endpoint.outputType ?? "ATProtocolValueContainer";
+	}
+
+	return endpoint.outputKind === "json"
+		? (endpoint.outputType ?? "ATProtocolValueContainer")
+		: "Data";
+}
+
+function renderAsyncEndpointMethod(
+	endpoint: EndpointSurface,
+	requestExpression: string,
+): string[] {
+	const signature = endpoint.inputType ? `input: ${endpoint.inputType}` : "";
+	const lines = [
+		`\tpublic func ${endpoint.functionName}(${signature}) async throws -> ${endpointReturnType(endpoint)} {`,
+	];
+
+	if (endpoint.errorType) {
+		lines.push("\t\tdo {");
+		lines.push(`\t\t\treturn try await ${requestExpression}`);
+		lines.push("\t\t} catch let error as XRPCTransportError {");
+		lines.push(
+			`\t\t\tif let typedError = ${endpoint.errorType}(transportError: error) {`,
+		);
+		lines.push("\t\t\t\tthrow typedError");
+		lines.push("\t\t\t}");
+		lines.push("\t\t\tthrow error");
+		lines.push("\t\t}");
+	} else {
+		lines.push(`\t\treturn try await ${requestExpression}`);
+	}
+
+	lines.push("\t}");
+	return lines;
+}
+
 function renderEndpointMethod(endpoint: EndpointSurface): string[] {
 	if (endpoint.kind === "subscription") {
 		const args = endpoint.inputType ? `input: ${endpoint.inputType}` : "";
 		const queryItems = endpoint.inputType ? "input.asQueryItems()" : "[]";
 		return [
-			`\tpublic func ${endpoint.functionName}(${args}) -> AsyncThrowingStream<${endpoint.outputType ?? "ATProtocolValueContainer"}, Error> {`,
+			`\tpublic func ${endpoint.functionName}(${args}) -> AsyncThrowingStream<XRPCSubscriptionEvent<${endpoint.outputType ?? "ATProtocolValueContainer"}>, Error> {`,
 			`\t\tclient.subscribe(path: "${endpoint.path}", queryItems: ${queryItems}, responseType: ${endpoint.outputType ?? "ATProtocolValueContainer"}.self)`,
 			"\t}",
 		];
 	}
 
 	if (endpoint.method === "GET") {
-		const signature = endpoint.inputType ? `input: ${endpoint.inputType}` : "";
 		const queryItems = endpoint.inputType ? "input.asQueryItems()" : "[]";
-		return [
-			`\tpublic func ${endpoint.functionName}(${signature}) async throws -> ${endpoint.outputType ?? "ATProtocolValueContainer"} {`,
-			`\t\ttry await client.request(method: "GET", path: "${endpoint.path}", queryItems: ${queryItems}, responseType: ${endpoint.outputType ?? "ATProtocolValueContainer"}.self)`,
-			"\t}",
-		];
+		return renderAsyncEndpointMethod(
+			endpoint,
+			endpoint.outputKind === "json"
+				? `client.requestJSON(method: "GET", path: "${endpoint.path}", queryItems: ${queryItems}, responseType: ${endpoint.outputType ?? "ATProtocolValueContainer"}.self)`
+				: `client.requestData(method: "GET", path: "${endpoint.path}", queryItems: ${queryItems}, responseKind: .${endpoint.outputKind})`,
+		);
 	}
 
-	const signature = endpoint.inputType ? `input: ${endpoint.inputType}` : "";
-	if (endpoint.inputEncoding === "*/*" && endpoint.inputType) {
-		return [
-			`\tpublic func ${endpoint.functionName}(${signature}) async throws -> ${endpoint.outputType ?? "ATProtocolValueContainer"} {`,
-			`\t\ttry await client.request(method: "POST", path: "${endpoint.path}", body: input.data, queryItems: [], headers: ["Content-Type": input.contentType], responseType: ${endpoint.outputType ?? "ATProtocolValueContainer"}.self)`,
-			"\t}",
-		];
+	if (endpoint.binaryInput && endpoint.inputType) {
+		return renderAsyncEndpointMethod(
+			endpoint,
+			endpoint.outputKind === "json"
+				? `client.requestJSON(method: "POST", path: "${endpoint.path}", body: input.data, queryItems: [], headers: ["Content-Type": input.contentType], responseType: ${endpoint.outputType ?? "ATProtocolValueContainer"}.self)`
+				: `client.requestData(method: "POST", path: "${endpoint.path}", body: input.data, queryItems: [], headers: ["Content-Type": input.contentType], responseKind: .${endpoint.outputKind})`,
+		);
 	}
 
 	const body = endpoint.inputType ? "try client.encodedBody(input)" : "nil";
-	return [
-		`\tpublic func ${endpoint.functionName}(${signature}) async throws -> ${endpoint.outputType ?? "ATProtocolValueContainer"} {`,
-		`\t\ttry await client.request(method: "POST", path: "${endpoint.path}", body: ${body}, queryItems: [], headers: ${endpoint.inputType ? '["Content-Type": "application/json"]' : "[:]"}, responseType: ${endpoint.outputType ?? "ATProtocolValueContainer"}.self)`,
-		"\t}",
-	];
+	return renderAsyncEndpointMethod(
+		endpoint,
+		endpoint.outputKind === "json"
+			? `client.requestJSON(method: "POST", path: "${endpoint.path}", body: ${body}, queryItems: [], headers: ${endpoint.inputType ? '["Content-Type": "application/json"]' : "[:]"}, responseType: ${endpoint.outputType ?? "ATProtocolValueContainer"}.self)`
+			: `client.requestData(method: "POST", path: "${endpoint.path}", body: ${body}, queryItems: [], headers: ${endpoint.inputType ? '["Content-Type": "application/json"]' : "[:]"}, responseKind: .${endpoint.outputKind})`,
+	);
 }
 
 function renderNamespaceNode(node: NamespaceNode): string[] {
@@ -978,6 +1187,8 @@ export async function emitSwiftFromIR(
 	const context: GeneratedContext = {
 		definitions: ir.definitionIndex,
 		models: new Map(),
+		knownValueEnums: new Map(),
+		inlineUnions: new Map(),
 	};
 
 	for (const named of ir.namedTypes) {
