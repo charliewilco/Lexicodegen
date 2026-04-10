@@ -19,6 +19,21 @@ function hasSwiftCompiler(): boolean {
 	return check.status === 0;
 }
 
+async function typecheckSwiftOutput(outputDir: string) {
+	const sourceFiles = (await fs.readdir(outputDir))
+		.filter((file) => file.endsWith(".swift"))
+		.map((file) => path.join(outputDir, file))
+		.sort();
+
+	if (sourceFiles.length === 0) {
+		throw new Error(`No Swift files found in ${outputDir}`);
+	}
+
+	return spawnSync("swiftc", ["-typecheck", ...sourceFiles], {
+		encoding: "utf8",
+	});
+}
+
 async function loadPhase3RegressionDocs() {
 	return Promise.all([
 		loadLexicon("lexicons/com/atproto/repo/applyWrites.json"),
@@ -211,6 +226,74 @@ describe("emitSwiftFromIR", () => {
 		);
 	});
 
+	test("emits empty query parameter types that still typecheck in Swift", async () => {
+		const outputDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), "lexicodegen-swift-empty-params-"),
+		);
+
+		const ir: LexiconIR = {
+			documents: [],
+			namedTypes: [],
+			endpoints: [
+				{
+					id: "app.bsky.actor.getPreferences",
+					name: "main",
+					fullName: "app.bsky.actor.getPreferences",
+					definition: {
+						type: "query",
+						parameters: {
+							type: "params",
+							properties: {},
+						},
+					},
+					method: "query",
+					source: "app.bsky.actor",
+					tag: "app.bsky.actor",
+					path: "/xrpc/app.bsky.actor.getPreferences",
+					parametersSchema: {
+						type: "params",
+						properties: {},
+					},
+					inputSchema: undefined,
+					inputEncoding: undefined,
+					outputSchema: undefined,
+					outputEncoding: undefined,
+					messageSchema: undefined,
+					errors: [],
+				},
+			],
+			definitionIndex: new Map(),
+		};
+
+		await emitSwiftFromIR(ir, outputDir);
+
+		const grouped = await fs.readFile(
+			path.join(outputDir, "AppBskyActor.generated.swift"),
+			"utf8",
+		);
+
+		expect(grouped).toContain(
+			"public struct AppBskyActorGetPreferencesParameters",
+		);
+		expect(grouped).toContain("private struct CodingKeys: CodingKey {");
+		expect(grouped).toContain(
+			"\t\t_ = try decoder.container(keyedBy: CodingKeys.self)",
+		);
+		expect(grouped).toContain(
+			"\t\t_ = encoder.container(keyedBy: CodingKeys.self)",
+		);
+		expect(grouped).toContain("\t\t[]");
+		expect(grouped).not.toContain(
+			"private enum CodingKeys: String, CodingKey {\n\t}",
+		);
+
+		if (hasSwiftCompiler()) {
+			const swiftc = await typecheckSwiftOutput(outputDir);
+			expect(swiftc.status).toBe(0);
+			expect(swiftc.stderr).toBe("");
+		}
+	});
+
 	test("handles real lexicon regressions for unions, records, subscriptions, binary input, and errors", async () => {
 		const docs = await loadPhase3RegressionDocs();
 
@@ -268,7 +351,7 @@ describe("emitSwiftFromIR", () => {
 		);
 
 		expect(repoFile).toContain(
-			"public enum ComAtprotoRepoApplyWritesInputWritesItem",
+			"public indirect enum ComAtprotoRepoApplyWritesInputWritesItem",
 		);
 		expect(repoFile).toContain("case create(ComAtprotoRepoApplyWritesCreate)");
 		expect(repoFile).toContain(
@@ -298,7 +381,7 @@ describe("emitSwiftFromIR", () => {
 		);
 
 		expect(syncFile).toContain(
-			"public enum ComAtprotoSyncSubscribeReposMessage",
+			"public indirect enum ComAtprotoSyncSubscribeReposMessage",
 		);
 		expect(syncFile).toContain(
 			"case commit(ComAtprotoSyncSubscribeReposCommit)",
@@ -317,7 +400,7 @@ describe("emitSwiftFromIR", () => {
 			'public static let typeIdentifier = "app.bsky.graph.list"',
 		);
 		expect(graphFile).toContain("public let avatar: Blob?");
-		expect(graphFile).toContain("public enum AppBskyGraphListLabels");
+		expect(graphFile).toContain("public indirect enum AppBskyGraphListLabels");
 		expect(graphFile).toContain(
 			"case selfLabels(ComAtprotoLabelDefsSelfLabels)",
 		);
@@ -356,6 +439,12 @@ describe("emitSwiftFromIR", () => {
 		);
 
 		expect(embedFile).toContain("public let record: ATProtocolValueContainer");
+		expect(embedFile).toContain(
+			"public let record: AppBskyEmbedRecordViewRecordUnion",
+		);
+		expect(embedFile).toContain(
+			"public indirect enum AppBskyEmbedRecordViewRecordUnion: Codable, Sendable, Equatable {",
+		);
 		expect(notificationFile).toContain(
 			"public let record: ATProtocolValueContainer",
 		);
@@ -458,6 +547,174 @@ describe("emitSwiftFromIR", () => {
 		}
 	});
 
+	test("resolves relative refs from named defs against the lexicon id", async () => {
+		const outputDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), "lexicodegen-swift-relative-ref-"),
+		);
+
+		const namedTypes: IRNamedType[] = [
+			{
+				id: "tools.ozone.safelink.defs",
+				name: "event",
+				fullName: "tools.ozone.safelink.defs.event",
+				definition: {
+					type: "object",
+					required: ["action"],
+					properties: {
+						action: {
+							type: "ref",
+							ref: "#actionType",
+						},
+					},
+				},
+				source: "tools.ozone.safelink.defs",
+				tag: "tools.ozone.safelink",
+				type: "object",
+			},
+			{
+				id: "tools.ozone.safelink.defs",
+				name: "actionType",
+				fullName: "tools.ozone.safelink.defs.actionType",
+				definition: {
+					type: "string",
+					knownValues: ["block", "warn"],
+				},
+				source: "tools.ozone.safelink.defs",
+				tag: "tools.ozone.safelink",
+				type: "string",
+			},
+		];
+
+		const ir: LexiconIR = {
+			documents: [],
+			namedTypes,
+			endpoints: [],
+			definitionIndex: new Map<string, IRNamedType>(
+				namedTypes.map((namedType): [string, IRNamedType] => [
+					namedType.fullName,
+					namedType,
+				]),
+			),
+		};
+
+		await emitSwiftFromIR(ir, outputDir);
+
+		const safelinkModels = await fs.readFile(
+			path.join(outputDir, "ToolsOzoneSafelink.generated.swift"),
+			"utf8",
+		);
+
+		expect(safelinkModels).toContain(
+			"public let action: ToolsOzoneSafelinkDefsActionType",
+		);
+		expect(safelinkModels).not.toContain(
+			"public let action: ATProtocolValueContainer",
+		);
+	});
+
+	test("emits params models and empty objects without widening to ATProtocolValueContainer", async () => {
+		const outputDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), "lexicodegen-swift-params-"),
+		);
+
+		const namedTypes: IRNamedType[] = [
+			{
+				id: "com.example.defs",
+				name: "target",
+				fullName: "com.example.defs.target",
+				definition: {
+					type: "object",
+					required: ["id"],
+					properties: {
+						id: { type: "string" },
+					},
+				},
+				source: "com.example.defs",
+				tag: "com.example.defs",
+				type: "object",
+			},
+			{
+				id: "com.example.defs",
+				name: "empty",
+				fullName: "com.example.defs.empty",
+				definition: {
+					type: "object",
+					properties: {},
+				},
+				source: "com.example.defs",
+				tag: "com.example.defs",
+				type: "object",
+			},
+		];
+
+		const ir: LexiconIR = {
+			documents: [],
+			namedTypes,
+			endpoints: [
+				{
+					id: "com.example.query",
+					name: "main",
+					fullName: "com.example.query",
+					definition: {
+						type: "query",
+						parameters: {
+							type: "params",
+							required: ["subject"],
+							properties: {
+								subject: { type: "ref", ref: "com.example.defs#target" },
+							},
+						},
+					},
+					method: "query",
+					source: "com.example.query",
+					tag: "com.example.query",
+					path: "/xrpc/com.example.query",
+					parametersSchema: {
+						type: "params",
+						required: ["subject"],
+						properties: {
+							subject: { type: "ref", ref: "com.example.defs#target" },
+						},
+					},
+					errors: [],
+				},
+			],
+			definitionIndex: new Map<string, IRNamedType>(
+				namedTypes.map((namedType): [string, IRNamedType] => [
+					namedType.fullName,
+					namedType,
+				]),
+			),
+		};
+
+		await emitSwiftFromIR(ir, outputDir);
+
+		const exampleDefs = await fs.readFile(
+			path.join(outputDir, "ComExampleDefs.generated.swift"),
+			"utf8",
+		);
+		expect(exampleDefs).toContain(
+			"public struct ComExampleDefsEmpty: Codable, Sendable, Equatable {",
+		);
+		expect(exampleDefs).not.toContain(
+			"typealias ComExampleDefsEmpty = ATProtocolValueContainer",
+		);
+
+		const endpoints = await fs.readFile(
+			path.join(outputDir, "Endpoints.swift"),
+			"utf8",
+		);
+		expect(endpoints).toContain(
+			"public func query(input: ComExampleQueryParameters) async throws -> EmptyResponse",
+		);
+
+		const queryModels = await fs.readFile(
+			path.join(outputDir, "ComExampleQuery.generated.swift"),
+			"utf8",
+		);
+		expect(queryModels).toContain("public let subject: ComExampleDefsTarget");
+	});
+
 	(hasSwiftCompiler() ? test : test.skip)(
 		"generates compilable Swift output from real lexicons",
 		async () => {
@@ -475,14 +732,7 @@ describe("emitSwiftFromIR", () => {
 			);
 			await emitSwiftFromIR(ir, outputDir);
 
-			const sourceFiles = (await fs.readdir(outputDir))
-				.filter((file) => file.endsWith(".swift"))
-				.map((file) => path.join(outputDir, file))
-				.sort();
-
-			const swiftc = spawnSync("swiftc", ["-parse", ...sourceFiles], {
-				encoding: "utf8",
-			});
+			const swiftc = await typecheckSwiftOutput(outputDir);
 
 			expect(swiftc.status).toBe(0);
 			expect(swiftc.stderr).toBe("");

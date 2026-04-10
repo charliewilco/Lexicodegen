@@ -6,16 +6,15 @@ If you come back to this repo after a long pause, this README is the “single s
 
 ## Current build status
 
-As of 2026-03-16, the repository is only partially green:
+As of 2026-04-09, the primary local verification suite is green:
 
 - `bun run build` passes and emits `dist/main.mjs`.
-- `bun test` fails with 3 test failures:
-  - `test/lexicon-loader.http.test.ts`: 2 async rejection assertions are written incorrectly for Bun’s matcher API.
-  - `test/lexicon-ir.test.ts`: 1 filter expectation no longer matches current IR behavior.
-- `bunx tsc --noEmit` fails in test files with lexicon fixture typing issues and Fetch API type mismatches.
-- `bunx biome check .` completes with 1 warning for an unused `path` parameter in `test/utils.test.ts`.
+- `bun test` passes.
+- `bunx tsc --noEmit` passes.
+- `bunx biome check .` passes.
+- `bun run verify:swift` regenerates `./output/swift` and typechecks all generated Swift with `swiftc`.
 
-Treat `bun run build` as the current reliable build signal. `just ci` and the GitHub Actions CI workflow are configured correctly, but they are not currently green because the repo baseline has test and typecheck failures.
+Treat `bun run verify:swift` as the clearest Swift generation signal, because it exercises the actual generated files instead of only validating emitter unit tests.
 
 ## Why this exists
 
@@ -106,6 +105,28 @@ You can run the generator directly from source:
 ```bash
 bun run ./main.ts ./lexicons --output ./output/swift
 ```
+
+## Verify generated Swift
+
+Use the dedicated verification command when you want a clear answer to whether the generated Swift actually compiles:
+
+```bash
+bun run verify:swift
+```
+
+or:
+
+```bash
+just verify-swift
+```
+
+If `./output/swift` is already up to date and you only want to rerun the compiler check, use:
+
+```bash
+bun run check:swift
+```
+
+This runs `swiftc -typecheck` across every `.swift` file in `./output/swift`.
 
 ## Usage
 
@@ -308,6 +329,7 @@ just regenerate
 just lexicons
 just test
 just ci
+just verify-swift
 ```
 
 - `just generate`: runs the built executable on the local `./lexicons` input
@@ -315,12 +337,14 @@ just ci
 - `just lexicons`: pulls default lexicons via `scripts/get-lexicons.sh`
 - `just test`: runs Bun test suite
 - `just ci`: runs typecheck + lint + tests + build
+- `just verify-swift`: regenerates Swift output and typechecks it with `swiftc`
 
 Current state:
 
 - `just build` equivalent (`bun run build`) passes
-- `just test` currently fails
-- `just ci` currently fails before completion because typecheck/tests are red
+- `just test` passes
+- `just ci` passes
+- `just verify-swift` passes when `swiftc` is available on PATH
 
 ## CI / CD
 
@@ -332,7 +356,7 @@ GitHub Actions is configured for automated checks:
   - Bun tests
   - Compile executable
   - Generate Swift output
-  - Parse generated Swift with `swiftc`
+  - Typecheck generated Swift with `swiftc`
 - `.github/workflows/daily-regenerate.yml`
   - Scheduled + manual trigger
   - Runs `just all` and opens a regeneration PR when changes are detected

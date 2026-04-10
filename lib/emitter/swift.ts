@@ -128,6 +128,34 @@ function modelName(fullName: string): string {
 	return fullName.split(".").map(toPascalCase).join("");
 }
 
+function hasDefinitionModelNameCollision(
+	name: string,
+	fullName: string,
+	context: GeneratedContext,
+): boolean {
+	return Array.from(context.definitions.values()).some(
+		(definition) =>
+			definition.fullName !== fullName &&
+			modelName(definition.fullName) === name,
+	);
+}
+
+function uniqueInlineUnionName(
+	fullName: string,
+	context: GeneratedContext,
+): string {
+	const baseName = modelName(fullName);
+	let candidate = baseName;
+	let index = 1;
+
+	while (hasDefinitionModelNameCollision(candidate, fullName, context)) {
+		candidate = `${baseName}Union${index === 1 ? "" : index}`;
+		index += 1;
+	}
+
+	return candidate;
+}
+
 function typealiasBody(name: string, target: string): string {
 	return `public typealias ${name} = ${target}`;
 }
@@ -392,7 +420,7 @@ function buildKnownValueEnum(
 		context.models,
 		name,
 		[
-			`public enum ${name}: String, Codable, CaseIterable, Sendable {`,
+			`public enum ${name}: String, Codable, CaseIterable, QueryParameterValue, Sendable {`,
 			...uniqueValues.map((entry) => {
 				const identifier = toSwiftSafeIdentifier(toCamelCase(entry));
 				return `\tcase ${identifier} = "${entry}"`;
@@ -481,36 +509,59 @@ function buildObjectDeclaration(
 		const encoderCall = property.optional ? "encodeIfPresent" : "encode";
 		return `\t\ttry container.${encoderCall}(${property.swiftName}, forKey: .${property.swiftName})`;
 	});
-	const codingKeys = [
-		"\tprivate enum CodingKeys: String, CodingKey {",
-		...(typeIdentifierKey ? [typeIdentifierKey] : []),
-		...usableProperties.map(
-			(property) => `\t\tcase ${property.swiftName} = "${property.key}"`,
-		),
-		"\t}",
-	];
-
-	const queryItemsMethod = options.queryEncodable
+	const hasNamedCodingKeys =
+		typeIdentifierKey != null || usableProperties.length > 0;
+	const codingKeys = hasNamedCodingKeys
 		? [
-				"",
-				"\tpublic func asQueryItems() -> [URLQueryItem] {",
-				"\t\tvar items: [URLQueryItem] = []",
-				...usableProperties.flatMap((property) => {
-					if (property.optional) {
-						return [
-							`\t\tif let value = ${property.swiftName} {`,
-							`\t\t\tvalue.appendQueryItems(named: "${property.key}", to: &items)`,
-							"\t\t}",
-						];
-					}
-
-					return [
-						`\t\t${property.swiftName}.appendQueryItems(named: "${property.key}", to: &items)`,
-					];
-				}),
-				"\t\treturn items",
+				"\tprivate enum CodingKeys: String, CodingKey {",
+				...(typeIdentifierKey ? [typeIdentifierKey] : []),
+				...usableProperties.map(
+					(property) => `\t\tcase ${property.swiftName} = "${property.key}"`,
+				),
 				"\t}",
 			]
+		: [
+				"\tprivate struct CodingKeys: CodingKey {",
+				'\t\tlet stringValue = ""',
+				"\t\tinit?(stringValue: String) {",
+				"\t\t\treturn nil",
+				"\t\t}",
+				"",
+				"\t\tlet intValue: Int? = nil",
+				"\t\tinit?(intValue: Int) {",
+				"\t\t\treturn nil",
+				"\t\t}",
+				"\t}",
+			];
+
+	const queryItemsMethod = options.queryEncodable
+		? usableProperties.length === 0
+			? [
+					"",
+					"\tpublic func asQueryItems() -> [URLQueryItem] {",
+					"\t\t[]",
+					"\t}",
+				]
+			: [
+					"",
+					"\tpublic func asQueryItems() -> [URLQueryItem] {",
+					"\t\tvar items: [URLQueryItem] = []",
+					...usableProperties.flatMap((property) => {
+						if (property.optional) {
+							return [
+								`\t\tif let value = ${property.swiftName} {`,
+								`\t\t\tvalue.appendQueryItems(named: "${property.key}", to: &items)`,
+								"\t\t}",
+							];
+						}
+
+						return [
+							`\t\t${property.swiftName}.appendQueryItems(named: "${property.key}", to: &items)`,
+						];
+					}),
+					"\t\treturn items",
+					"\t}",
+				]
 		: [];
 
 	const initializer =
@@ -534,7 +585,9 @@ function buildObjectDeclaration(
 		"",
 		...initializer,
 		"\tpublic init(from decoder: Decoder) throws {",
-		"\t\tlet container = try decoder.container(keyedBy: CodingKeys.self)",
+		hasNamedCodingKeys
+			? "\t\tlet container = try decoder.container(keyedBy: CodingKeys.self)"
+			: "\t\t_ = try decoder.container(keyedBy: CodingKeys.self)",
 		...(options.typeIdentifier
 			? [
 					"\t\t_ = try container.decodeIfPresent(String.self, forKey: .typeIdentifier)",
@@ -544,7 +597,9 @@ function buildObjectDeclaration(
 		"\t}",
 		"",
 		"\tpublic func encode(to encoder: Encoder) throws {",
-		"\t\tvar container = encoder.container(keyedBy: CodingKeys.self)",
+		hasNamedCodingKeys
+			? "\t\tvar container = encoder.container(keyedBy: CodingKeys.self)"
+			: "\t\t_ = encoder.container(keyedBy: CodingKeys.self)",
 		...(options.typeIdentifier
 			? [
 					"\t\ttry container.encode(Self.typeIdentifier, forKey: .typeIdentifier)",
@@ -578,7 +633,7 @@ function buildUnionDeclaration(
 		);
 	}
 
-	const name = modelName(fullName);
+	const name = uniqueInlineUnionName(fullName, context);
 	if (context.models.has(name)) {
 		return name;
 	}
@@ -634,7 +689,7 @@ function buildUnionDeclaration(
 	});
 
 	const body = [
-		`public enum ${name}: Codable, Sendable, Equatable {`,
+		`public indirect enum ${name}: Codable, Sendable, Equatable {`,
 		...cases.map((entry) => `\tcase ${entry.caseName}(${entry.caseType})`),
 		"\tcase unexpected(ATProtocolValueContainer)",
 		"",

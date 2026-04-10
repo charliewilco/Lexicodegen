@@ -106,7 +106,7 @@ public struct EmptyResponse: Codable, Hashable, Sendable {
 			return
 		}
 
-		if var container = try? decoder.unkeyedContainer(), container.isAtEnd {
+		if let container = try? decoder.unkeyedContainer(), container.isAtEnd {
 			return
 		}
 
@@ -148,7 +148,7 @@ public enum ATProtocolValueContainer: Codable, Sendable, Equatable {
 			return
 		}
 
-		var arrayContainer = try? decoder.unkeyedContainer()
+		let arrayContainer = try? decoder.unkeyedContainer()
 		if var arrayContainer {
 			var values: [ATProtocolValueContainer] = []
 			while !arrayContainer.isAtEnd {
@@ -414,6 +414,12 @@ extension Bool: QueryParameterValue {
 extension Double: QueryParameterValue {
 	public func appendQueryItems(named name: String, to items: inout [URLQueryItem]) {
 		items.append(URLQueryItem(name: name, value: String(self)))
+	}
+}
+
+extension QueryParameterValue where Self: RawRepresentable, RawValue == String {
+	public func appendQueryItems(named name: String, to items: inout [URLQueryItem]) {
+		rawValue.appendQueryItems(named: name, to: &items)
 	}
 }
 
