@@ -15,20 +15,21 @@
 - `bun install`: install dependencies.
 - `just help`: list available project tasks.
 - `bun test`: run Bun unit tests.
-- `bunx tsc --noEmit`: typecheck TypeScript.
+- `bun run typecheck`: typecheck TypeScript with `tsgo` (`@typescript/native-preview`).
 - `bunx biome check .`: validate format/lint.
 - `just format`: run Biome formatting on source and generated files.
 - `just lexicons`: refresh local lexicon snapshots.
 - `just generate`: refresh lexicons, then regenerate Swift models.
 - `bun run dev`: run generator in watch mode during converter changes.
-- Current baseline as of `2026-03-16`:
+- Current baseline as of `2026-04-09`:
   - `bun run build` passes.
-  - `bun test` fails with 3 test failures in `test/lexicon-loader.http.test.ts` and `test/lexicon-ir.test.ts`.
-  - `bunx tsc --noEmit` fails in test files due to fixture typing and Fetch API type issues.
-  - `bunx biome check .` reports 1 warning in `test/utils.test.ts` for an unused parameter.
+  - `bun test` passes.
+  - `bun run typecheck` passes.
+  - `bunx biome check .` passes.
+  - `bun run verify:swift` passes when `swiftc` is available on PATH.
 - Optional checks:
   - `bunx biome check .` for lint/style checks.
-  - `bunx tsc --noEmit` for type-checking.
+  - `bun run typecheck` for type-checking.
   - `bun test` for regression coverage.
   - `bunx biome format --write .` for formatting after generated file updates.
 
@@ -43,12 +44,12 @@
 - Unit tests use Bun’s built-in test runner with files under `test/*.test.ts`.
 - Validate feature changes by running:
   1. `bun test`
-  2. `bunx tsc --noEmit`
+  2. `bun run typecheck`
   3. `bunx biome check .`
   4. `bun run build`
 - Repository status note:
-  - Do not assume the baseline is green. Today, only `bun run build` is passing cleanly.
-  - If your change is documentation-only, you can skip checks, but if you do run them, report the known baseline failures separately from regressions introduced by your work.
+  - The baseline is green as of `2026-04-09`, but rerun the relevant checks instead of assuming it stayed green.
+  - If your change is documentation-only, you can skip checks; otherwise, report exactly what you ran.
 - For end-to-end generation checks:
   1. `./lexicodegen ./lexicons --output ./output/swift`
   2. `bunx biome format --write .` if formatting changed

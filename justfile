@@ -7,7 +7,7 @@ build:
 
 # Run TypeScript type-checking.
 typecheck:
-	bunx tsc --noEmit
+	bun run typecheck
 
 # Format generated Swift files, lexicon JSON files, and TypeScript sources.
 format:
