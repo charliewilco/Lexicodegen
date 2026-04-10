@@ -18,16 +18,17 @@
 	},
 	"dependencies": {
 		"@atproto/lexicon": "^0.6.2",
-		"ejs": "4.0.1"
+		"ejs": "5.0.1"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.3.8",
 		"@types/bun": "latest",
 		"@types/ejs": "3.1.5",
-		"lefthook": "^2.0.8"
+		"lefthook": "^2.0.8",
+		"typescript": "^6.0.2"
 	},
 	"peerDependencies": {
-		"typescript": "^5"
+		"typescript": "^6"
 	},
 	"packageManager": "bun@1.3.9"
 }
