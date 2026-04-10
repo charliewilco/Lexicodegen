@@ -10,7 +10,7 @@ As of 2026-04-09, the primary local verification suite is green:
 
 - `bun run build` passes and emits `dist/main.mjs`.
 - `bun test` passes.
-- `bunx tsc --noEmit` passes.
+- `bun run typecheck` passes.
 - `bunx biome check .` passes.
 - `bun run verify:swift` regenerates `./output/swift` and typechecks the generated Swift with `swiftc`.
 
@@ -291,7 +291,7 @@ just help
 bun test
 
 # typecheck + lint/check
-bunx tsc --noEmit
+bun run typecheck
 bunx biome check .
 
 # bundle the CLI
@@ -354,7 +354,7 @@ GitHub Actions is configured for automated checks:
 Current state:
 
 - The CI workflow reflects the intended verification pipeline.
-- CI runs the same local JS/Bun checks plus explicit Swift regeneration and typechecking.
+- CI runs the same local JS/Bun checks plus explicit Swift regeneration and typechecking: `bun run typecheck`, `bunx biome check .`, `bun test`, `bun run build`, and `bun run verify:swift`.
 
 ## Troubleshooting
 

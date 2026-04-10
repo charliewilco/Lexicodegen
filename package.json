@@ -12,6 +12,7 @@
 		"generate": "bun ./main.ts ./lexicons --output ./output/swift",
 		"check:swift": "bash ./scripts/check-swift-compile.sh ./output/swift",
 		"verify:swift": "bun run generate && bun run check:swift",
+		"typecheck": "tsgo --noEmit",
 		"postgenerate": "bunx biome format --write ./output/**/*.swift ./lexicons/**/**/**/*.json",
 		"dev": "bun --watch run ./main.ts",
 		"test": "bun test",
@@ -23,13 +24,10 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.4.11",
+		"@typescript/native-preview": "^7.0.0-dev.20260409.1",
 		"@types/bun": "latest",
 		"@types/ejs": "3.1.5",
-		"lefthook": "^2.0.8",
-		"typescript": "^6.0.2"
-	},
-	"peerDependencies": {
-		"typescript": "^6"
+		"lefthook": "^2.0.8"
 	},
 	"packageManager": "bun@1.3.9"
 }
