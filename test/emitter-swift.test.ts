@@ -19,6 +19,21 @@ function hasSwiftCompiler(): boolean {
 	return check.status === 0;
 }
 
+async function typecheckSwiftOutput(outputDir: string) {
+	const sourceFiles = (await fs.readdir(outputDir))
+		.filter((file) => file.endsWith(".swift"))
+		.map((file) => path.join(outputDir, file))
+		.sort();
+
+	if (sourceFiles.length === 0) {
+		throw new Error(`No Swift files found in ${outputDir}`);
+	}
+
+	return spawnSync("swiftc", ["-typecheck", ...sourceFiles], {
+		encoding: "utf8",
+	});
+}
+
 async function loadPhase3RegressionDocs() {
 	return Promise.all([
 		loadLexicon("lexicons/com/atproto/repo/applyWrites.json"),
@@ -211,6 +226,74 @@ describe("emitSwiftFromIR", () => {
 		);
 	});
 
+	test("emits empty query parameter types that still typecheck in Swift", async () => {
+		const outputDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), "lexicodegen-swift-empty-params-"),
+		);
+
+		const ir: LexiconIR = {
+			documents: [],
+			namedTypes: [],
+			endpoints: [
+				{
+					id: "app.bsky.actor.getPreferences",
+					name: "main",
+					fullName: "app.bsky.actor.getPreferences",
+					definition: {
+						type: "query",
+						parameters: {
+							type: "params",
+							properties: {},
+						},
+					},
+					method: "query",
+					source: "app.bsky.actor",
+					tag: "app.bsky.actor",
+					path: "/xrpc/app.bsky.actor.getPreferences",
+					parametersSchema: {
+						type: "params",
+						properties: {},
+					},
+					inputSchema: undefined,
+					inputEncoding: undefined,
+					outputSchema: undefined,
+					outputEncoding: undefined,
+					messageSchema: undefined,
+					errors: [],
+				},
+			],
+			definitionIndex: new Map(),
+		};
+
+		await emitSwiftFromIR(ir, outputDir);
+
+		const grouped = await fs.readFile(
+			path.join(outputDir, "AppBskyActor.generated.swift"),
+			"utf8",
+		);
+
+		expect(grouped).toContain(
+			"public struct AppBskyActorGetPreferencesParameters",
+		);
+		expect(grouped).toContain("private struct CodingKeys: CodingKey {");
+		expect(grouped).toContain(
+			"\t\t_ = try decoder.container(keyedBy: CodingKeys.self)",
+		);
+		expect(grouped).toContain(
+			"\t\t_ = encoder.container(keyedBy: CodingKeys.self)",
+		);
+		expect(grouped).toContain("\t\t[]");
+		expect(grouped).not.toContain(
+			"private enum CodingKeys: String, CodingKey {\n\t}",
+		);
+
+		if (hasSwiftCompiler()) {
+			const swiftc = await typecheckSwiftOutput(outputDir);
+			expect(swiftc.status).toBe(0);
+			expect(swiftc.stderr).toBe("");
+		}
+	});
+
 	test("handles real lexicon regressions for unions, records, subscriptions, binary input, and errors", async () => {
 		const docs = await loadPhase3RegressionDocs();
 
@@ -268,7 +351,7 @@ describe("emitSwiftFromIR", () => {
 		);
 
 		expect(repoFile).toContain(
-			"public enum ComAtprotoRepoApplyWritesInputWritesItem",
+			"public indirect enum ComAtprotoRepoApplyWritesInputWritesItem",
 		);
 		expect(repoFile).toContain("case create(ComAtprotoRepoApplyWritesCreate)");
 		expect(repoFile).toContain(
@@ -298,7 +381,7 @@ describe("emitSwiftFromIR", () => {
 		);
 
 		expect(syncFile).toContain(
-			"public enum ComAtprotoSyncSubscribeReposMessage",
+			"public indirect enum ComAtprotoSyncSubscribeReposMessage",
 		);
 		expect(syncFile).toContain(
 			"case commit(ComAtprotoSyncSubscribeReposCommit)",
@@ -317,7 +400,7 @@ describe("emitSwiftFromIR", () => {
 			'public static let typeIdentifier = "app.bsky.graph.list"',
 		);
 		expect(graphFile).toContain("public let avatar: Blob?");
-		expect(graphFile).toContain("public enum AppBskyGraphListLabels");
+		expect(graphFile).toContain("public indirect enum AppBskyGraphListLabels");
 		expect(graphFile).toContain(
 			"case selfLabels(ComAtprotoLabelDefsSelfLabels)",
 		);
@@ -356,6 +439,12 @@ describe("emitSwiftFromIR", () => {
 		);
 
 		expect(embedFile).toContain("public let record: ATProtocolValueContainer");
+		expect(embedFile).toContain(
+			"public let record: AppBskyEmbedRecordViewRecordUnion",
+		);
+		expect(embedFile).toContain(
+			"public indirect enum AppBskyEmbedRecordViewRecordUnion: Codable, Sendable, Equatable {",
+		);
 		expect(notificationFile).toContain(
 			"public let record: ATProtocolValueContainer",
 		);
@@ -643,14 +732,7 @@ describe("emitSwiftFromIR", () => {
 			);
 			await emitSwiftFromIR(ir, outputDir);
 
-			const sourceFiles = (await fs.readdir(outputDir))
-				.filter((file) => file.endsWith(".swift"))
-				.map((file) => path.join(outputDir, file))
-				.sort();
-
-			const swiftc = spawnSync("swiftc", ["-parse", ...sourceFiles], {
-				encoding: "utf8",
-			});
+			const swiftc = await typecheckSwiftOutput(outputDir);
 
 			expect(swiftc.status).toBe(0);
 			expect(swiftc.stderr).toBe("");

@@ -9,6 +9,8 @@
 	"scripts": {
 		"build": "bun build ./main.ts --target bun --outfile ./dist/main.mjs",
 		"generate": "bun ./main.ts ./lexicons --output ./output/swift",
+		"check:swift": "bash ./scripts/check-swift-compile.sh ./output/swift",
+		"verify:swift": "bun run generate && bun run check:swift",
 		"postgenerate": "bunx biome format --write ./output/**/*.swift ./lexicons/**/**/**/*.json",
 		"dev": "bun --watch run ./main.ts",
 		"test": "bun test",

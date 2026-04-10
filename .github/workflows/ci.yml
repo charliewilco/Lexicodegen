@@ -43,11 +43,5 @@ jobs:
       - name: Generate Swift output from current lexicons
         run: bun run generate
 
-      - name: Verify generated Swift parses
-        run: |
-          GENERATED_FILES=$(find ./output/swift -name "*.swift")
-          if [ -z "$GENERATED_FILES" ]; then
-            echo "No generated Swift files found"
-            exit 1
-          fi
-          swiftc -parse $GENERATED_FILES
+      - name: Verify generated Swift typechecks
+        run: bun run check:swift

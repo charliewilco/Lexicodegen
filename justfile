@@ -37,6 +37,14 @@ ci:
 generate:
 	bun ./main.ts ./lexicons --output ./output/swift
 
+# Typecheck generated Swift output with swiftc.
+swift-check:
+	bun run check:swift
+
+# Regenerate Swift output, then typecheck it with swiftc.
+verify-swift:
+	bun run verify:swift
+
 # Refresh upstream lexicons, then regenerate.
 regenerate: lexicons generate
 
