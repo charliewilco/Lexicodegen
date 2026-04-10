@@ -105,9 +105,11 @@ describe("buildLexiconIR", () => {
 
 		expect(ir.documents.map((doc) => doc.id)).toEqual([
 			"app.bsky.feed.getFeed",
+			"app.bsky.feed.subscribeFeed",
 		]);
 		expect(ir.endpoints.map((endpoint) => endpoint.fullName)).toEqual([
 			"app.bsky.feed.getFeed",
+			"app.bsky.feed.subscribeFeed",
 		]);
 		expect(ir.namedTypes.map((named) => named.fullName)).toEqual([
 			"app.bsky.feed.getFeed.recordType",
