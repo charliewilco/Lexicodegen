@@ -5,6 +5,7 @@
 	"bin": {
 		"lexicodegen": "./main.ts"
 	},
+	"license": "Unlicense",
 	"private": true,
 	"scripts": {
 		"build": "bun build ./main.ts --target bun --outfile ./dist/main.mjs",
