@@ -12,6 +12,8 @@ permissions:
 jobs:
   regenerate:
     runs-on: ubuntu-latest
+    env:
+      SWIFT_MODULE_CACHE_PATH: ${{ runner.temp }}/swift-module-cache
 
     steps:
       - name: Checkout
@@ -21,11 +23,25 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
+          cache-dependency-path: go.sum
 
       - name: Setup Swift
         uses: swift-actions/setup-swift@v2.4.0
         with:
           swift-version: "6.2"
+
+      - name: Compute Swift cache key
+        id: swift-cache-key
+        shell: bash
+        run: |
+          version="$(swift --version | head -n 1 | tr -cs '[:alnum:]._-' '-')"
+          echo "key=${RUNNER_OS}-${version}-module-cache-v1" >> "$GITHUB_OUTPUT"
+
+      - name: Restore Swift module cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.SWIFT_MODULE_CACHE_PATH }}
+          key: ${{ steps.swift-cache-key.outputs.key }}
 
       - name: Refresh lexicons
         run: sh ./scripts/get-lexicons.sh

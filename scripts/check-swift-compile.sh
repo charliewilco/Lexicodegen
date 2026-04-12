@@ -24,6 +24,12 @@ if [ ${#swift_files[@]} -eq 0 ]; then
 	exit 1
 fi
 
+swiftc_args=()
+if [ -n "${SWIFT_MODULE_CACHE_PATH:-}" ]; then
+	mkdir -p "$SWIFT_MODULE_CACHE_PATH"
+	swiftc_args+=("-module-cache-path" "$SWIFT_MODULE_CACHE_PATH")
+fi
+
 echo "Typechecking ${#swift_files[@]} Swift files from $OUTPUT_DIR"
-swiftc -typecheck "${swift_files[@]}"
+swiftc -typecheck "${swiftc_args[@]}" "${swift_files[@]}"
 echo "Swift typecheck passed"
