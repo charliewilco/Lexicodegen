@@ -1,34 +1,16 @@
 # Lexicodegen
 
-Generate Swift models and API client surface from AT Protocol lexicons using a Bun-based CLI.
+Generate Swift models and XRPC client surface from AT Protocol lexicons with a single Go CLI.
 
-If you come back to this repo after a long pause, this README is the source of truth for how the repo behaves today.
+This repo used to be Bun/TypeScript-based. It is now Go-first:
 
-## Current build status
+- lexicon parsing and validation use [Indigo](https://github.com/bluesky-social/indigo)
+- config, source loading, IR building, and Swift emission are repo-owned Go code
+- generated Swift output is kept near-parity with the previous implementation
 
-As of 2026-04-09, the primary local verification suite is green:
+The design intentionally keeps a repo-owned intermediate representation so future targets are possible without coupling the project to Indigo's generator packages.
 
-- `bun run build` passes and emits `dist/main.mjs`.
-- `bun test` passes.
-- `bun run typecheck` passes.
-- `bunx biome check .` passes.
-- `bun run verify:swift` regenerates `./output/swift` and typechecks the generated Swift with `swiftc`.
-
-Treat `bun run verify:swift` as the clearest end-to-end generation signal, because it exercises the actual generated files instead of only validating emitter unit tests.
-
-## Why this exists
-
-`lexicon-openapi-generator` evolved from an OpenAPI-first implementation into a Swift-first workflow:
-
-- Input is one or more lexicon sources: local files, HTTP JSON, or tarball archive URLs.
-- Output is Swift code for:
-	- model structs and enums
-	- endpoint request and response types
-	- subscription client methods backed by `AsyncThrowingStream`
-	- shared helper files: `Models.swift` and `Endpoints.swift`
-- Optional OpenAPI output is no longer part of the active path.
-
-## Current output
+## Current Output
 
 - Generated Swift files are written to `output/swift` by default.
 - Files are namespace-grouped, for example:
@@ -37,144 +19,115 @@ Treat `bun run verify:swift` as the clearest end-to-end generation signal, becau
 - Shared helper files are emitted as:
 	- `Models.swift`
 	- `Endpoints.swift`
-- `output.swiftFilePrefix` can prepend every generated Swift filename, for example `Generated_Models.swift`
+- `output.swiftFilePrefix` can prepend every generated Swift filename, for example `Generated_Models.swift`.
 
-## Project layout
+## Project Layout
 
-- `main.ts`: CLI entrypoint (`load config -> load lexicons -> build IR -> emit Swift`)
-- `lib/config.ts`: argument and config parsing
-- `lib/lexicon-loader.ts`: source loading (`local`, `http`, `git-archive`)
-- `lib/lexicon-ir.ts`: namespace-agnostic intermediate representation
-- `lib/emitter/swift.ts`: Swift code generation
-- `lib/utils.ts`: reusable helpers and compatibility utilities
-- `templates/swift/*.ejs`: EJS templates used by the emitter
-- `lexicons/`: checked-in lexicon JSON inputs
-- `output/swift/`: generated Swift output
-- `scripts/get-lexicons.sh`: pulls the default upstream lexicon tarball
+- `cmd/lexicodegen`: CLI entrypoint
+- `internal/config`: CLI and config-file parsing, defaults, normalization, validation
+- `internal/source`: local, HTTP, and git-archive lexicon loading
+- `internal/schema`: raw normalized schema model plus Indigo-backed validation adapter
+- `internal/ir`: generator IR for Swift emission
+- `internal/swiftgen`: Swift-specific code generation
+- `lexicons/`: checked-in lexicon JSON input
+- `testdata/golden/full/`: parity snapshot for generated Swift output
+- `scripts/get-lexicons.sh`: refreshes lexicon snapshots from upstream
 - `scripts/check-swift-compile.sh`: typechecks generated Swift with `swiftc`
-- `.github/workflows/`: CI and daily regeneration automation
 
 ## Installation
 
-```bash
-bun install
-```
+Requirements:
 
-## How to run the generator
+- Go 1.26+
+- Swift 6.2+ if you want to run generated-code compilation checks
 
-The repo’s day-to-day entrypoint is the source file:
-
-```bash
-bun run ./main.ts ./lexicons --output ./output/swift
-```
-
-The package also declares a `lexicodegen` bin in `package.json`. If you install or link the package with Bun, that command resolves to `main.ts`.
+Build the CLI:
 
 ```bash
-bun link
-lexicodegen ./lexicons --output ./output/swift
+go build -o ./lexicodegen ./cmd/lexicodegen
 ```
 
-`bun run build` bundles `main.ts` to `dist/main.mjs` and is part of the verification pipeline, but the commands in this README use the source entrypoint because that is the path exercised by local development and project automation today.
-
-There is currently no dedicated CLI `--help` output. Use the supported flags and examples below as the authoritative reference.
-
-## Verify generated Swift
-
-Use the dedicated verification command when you want a clear answer to whether the generated Swift compiles:
+Or run it directly:
 
 ```bash
-bun run verify:swift
+go run ./cmd/lexicodegen ./lexicons --output ./output/swift
 ```
 
-or:
+## Git Hooks
+
+Lefthook is configured as a project-local Go tool and tracked in `go.mod`. The repo config lives in `lefthook.toml`.
+
+Install the hooks with:
 
 ```bash
-just verify-swift
+go tool github.com/evilmartians/lefthook/v2 install
 ```
 
-If `output/swift` is already up to date and you only want to rerun the compiler check:
+Or use the repo helper:
 
 ```bash
-bun run check:swift
+just hooks-install
 ```
 
-That runs `swiftc -typecheck` across every `.swift` file in `output/swift`.
+Configured hooks:
+
+- `pre-commit`: run `gofmt -w` on staged Go files and restage fixes
+- `pre-push`: run `go test ./...`
 
 ## Usage
 
-### Basic usage
-
-Preferred local invocation:
+Basic usage:
 
 ```bash
-bun run ./main.ts <source1> [source2 ...] [--source <source>] [--output <swift-output-dir>]
-```
-
-If the package has been linked or installed with Bun:
-
-```bash
-lexicodegen <source1> [source2 ...] [--source <source>] [--output <swift-output-dir>]
+go run ./cmd/lexicodegen <source1> [source2 ...] [--source <source>] [--output <swift-output-dir>]
 ```
 
 Examples:
 
 ```bash
-bun run ./main.ts ./lexicons ./frontpage-lexicons --output ./output/swift
-bun run ./main.ts ./lexicons https://example.com/namespace.json --output ./output/swift
-bun run ./main.ts --source local:./leaflet --source https://example.com/namespace.json --output ./output/swift
+go run ./cmd/lexicodegen ./lexicons ./frontpage-lexicons --output ./output/swift
+go run ./cmd/lexicodegen ./lexicons https://example.com/namespace.json --output ./output/swift
+go run ./cmd/lexicodegen --source local:./leaflet --source https://example.com/namespace.json --output ./output/swift
 ```
 
-### Source input types
+Supported source kinds:
 
-- Local folder or file:
-	- `./lexicons`
-	- `local:./lexicons`
-- HTTP URL:
-	- `https://...` for a JSON lexicon document or JSON array of lexicon documents
-- Git archive URL:
-	- `git-archive:https://github.com/org/repo/archive/refs/heads/main.tar.gz`
-	- `stripPath` can be set in config to narrow the extracted scan root
+- local directory or file
+- HTTP JSON document or JSON array of documents
+- `git-archive:` tarball URL with optional `stripPath` in config
 
-`branch` is accepted by the config type for `git-archive` sources but is not currently used during loading. Point `url` at the exact archive ref you want to fetch.
+## Flags
 
-### `--source` and positional args
+Supported CLI flags:
 
-- Positional arguments are accepted as source entries.
-- `--source` arguments are also accepted.
-- Both are merged; `--source` entries are processed first, then positional sources.
-- If no source is provided by flags or positionals, the default source `./lexicons` is used.
-
-## Supported flags
-
-Current CLI flags supported by `loadGeneratorConfig`:
-
-| Flag | Type | Notes |
-|---|---|---|
-| `--config <path>` | string | JSON or TOML config file |
-| `--source <path-or-url>` | string (repeatable) | Add explicit source |
-| `--allow-prefix <prefix>` | string (repeatable) | Include only matching namespace prefixes |
-| `--deny-prefix <prefix>` | string (repeatable) | Exclude matching namespace prefixes |
-| `--deny-unspecced` | boolean | Skip unspecced defs |
-| `--deny-deprecated` | boolean | Skip deprecated defs |
-| `--output <dir>` | string | Alias for `--swift-output-dir` |
-| `--swift-output-dir <dir>` | string | Swift output path |
-| `--targets <target>` / `--target <target>` | string | Accepts `swift` or a comma-separated list |
+- `--config <path>`
+- `--source <path-or-url>` (repeatable)
+- `--allow-prefix <prefix>` (repeatable or comma-separated)
+- `--deny-prefix <prefix>` (repeatable or comma-separated)
+- `--deny-unspecced`
+- `--deny-deprecated`
+- `--output <dir>`
+- `--swift-output-dir <dir>`
+- `--target <target>` / `--targets <target>`
 
 Notes:
 
-- `--targets` currently accepts only `swift`.
-- `--targets=both` is treated as `swift` for compatibility.
-- Unknown flags are currently ignored rather than rejected, so copy commands carefully.
+- `swift` is the only supported target
+- `both` is accepted as a compatibility alias for `swift`
+- unknown flags are rejected
+- unknown targets are rejected
+- `output.swiftFilePrefix` is currently config-only
 
-## Config files (JSON / TOML)
+## Config Files
 
-Both config formats are supported:
+JSON and TOML config files are supported:
 
-- `--config path/to/config.json`
-- `--config path/to/config.toml`
+```bash
+go run ./cmd/lexicodegen --config ./lexicodegen.toml
+go run ./cmd/lexicodegen --config ./lexicodegen.json
+```
 
-### Config shape
+### Config Shape
 
 | Key | Type | Default | Notes |
 |---|---|---|---|
@@ -189,7 +142,7 @@ Both config formats are supported:
 
 This repo already supports filter prefixes in config via `filters.allowPrefixes` and `filters.denyPrefixes`. `output.swiftFilePrefix` is separate: it changes generated filenames, not lexicon filtering.
 
-### `sources` schema
+### `sources` Schema
 
 Each source is one of:
 
@@ -208,7 +161,7 @@ Each source is one of:
 ```json
 {
 	"kind": "http",
-	"url": "https://..."
+	"url": "https://example.com/lexicons.json"
 }
 ```
 
@@ -224,7 +177,7 @@ Each source is one of:
 
 `stripPath` is used during archive extraction. If you need a specific branch or tag, point `url` at the archive for that ref directly.
 
-### JSON example
+### JSON Example
 
 ```json
 {
@@ -236,7 +189,7 @@ Each source is one of:
 		}
 	],
 	"filters": {
-		"allowPrefixes": ["app.bsky", "leaflet", "frontpage"],
+		"allowPrefixes": ["app.bsky", "frontpage"],
 		"denyPrefixes": ["com.atproto.lexicon.resolveLexicon"],
 		"denyUnspecced": false,
 		"denyDeprecated": false
@@ -249,21 +202,21 @@ Each source is one of:
 }
 ```
 
-### TOML example
+### TOML Example
 
 ```toml
-targets = ["swift"]
-
 [[sources]]
 kind = "local"
 path = "./lexicons"
 recursive = true
 
 [filters]
-allowPrefixes = ["app.bsky", "leaflet", "frontpage"]
+allowPrefixes = ["app.bsky", "frontpage"]
 denyPrefixes = ["com.atproto.lexicon.resolveLexicon"]
 denyUnspecced = false
 denyDeprecated = false
+
+targets = ["swift"]
 
 [output]
 swiftOutDir = "./output/swift"
@@ -272,121 +225,30 @@ swiftFilePrefix = "Generated_"
 
 `output.swiftFilePrefix` is applied verbatim. If you want a separator, include it yourself, for example `Generated_` or `ATProto`.
 
-### Config precedence
+### Precedence
 
-- CLI flags override config file values for:
-	- output path
-	- allow and deny prefix filters
-	- `deny-unspecced` and `deny-deprecated`
-- Source behavior:
-	- if any CLI source is provided (`--source` or positional), config and default `sources` are ignored
-	- otherwise config or default sources are used
-- `output.swiftFilePrefix` is currently config-only
-- Targets default to `["swift"]` if nothing is specified
+Merge behavior is intentionally simple:
 
-## Supported lexicon definitions
+- CLI sources replace config-file sources when any positional source or `--source` is provided
+- CLI filter flags override config filters individually
+- `--output` and `--swift-output-dir` override `output.swiftOutDir`
+- `output.swiftFilePrefix` comes from config only
+- resolved local paths are normalized relative to the current working directory
 
-- `query` -> HTTP GET endpoint path under `/xrpc/{lexicon.id}`
-- `procedure` -> HTTP POST endpoint path under `/xrpc/{lexicon.id}`
-- `subscription` -> streaming endpoint surface in Swift
-- `object`, `record`, `array`, `string`, `token`
-- `permission-set`
-- `union` with a generated `.unknown` fallback
+## Development
 
-## Everyday commands
+Common commands:
 
-### Primary commands
+- `just build`
+- `just test`
+- `just lint`
+- `just generate`
+- `just verify-swift`
+- `just all`
 
-```bash
-# list tasks
-just help
+Primary verification flow:
 
-# run unit tests
-bun test
-
-# typecheck + lint/check
-bun run typecheck
-bunx biome check .
-
-# bundle the CLI
-bun run build
-
-# generate from the default local lexicon directory
-bun run ./main.ts ./lexicons --output ./output/swift
-
-# regenerate Swift and typecheck the generated output
-bun run verify:swift
-```
-
-### Just recipes
-
-```bash
-just help
-just generate
-just regenerate
-just lexicons
-just test
-just ci
-just swift-check
-just verify-swift
-just all
-```
-
-- `just generate`: runs `bun ./main.ts ./lexicons --output ./output/swift`
-- `just regenerate`: refreshes `lexicons/` via `just lexicons`, then regenerates output
-- `just lexicons`: pulls default lexicons via `scripts/get-lexicons.sh`
-- `just test`: runs the Bun test suite
-- `just ci`: runs typecheck, Biome, tests, and build
-- `just swift-check`: runs `bun run check:swift`
-- `just verify-swift`: regenerates Swift output and typechecks it with `swiftc`
-- `just all`: refreshes lexicons, regenerates output, then formats the repo
-
-Current state:
-
-- `bun run build` passes
-- `just test` passes
-- `just ci` passes
-- `just verify-swift` passes when `swiftc` is available on `PATH`
-
-## CI / CD
-
-GitHub Actions is configured for automated checks:
-
-- `.github/workflows/ci.yml`
-	- `bun install --frozen-lockfile`
-	- `bunx tsc --noEmit`
-	- `bunx biome check .`
-	- `bun test`
-	- `bun run build`
-	- `bun run generate`
-	- `bun run check:swift`
-- `.github/workflows/daily-regenerate.yml`
-	- scheduled and manual trigger
-	- runs `just all`
-	- opens a regeneration PR when changes are detected
-
-Current state:
-
-- The CI workflow reflects the intended verification pipeline.
-- CI runs the same local JS/Bun checks plus explicit Swift regeneration and typechecking: `bun run typecheck`, `bunx biome check .`, `bun test`, `bun run build`, and `bun run verify:swift`.
-
-## Troubleshooting
-
-- `Could not load source`:
-	- verify the source path or URL is reachable and the payload is valid lexicon JSON
-- Empty generation:
-	- check filters: `--allow-prefix`, `--deny-prefix`, `--deny-unspecced`, `--deny-deprecated`
-- Unexpected file names:
-	- filenames are namespace-derived by default; if `output.swiftFilePrefix` is set, that string is prepended to every generated Swift file
-- Tarball source not loading:
-	- confirm the URL serves a valid tarball and that lexicon JSON files exist at the extracted path
-
-## Notes
-
-- `scripts/get-lexicons.sh` is currently Bluesky-oriented and still uses `bluesky-social/atproto` defaults
-- For non-Bluesky feeds, prefer explicit `--source` entries or config `sources`
-- Source handling and output generation defaults are intentionally namespace-agnostic
-
-## License
-
-This project is released under the Unlicense. See `UNLICENSE`.
+- `go test ./...`
+- `go build -o ./lexicodegen ./cmd/lexicodegen`
+- `go run ./cmd/lexicodegen ./lexicons --output ./output/swift`
+- `bash ./scripts/check-swift-compile.sh ./output/swift`

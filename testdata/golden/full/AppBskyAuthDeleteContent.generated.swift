@@ -1,0 +1,41 @@
+import Foundation
+
+
+public struct AppBskyAuthDeleteContent: Codable, Sendable, Equatable {
+	public static let title: String? = "Delete Bluesky Content"
+	public static let detail: String? = "Clean up public account history: posts, reposts, and likes."
+	public static let knownMethods: [AppBskyAuthDeleteContentMethod] = []
+
+	public let grantedMethods: [AppBskyAuthDeleteContentMethod]
+
+	public init(grantedMethods: [AppBskyAuthDeleteContentMethod] = []) {
+		self.grantedMethods = grantedMethods
+	}
+
+	public init(from decoder: Decoder) throws {
+		var container = try decoder.unkeyedContainer()
+		var grantedMethods: [AppBskyAuthDeleteContentMethod] = []
+		while !container.isAtEnd {
+			grantedMethods.append(AppBskyAuthDeleteContentMethod(rawValue: try container.decode(String.self)))
+		}
+		self.grantedMethods = grantedMethods
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.unkeyedContainer()
+		for method in grantedMethods {
+			try container.encode(method.rawValue)
+		}
+	}
+}
+
+
+public struct AppBskyAuthDeleteContentMethod: RawRepresentable, Codable, Hashable, Sendable {
+	public let rawValue: String
+
+	public init(rawValue: String) {
+		self.rawValue = rawValue
+	}
+}
+
+

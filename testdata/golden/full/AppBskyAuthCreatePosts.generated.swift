@@ -1,0 +1,45 @@
+import Foundation
+
+
+public struct AppBskyAuthCreatePosts: Codable, Sendable, Equatable {
+	public static let title: String? = "Create Bluesky Posts"
+	public static let detail: String? = "Can not update or delete posts."
+	public static let knownMethods: [AppBskyAuthCreatePostsMethod] = [.appBskyVideoUploadVideo, .appBskyVideoGetJobStatus, .appBskyVideoGetUploadLimits]
+
+	public let grantedMethods: [AppBskyAuthCreatePostsMethod]
+
+	public init(grantedMethods: [AppBskyAuthCreatePostsMethod] = []) {
+		self.grantedMethods = grantedMethods
+	}
+
+	public init(from decoder: Decoder) throws {
+		var container = try decoder.unkeyedContainer()
+		var grantedMethods: [AppBskyAuthCreatePostsMethod] = []
+		while !container.isAtEnd {
+			grantedMethods.append(AppBskyAuthCreatePostsMethod(rawValue: try container.decode(String.self)))
+		}
+		self.grantedMethods = grantedMethods
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.unkeyedContainer()
+		for method in grantedMethods {
+			try container.encode(method.rawValue)
+		}
+	}
+}
+
+
+public struct AppBskyAuthCreatePostsMethod: RawRepresentable, Codable, Hashable, Sendable {
+	public let rawValue: String
+
+	public init(rawValue: String) {
+		self.rawValue = rawValue
+	}
+
+	public static let appBskyVideoUploadVideo = Self(rawValue: "app.bsky.video.uploadVideo")
+	public static let appBskyVideoGetJobStatus = Self(rawValue: "app.bsky.video.getJobStatus")
+	public static let appBskyVideoGetUploadLimits = Self(rawValue: "app.bsky.video.getUploadLimits")
+}
+
+

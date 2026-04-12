@@ -1,0 +1,235 @@
+import Foundation
+
+
+public struct ComAtprotoModerationCreateReportInput: Codable, Sendable, Equatable {
+	public let modTool: ComAtprotoModerationCreateReportModTool?
+	public let reason: String?
+	public let reasonType: ComAtprotoModerationDefsReasonType
+	public let subject: ComAtprotoModerationCreateReportInputSubject
+
+	public init(
+		modTool: ComAtprotoModerationCreateReportModTool? = nil,
+		reason: String? = nil,
+		reasonType: ComAtprotoModerationDefsReasonType,
+		subject: ComAtprotoModerationCreateReportInputSubject
+	) {
+		self.modTool = modTool
+		self.reason = reason
+		self.reasonType = reasonType
+		self.subject = subject
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		modTool = try container.decodeIfPresent(ComAtprotoModerationCreateReportModTool.self, forKey: .modTool)
+		reason = try container.decodeIfPresent(String.self, forKey: .reason)
+		reasonType = try container.decode(ComAtprotoModerationDefsReasonType.self, forKey: .reasonType)
+		subject = try container.decode(ComAtprotoModerationCreateReportInputSubject.self, forKey: .subject)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(modTool, forKey: .modTool)
+		try container.encodeIfPresent(reason, forKey: .reason)
+		try container.encode(reasonType, forKey: .reasonType)
+		try container.encode(subject, forKey: .subject)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case modTool = "modTool"
+		case reason = "reason"
+		case reasonType = "reasonType"
+		case subject = "subject"
+	}
+}
+
+
+public indirect enum ComAtprotoModerationCreateReportInputSubject: Codable, Sendable, Equatable {
+	case repoRef(ComAtprotoAdminDefsRepoRef)
+	case strongRef(ComAtprotoRepoStrongRef)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "com.atproto.admin.defs#repoRef": self = .repoRef(try ComAtprotoAdminDefsRepoRef(from: decoder))
+		case "com.atproto.repo.strongRef": self = .strongRef(try ComAtprotoRepoStrongRef(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .repoRef(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "com.atproto.admin.defs#repoRef", to: encoder)
+		case .strongRef(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "com.atproto.repo.strongRef", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
+public struct ComAtprotoModerationCreateReportModTool: Codable, Sendable, Equatable {
+	public let meta: ATProtocolValueContainer?
+	public let name: String
+
+	public init(
+		meta: ATProtocolValueContainer? = nil,
+		name: String
+	) {
+		self.meta = meta
+		self.name = name
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		meta = try container.decodeIfPresent(ATProtocolValueContainer.self, forKey: .meta)
+		name = try container.decode(String.self, forKey: .name)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(meta, forKey: .meta)
+		try container.encode(name, forKey: .name)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case meta = "meta"
+		case name = "name"
+	}
+}
+
+
+public struct ComAtprotoModerationCreateReportOutput: Codable, Sendable, Equatable {
+	public let createdAt: ATProtocolDate
+	public let id: Int
+	public let reason: String?
+	public let reasonType: ComAtprotoModerationDefsReasonType
+	public let reportedBy: DID
+	public let subject: ComAtprotoModerationCreateReportInputSubject
+
+	public init(
+		createdAt: ATProtocolDate,
+		id: Int,
+		reason: String? = nil,
+		reasonType: ComAtprotoModerationDefsReasonType,
+		reportedBy: DID,
+		subject: ComAtprotoModerationCreateReportInputSubject
+	) {
+		self.createdAt = createdAt
+		self.id = id
+		self.reason = reason
+		self.reasonType = reasonType
+		self.reportedBy = reportedBy
+		self.subject = subject
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		createdAt = try container.decode(ATProtocolDate.self, forKey: .createdAt)
+		id = try container.decode(Int.self, forKey: .id)
+		reason = try container.decodeIfPresent(String.self, forKey: .reason)
+		reasonType = try container.decode(ComAtprotoModerationDefsReasonType.self, forKey: .reasonType)
+		reportedBy = try container.decode(DID.self, forKey: .reportedBy)
+		subject = try container.decode(ComAtprotoModerationCreateReportInputSubject.self, forKey: .subject)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(createdAt, forKey: .createdAt)
+		try container.encode(id, forKey: .id)
+		try container.encodeIfPresent(reason, forKey: .reason)
+		try container.encode(reasonType, forKey: .reasonType)
+		try container.encode(reportedBy, forKey: .reportedBy)
+		try container.encode(subject, forKey: .subject)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case createdAt = "createdAt"
+		case id = "id"
+		case reason = "reason"
+		case reasonType = "reasonType"
+		case reportedBy = "reportedBy"
+		case subject = "subject"
+	}
+}
+
+
+public typealias ComAtprotoModerationDefsReasonAppeal = String
+
+
+public typealias ComAtprotoModerationDefsReasonMisleading = String
+
+
+public typealias ComAtprotoModerationDefsReasonOther = String
+
+
+public typealias ComAtprotoModerationDefsReasonRude = String
+
+
+public typealias ComAtprotoModerationDefsReasonSexual = String
+
+
+public typealias ComAtprotoModerationDefsReasonSpam = String
+
+
+public enum ComAtprotoModerationDefsReasonType: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case comAtprotoModerationDefsReasonSpam = "com.atproto.moderation.defs#reasonSpam"
+	case comAtprotoModerationDefsReasonViolation = "com.atproto.moderation.defs#reasonViolation"
+	case comAtprotoModerationDefsReasonMisleading = "com.atproto.moderation.defs#reasonMisleading"
+	case comAtprotoModerationDefsReasonSexual = "com.atproto.moderation.defs#reasonSexual"
+	case comAtprotoModerationDefsReasonRude = "com.atproto.moderation.defs#reasonRude"
+	case comAtprotoModerationDefsReasonOther = "com.atproto.moderation.defs#reasonOther"
+	case comAtprotoModerationDefsReasonAppeal = "com.atproto.moderation.defs#reasonAppeal"
+	case toolsOzoneReportDefsReasonAppeal = "tools.ozone.report.defs#reasonAppeal"
+	case toolsOzoneReportDefsReasonOther = "tools.ozone.report.defs#reasonOther"
+	case toolsOzoneReportDefsReasonViolenceAnimal = "tools.ozone.report.defs#reasonViolenceAnimal"
+	case toolsOzoneReportDefsReasonViolenceThreats = "tools.ozone.report.defs#reasonViolenceThreats"
+	case toolsOzoneReportDefsReasonViolenceGraphicContent = "tools.ozone.report.defs#reasonViolenceGraphicContent"
+	case toolsOzoneReportDefsReasonViolenceGlorification = "tools.ozone.report.defs#reasonViolenceGlorification"
+	case toolsOzoneReportDefsReasonViolenceExtremistContent = "tools.ozone.report.defs#reasonViolenceExtremistContent"
+	case toolsOzoneReportDefsReasonViolenceTrafficking = "tools.ozone.report.defs#reasonViolenceTrafficking"
+	case toolsOzoneReportDefsReasonViolenceOther = "tools.ozone.report.defs#reasonViolenceOther"
+	case toolsOzoneReportDefsReasonSexualAbuseContent = "tools.ozone.report.defs#reasonSexualAbuseContent"
+	case toolsOzoneReportDefsReasonSexualNcii = "tools.ozone.report.defs#reasonSexualNCII"
+	case toolsOzoneReportDefsReasonSexualDeepfake = "tools.ozone.report.defs#reasonSexualDeepfake"
+	case toolsOzoneReportDefsReasonSexualAnimal = "tools.ozone.report.defs#reasonSexualAnimal"
+	case toolsOzoneReportDefsReasonSexualUnlabeled = "tools.ozone.report.defs#reasonSexualUnlabeled"
+	case toolsOzoneReportDefsReasonSexualOther = "tools.ozone.report.defs#reasonSexualOther"
+	case toolsOzoneReportDefsReasonChildSafetyCsam = "tools.ozone.report.defs#reasonChildSafetyCSAM"
+	case toolsOzoneReportDefsReasonChildSafetyGroom = "tools.ozone.report.defs#reasonChildSafetyGroom"
+	case toolsOzoneReportDefsReasonChildSafetyPrivacy = "tools.ozone.report.defs#reasonChildSafetyPrivacy"
+	case toolsOzoneReportDefsReasonChildSafetyHarassment = "tools.ozone.report.defs#reasonChildSafetyHarassment"
+	case toolsOzoneReportDefsReasonChildSafetyOther = "tools.ozone.report.defs#reasonChildSafetyOther"
+	case toolsOzoneReportDefsReasonHarassmentTroll = "tools.ozone.report.defs#reasonHarassmentTroll"
+	case toolsOzoneReportDefsReasonHarassmentTargeted = "tools.ozone.report.defs#reasonHarassmentTargeted"
+	case toolsOzoneReportDefsReasonHarassmentHateSpeech = "tools.ozone.report.defs#reasonHarassmentHateSpeech"
+	case toolsOzoneReportDefsReasonHarassmentDoxxing = "tools.ozone.report.defs#reasonHarassmentDoxxing"
+	case toolsOzoneReportDefsReasonHarassmentOther = "tools.ozone.report.defs#reasonHarassmentOther"
+	case toolsOzoneReportDefsReasonMisleadingBot = "tools.ozone.report.defs#reasonMisleadingBot"
+	case toolsOzoneReportDefsReasonMisleadingImpersonation = "tools.ozone.report.defs#reasonMisleadingImpersonation"
+	case toolsOzoneReportDefsReasonMisleadingSpam = "tools.ozone.report.defs#reasonMisleadingSpam"
+	case toolsOzoneReportDefsReasonMisleadingScam = "tools.ozone.report.defs#reasonMisleadingScam"
+	case toolsOzoneReportDefsReasonMisleadingElections = "tools.ozone.report.defs#reasonMisleadingElections"
+	case toolsOzoneReportDefsReasonMisleadingOther = "tools.ozone.report.defs#reasonMisleadingOther"
+	case toolsOzoneReportDefsReasonRuleSiteSecurity = "tools.ozone.report.defs#reasonRuleSiteSecurity"
+	case toolsOzoneReportDefsReasonRuleProhibitedSales = "tools.ozone.report.defs#reasonRuleProhibitedSales"
+	case toolsOzoneReportDefsReasonRuleBanEvasion = "tools.ozone.report.defs#reasonRuleBanEvasion"
+	case toolsOzoneReportDefsReasonRuleOther = "tools.ozone.report.defs#reasonRuleOther"
+	case toolsOzoneReportDefsReasonSelfHarmContent = "tools.ozone.report.defs#reasonSelfHarmContent"
+	case toolsOzoneReportDefsReasonSelfHarmEd = "tools.ozone.report.defs#reasonSelfHarmED"
+	case toolsOzoneReportDefsReasonSelfHarmStunts = "tools.ozone.report.defs#reasonSelfHarmStunts"
+	case toolsOzoneReportDefsReasonSelfHarmSubstances = "tools.ozone.report.defs#reasonSelfHarmSubstances"
+	case toolsOzoneReportDefsReasonSelfHarmOther = "tools.ozone.report.defs#reasonSelfHarmOther"
+}
+
+
+public typealias ComAtprotoModerationDefsReasonViolation = String
+
+
+public enum ComAtprotoModerationDefsSubjectType: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case account = "account"
+	case record = "record"
+	case chat = "chat"
+}
+
+

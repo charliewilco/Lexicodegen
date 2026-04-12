@@ -1,0 +1,167 @@
+import Foundation
+
+
+public struct AppBskyRichtextFacet: Codable, Sendable, Equatable {
+	public let features: [AppBskyRichtextFacetFeaturesItem]
+	public let index: AppBskyRichtextFacetByteSlice
+
+	public init(
+		features: [AppBskyRichtextFacetFeaturesItem],
+		index: AppBskyRichtextFacetByteSlice
+	) {
+		self.features = features
+		self.index = index
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		features = try container.decode([AppBskyRichtextFacetFeaturesItem].self, forKey: .features)
+		index = try container.decode(AppBskyRichtextFacetByteSlice.self, forKey: .index)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(features, forKey: .features)
+		try container.encode(index, forKey: .index)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case features = "features"
+		case index = "index"
+	}
+}
+
+
+public struct AppBskyRichtextFacetByteSlice: Codable, Sendable, Equatable {
+	public let byteEnd: Int
+	public let byteStart: Int
+
+	public init(
+		byteEnd: Int,
+		byteStart: Int
+	) {
+		self.byteEnd = byteEnd
+		self.byteStart = byteStart
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		byteEnd = try container.decode(Int.self, forKey: .byteEnd)
+		byteStart = try container.decode(Int.self, forKey: .byteStart)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(byteEnd, forKey: .byteEnd)
+		try container.encode(byteStart, forKey: .byteStart)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case byteEnd = "byteEnd"
+		case byteStart = "byteStart"
+	}
+}
+
+
+public indirect enum AppBskyRichtextFacetFeaturesItem: Codable, Sendable, Equatable {
+	case mention(AppBskyRichtextFacetMention)
+	case link(AppBskyRichtextFacetLink)
+	case tag(AppBskyRichtextFacetTag)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "app.bsky.richtext.facet#mention": self = .mention(try AppBskyRichtextFacetMention(from: decoder))
+		case "app.bsky.richtext.facet#link": self = .link(try AppBskyRichtextFacetLink(from: decoder))
+		case "app.bsky.richtext.facet#tag": self = .tag(try AppBskyRichtextFacetTag(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .mention(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.richtext.facet#mention", to: encoder)
+		case .link(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.richtext.facet#link", to: encoder)
+		case .tag(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.richtext.facet#tag", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
+public struct AppBskyRichtextFacetLink: Codable, Sendable, Equatable {
+	public let uri: String
+
+	public init(
+		uri: String
+	) {
+		self.uri = uri
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		uri = try container.decode(String.self, forKey: .uri)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(uri, forKey: .uri)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case uri = "uri"
+	}
+}
+
+
+public struct AppBskyRichtextFacetMention: Codable, Sendable, Equatable {
+	public let did: DID
+
+	public init(
+		did: DID
+	) {
+		self.did = did
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		did = try container.decode(DID.self, forKey: .did)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(did, forKey: .did)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case did = "did"
+	}
+}
+
+
+public struct AppBskyRichtextFacetTag: Codable, Sendable, Equatable {
+	public let tag: String
+
+	public init(
+		tag: String
+	) {
+		self.tag = tag
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		tag = try container.decode(String.self, forKey: .tag)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(tag, forKey: .tag)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case tag = "tag"
+	}
+}
+
+

@@ -1,0 +1,1500 @@
+import Foundation
+
+
+public enum ComAtprotoSyncDefsHostStatus: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case active = "active"
+	case idle = "idle"
+	case offline = "offline"
+	case throttled = "throttled"
+	case banned = "banned"
+}
+
+
+public enum ComAtprotoSyncGetBlobError: String, Swift.Error, CaseIterable, Sendable {
+	case blobNotFound = "BlobNotFound"
+	case repoDeactivated = "RepoDeactivated"
+	case repoNotFound = "RepoNotFound"
+	case repoSuspended = "RepoSuspended"
+	case repoTakendown = "RepoTakendown"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ComAtprotoSyncGetBlobParameters: Codable, Sendable, Equatable {
+	public let cid: CID
+	public let did: DID
+
+	public init(
+		cid: CID,
+		did: DID
+	) {
+		self.cid = cid
+		self.did = did
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cid = try container.decode(CID.self, forKey: .cid)
+		did = try container.decode(DID.self, forKey: .did)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(cid, forKey: .cid)
+		try container.encode(did, forKey: .did)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		cid.appendQueryItems(named: "cid", to: &items)
+		did.appendQueryItems(named: "did", to: &items)
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cid = "cid"
+		case did = "did"
+	}
+}
+
+
+public enum ComAtprotoSyncGetBlocksError: String, Swift.Error, CaseIterable, Sendable {
+	case blockNotFound = "BlockNotFound"
+	case repoDeactivated = "RepoDeactivated"
+	case repoNotFound = "RepoNotFound"
+	case repoSuspended = "RepoSuspended"
+	case repoTakendown = "RepoTakendown"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ComAtprotoSyncGetBlocksParameters: Codable, Sendable, Equatable {
+	public let cids: [CID]
+	public let did: DID
+
+	public init(
+		cids: [CID],
+		did: DID
+	) {
+		self.cids = cids
+		self.did = did
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cids = try container.decode([CID].self, forKey: .cids)
+		did = try container.decode(DID.self, forKey: .did)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(cids, forKey: .cids)
+		try container.encode(did, forKey: .did)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		cids.appendQueryItems(named: "cids", to: &items)
+		did.appendQueryItems(named: "did", to: &items)
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cids = "cids"
+		case did = "did"
+	}
+}
+
+
+public struct ComAtprotoSyncGetCheckoutParameters: Codable, Sendable, Equatable {
+	public let did: DID
+
+	public init(
+		did: DID
+	) {
+		self.did = did
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		did = try container.decode(DID.self, forKey: .did)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(did, forKey: .did)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		did.appendQueryItems(named: "did", to: &items)
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case did = "did"
+	}
+}
+
+
+public enum ComAtprotoSyncGetHeadError: String, Swift.Error, CaseIterable, Sendable {
+	case headNotFound = "HeadNotFound"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ComAtprotoSyncGetHeadOutput: Codable, Sendable, Equatable {
+	public let root: CID
+
+	public init(
+		root: CID
+	) {
+		self.root = root
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		root = try container.decode(CID.self, forKey: .root)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(root, forKey: .root)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case root = "root"
+	}
+}
+
+
+public struct ComAtprotoSyncGetHeadParameters: Codable, Sendable, Equatable {
+	public let did: DID
+
+	public init(
+		did: DID
+	) {
+		self.did = did
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		did = try container.decode(DID.self, forKey: .did)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(did, forKey: .did)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		did.appendQueryItems(named: "did", to: &items)
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case did = "did"
+	}
+}
+
+
+public enum ComAtprotoSyncGetHostStatusError: String, Swift.Error, CaseIterable, Sendable {
+	case hostNotFound = "HostNotFound"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ComAtprotoSyncGetHostStatusOutput: Codable, Sendable, Equatable {
+	public let accountCount: Int?
+	public let hostname: String
+	public let seq: Int?
+	public let status: ComAtprotoSyncDefsHostStatus?
+
+	public init(
+		accountCount: Int? = nil,
+		hostname: String,
+		seq: Int? = nil,
+		status: ComAtprotoSyncDefsHostStatus? = nil
+	) {
+		self.accountCount = accountCount
+		self.hostname = hostname
+		self.seq = seq
+		self.status = status
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		accountCount = try container.decodeIfPresent(Int.self, forKey: .accountCount)
+		hostname = try container.decode(String.self, forKey: .hostname)
+		seq = try container.decodeIfPresent(Int.self, forKey: .seq)
+		status = try container.decodeIfPresent(ComAtprotoSyncDefsHostStatus.self, forKey: .status)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(accountCount, forKey: .accountCount)
+		try container.encode(hostname, forKey: .hostname)
+		try container.encodeIfPresent(seq, forKey: .seq)
+		try container.encodeIfPresent(status, forKey: .status)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case accountCount = "accountCount"
+		case hostname = "hostname"
+		case seq = "seq"
+		case status = "status"
+	}
+}
+
+
+public struct ComAtprotoSyncGetHostStatusParameters: Codable, Sendable, Equatable {
+	public let hostname: String
+
+	public init(
+		hostname: String
+	) {
+		self.hostname = hostname
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		hostname = try container.decode(String.self, forKey: .hostname)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(hostname, forKey: .hostname)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		hostname.appendQueryItems(named: "hostname", to: &items)
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case hostname = "hostname"
+	}
+}
+
+
+public enum ComAtprotoSyncGetLatestCommitError: String, Swift.Error, CaseIterable, Sendable {
+	case repoDeactivated = "RepoDeactivated"
+	case repoNotFound = "RepoNotFound"
+	case repoSuspended = "RepoSuspended"
+	case repoTakendown = "RepoTakendown"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ComAtprotoSyncGetLatestCommitOutput: Codable, Sendable, Equatable {
+	public let cid: CID
+	public let rev: TID
+
+	public init(
+		cid: CID,
+		rev: TID
+	) {
+		self.cid = cid
+		self.rev = rev
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cid = try container.decode(CID.self, forKey: .cid)
+		rev = try container.decode(TID.self, forKey: .rev)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(cid, forKey: .cid)
+		try container.encode(rev, forKey: .rev)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cid = "cid"
+		case rev = "rev"
+	}
+}
+
+
+public struct ComAtprotoSyncGetLatestCommitParameters: Codable, Sendable, Equatable {
+	public let did: DID
+
+	public init(
+		did: DID
+	) {
+		self.did = did
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		did = try container.decode(DID.self, forKey: .did)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(did, forKey: .did)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		did.appendQueryItems(named: "did", to: &items)
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case did = "did"
+	}
+}
+
+
+public enum ComAtprotoSyncGetRecordError: String, Swift.Error, CaseIterable, Sendable {
+	case recordNotFound = "RecordNotFound"
+	case repoDeactivated = "RepoDeactivated"
+	case repoNotFound = "RepoNotFound"
+	case repoSuspended = "RepoSuspended"
+	case repoTakendown = "RepoTakendown"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ComAtprotoSyncGetRecordParameters: Codable, Sendable, Equatable {
+	public let collection: NSID
+	public let did: DID
+	public let rkey: RecordKey
+
+	public init(
+		collection: NSID,
+		did: DID,
+		rkey: RecordKey
+	) {
+		self.collection = collection
+		self.did = did
+		self.rkey = rkey
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		collection = try container.decode(NSID.self, forKey: .collection)
+		did = try container.decode(DID.self, forKey: .did)
+		rkey = try container.decode(RecordKey.self, forKey: .rkey)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(collection, forKey: .collection)
+		try container.encode(did, forKey: .did)
+		try container.encode(rkey, forKey: .rkey)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		collection.appendQueryItems(named: "collection", to: &items)
+		did.appendQueryItems(named: "did", to: &items)
+		rkey.appendQueryItems(named: "rkey", to: &items)
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case collection = "collection"
+		case did = "did"
+		case rkey = "rkey"
+	}
+}
+
+
+public enum ComAtprotoSyncGetRepoError: String, Swift.Error, CaseIterable, Sendable {
+	case repoDeactivated = "RepoDeactivated"
+	case repoNotFound = "RepoNotFound"
+	case repoSuspended = "RepoSuspended"
+	case repoTakendown = "RepoTakendown"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ComAtprotoSyncGetRepoParameters: Codable, Sendable, Equatable {
+	public let did: DID
+	public let since: TID?
+
+	public init(
+		did: DID,
+		since: TID? = nil
+	) {
+		self.did = did
+		self.since = since
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		did = try container.decode(DID.self, forKey: .did)
+		since = try container.decodeIfPresent(TID.self, forKey: .since)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(did, forKey: .did)
+		try container.encodeIfPresent(since, forKey: .since)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		did.appendQueryItems(named: "did", to: &items)
+		if let value = since {
+			value.appendQueryItems(named: "since", to: &items)
+		}
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case did = "did"
+		case since = "since"
+	}
+}
+
+
+public enum ComAtprotoSyncGetRepoStatusError: String, Swift.Error, CaseIterable, Sendable {
+	case repoNotFound = "RepoNotFound"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ComAtprotoSyncGetRepoStatusOutput: Codable, Sendable, Equatable {
+	public let active: Bool
+	public let did: DID
+	public let rev: TID?
+	public let status: ComAtprotoSyncListReposRepoStatus?
+
+	public init(
+		active: Bool,
+		did: DID,
+		rev: TID? = nil,
+		status: ComAtprotoSyncListReposRepoStatus? = nil
+	) {
+		self.active = active
+		self.did = did
+		self.rev = rev
+		self.status = status
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		active = try container.decode(Bool.self, forKey: .active)
+		did = try container.decode(DID.self, forKey: .did)
+		rev = try container.decodeIfPresent(TID.self, forKey: .rev)
+		status = try container.decodeIfPresent(ComAtprotoSyncListReposRepoStatus.self, forKey: .status)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(active, forKey: .active)
+		try container.encode(did, forKey: .did)
+		try container.encodeIfPresent(rev, forKey: .rev)
+		try container.encodeIfPresent(status, forKey: .status)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case active = "active"
+		case did = "did"
+		case rev = "rev"
+		case status = "status"
+	}
+}
+
+
+public struct ComAtprotoSyncGetRepoStatusParameters: Codable, Sendable, Equatable {
+	public let did: DID
+
+	public init(
+		did: DID
+	) {
+		self.did = did
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		did = try container.decode(DID.self, forKey: .did)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(did, forKey: .did)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		did.appendQueryItems(named: "did", to: &items)
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case did = "did"
+	}
+}
+
+
+public enum ComAtprotoSyncListBlobsError: String, Swift.Error, CaseIterable, Sendable {
+	case repoDeactivated = "RepoDeactivated"
+	case repoNotFound = "RepoNotFound"
+	case repoSuspended = "RepoSuspended"
+	case repoTakendown = "RepoTakendown"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ComAtprotoSyncListBlobsOutput: Codable, Sendable, Equatable {
+	public let cids: [CID]
+	public let cursor: String?
+
+	public init(
+		cids: [CID],
+		cursor: String? = nil
+	) {
+		self.cids = cids
+		self.cursor = cursor
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cids = try container.decode([CID].self, forKey: .cids)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(cids, forKey: .cids)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cids = "cids"
+		case cursor = "cursor"
+	}
+}
+
+
+public struct ComAtprotoSyncListBlobsParameters: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let did: DID
+	public let limit: Int?
+	public let since: TID?
+
+	public init(
+		cursor: String? = nil,
+		did: DID,
+		limit: Int? = nil,
+		since: TID? = nil
+	) {
+		self.cursor = cursor
+		self.did = did
+		self.limit = limit
+		self.since = since
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		did = try container.decode(DID.self, forKey: .did)
+		limit = try container.decodeIfPresent(Int.self, forKey: .limit)
+		since = try container.decodeIfPresent(TID.self, forKey: .since)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encode(did, forKey: .did)
+		try container.encodeIfPresent(limit, forKey: .limit)
+		try container.encodeIfPresent(since, forKey: .since)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		if let value = cursor {
+			value.appendQueryItems(named: "cursor", to: &items)
+		}
+		did.appendQueryItems(named: "did", to: &items)
+		if let value = limit {
+			value.appendQueryItems(named: "limit", to: &items)
+		}
+		if let value = since {
+			value.appendQueryItems(named: "since", to: &items)
+		}
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case did = "did"
+		case limit = "limit"
+		case since = "since"
+	}
+}
+
+
+public struct ComAtprotoSyncListHostsHost: Codable, Sendable, Equatable {
+	public let accountCount: Int?
+	public let hostname: String
+	public let seq: Int?
+	public let status: ComAtprotoSyncDefsHostStatus?
+
+	public init(
+		accountCount: Int? = nil,
+		hostname: String,
+		seq: Int? = nil,
+		status: ComAtprotoSyncDefsHostStatus? = nil
+	) {
+		self.accountCount = accountCount
+		self.hostname = hostname
+		self.seq = seq
+		self.status = status
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		accountCount = try container.decodeIfPresent(Int.self, forKey: .accountCount)
+		hostname = try container.decode(String.self, forKey: .hostname)
+		seq = try container.decodeIfPresent(Int.self, forKey: .seq)
+		status = try container.decodeIfPresent(ComAtprotoSyncDefsHostStatus.self, forKey: .status)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(accountCount, forKey: .accountCount)
+		try container.encode(hostname, forKey: .hostname)
+		try container.encodeIfPresent(seq, forKey: .seq)
+		try container.encodeIfPresent(status, forKey: .status)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case accountCount = "accountCount"
+		case hostname = "hostname"
+		case seq = "seq"
+		case status = "status"
+	}
+}
+
+
+public struct ComAtprotoSyncListHostsOutput: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let hosts: [ComAtprotoSyncListHostsHost]
+
+	public init(
+		cursor: String? = nil,
+		hosts: [ComAtprotoSyncListHostsHost]
+	) {
+		self.cursor = cursor
+		self.hosts = hosts
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		hosts = try container.decode([ComAtprotoSyncListHostsHost].self, forKey: .hosts)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encode(hosts, forKey: .hosts)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case hosts = "hosts"
+	}
+}
+
+
+public struct ComAtprotoSyncListHostsParameters: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let limit: Int?
+
+	public init(
+		cursor: String? = nil,
+		limit: Int? = nil
+	) {
+		self.cursor = cursor
+		self.limit = limit
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		limit = try container.decodeIfPresent(Int.self, forKey: .limit)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encodeIfPresent(limit, forKey: .limit)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		if let value = cursor {
+			value.appendQueryItems(named: "cursor", to: &items)
+		}
+		if let value = limit {
+			value.appendQueryItems(named: "limit", to: &items)
+		}
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case limit = "limit"
+	}
+}
+
+
+public struct ComAtprotoSyncListReposByCollectionOutput: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let repos: [ComAtprotoSyncListReposByCollectionRepo]
+
+	public init(
+		cursor: String? = nil,
+		repos: [ComAtprotoSyncListReposByCollectionRepo]
+	) {
+		self.cursor = cursor
+		self.repos = repos
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		repos = try container.decode([ComAtprotoSyncListReposByCollectionRepo].self, forKey: .repos)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encode(repos, forKey: .repos)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case repos = "repos"
+	}
+}
+
+
+public struct ComAtprotoSyncListReposByCollectionParameters: Codable, Sendable, Equatable {
+	public let collection: NSID
+	public let cursor: String?
+	public let limit: Int?
+
+	public init(
+		collection: NSID,
+		cursor: String? = nil,
+		limit: Int? = nil
+	) {
+		self.collection = collection
+		self.cursor = cursor
+		self.limit = limit
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		collection = try container.decode(NSID.self, forKey: .collection)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		limit = try container.decodeIfPresent(Int.self, forKey: .limit)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(collection, forKey: .collection)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encodeIfPresent(limit, forKey: .limit)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		collection.appendQueryItems(named: "collection", to: &items)
+		if let value = cursor {
+			value.appendQueryItems(named: "cursor", to: &items)
+		}
+		if let value = limit {
+			value.appendQueryItems(named: "limit", to: &items)
+		}
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case collection = "collection"
+		case cursor = "cursor"
+		case limit = "limit"
+	}
+}
+
+
+public struct ComAtprotoSyncListReposByCollectionRepo: Codable, Sendable, Equatable {
+	public let did: DID
+
+	public init(
+		did: DID
+	) {
+		self.did = did
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		did = try container.decode(DID.self, forKey: .did)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(did, forKey: .did)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case did = "did"
+	}
+}
+
+
+public struct ComAtprotoSyncListReposOutput: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let repos: [ComAtprotoSyncListReposRepo]
+
+	public init(
+		cursor: String? = nil,
+		repos: [ComAtprotoSyncListReposRepo]
+	) {
+		self.cursor = cursor
+		self.repos = repos
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		repos = try container.decode([ComAtprotoSyncListReposRepo].self, forKey: .repos)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encode(repos, forKey: .repos)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case repos = "repos"
+	}
+}
+
+
+public struct ComAtprotoSyncListReposParameters: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let limit: Int?
+
+	public init(
+		cursor: String? = nil,
+		limit: Int? = nil
+	) {
+		self.cursor = cursor
+		self.limit = limit
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		limit = try container.decodeIfPresent(Int.self, forKey: .limit)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encodeIfPresent(limit, forKey: .limit)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		if let value = cursor {
+			value.appendQueryItems(named: "cursor", to: &items)
+		}
+		if let value = limit {
+			value.appendQueryItems(named: "limit", to: &items)
+		}
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case limit = "limit"
+	}
+}
+
+
+public struct ComAtprotoSyncListReposRepo: Codable, Sendable, Equatable {
+	public let active: Bool?
+	public let did: DID
+	public let head: CID
+	public let rev: TID
+	public let status: ComAtprotoSyncListReposRepoStatus?
+
+	public init(
+		active: Bool? = nil,
+		did: DID,
+		head: CID,
+		rev: TID,
+		status: ComAtprotoSyncListReposRepoStatus? = nil
+	) {
+		self.active = active
+		self.did = did
+		self.head = head
+		self.rev = rev
+		self.status = status
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		active = try container.decodeIfPresent(Bool.self, forKey: .active)
+		did = try container.decode(DID.self, forKey: .did)
+		head = try container.decode(CID.self, forKey: .head)
+		rev = try container.decode(TID.self, forKey: .rev)
+		status = try container.decodeIfPresent(ComAtprotoSyncListReposRepoStatus.self, forKey: .status)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(active, forKey: .active)
+		try container.encode(did, forKey: .did)
+		try container.encode(head, forKey: .head)
+		try container.encode(rev, forKey: .rev)
+		try container.encodeIfPresent(status, forKey: .status)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case active = "active"
+		case did = "did"
+		case head = "head"
+		case rev = "rev"
+		case status = "status"
+	}
+}
+
+
+public enum ComAtprotoSyncListReposRepoStatus: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case takendown = "takendown"
+	case suspended = "suspended"
+	case deleted = "deleted"
+	case deactivated = "deactivated"
+	case desynchronized = "desynchronized"
+	case throttled = "throttled"
+}
+
+
+public struct ComAtprotoSyncNotifyOfUpdateInput: Codable, Sendable, Equatable {
+	public let hostname: String
+
+	public init(
+		hostname: String
+	) {
+		self.hostname = hostname
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		hostname = try container.decode(String.self, forKey: .hostname)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(hostname, forKey: .hostname)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case hostname = "hostname"
+	}
+}
+
+
+public enum ComAtprotoSyncRequestCrawlError: String, Swift.Error, CaseIterable, Sendable {
+	case hostBanned = "HostBanned"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ComAtprotoSyncRequestCrawlInput: Codable, Sendable, Equatable {
+	public let hostname: String
+
+	public init(
+		hostname: String
+	) {
+		self.hostname = hostname
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		hostname = try container.decode(String.self, forKey: .hostname)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(hostname, forKey: .hostname)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case hostname = "hostname"
+	}
+}
+
+
+public struct ComAtprotoSyncSubscribeReposAccount: Codable, Sendable, Equatable {
+	public let active: Bool
+	public let did: DID
+	public let seq: Int
+	public let status: ComAtprotoSyncListReposRepoStatus?
+	public let time: ATProtocolDate
+
+	public init(
+		active: Bool,
+		did: DID,
+		seq: Int,
+		status: ComAtprotoSyncListReposRepoStatus? = nil,
+		time: ATProtocolDate
+	) {
+		self.active = active
+		self.did = did
+		self.seq = seq
+		self.status = status
+		self.time = time
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		active = try container.decode(Bool.self, forKey: .active)
+		did = try container.decode(DID.self, forKey: .did)
+		seq = try container.decode(Int.self, forKey: .seq)
+		status = try container.decodeIfPresent(ComAtprotoSyncListReposRepoStatus.self, forKey: .status)
+		time = try container.decode(ATProtocolDate.self, forKey: .time)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(active, forKey: .active)
+		try container.encode(did, forKey: .did)
+		try container.encode(seq, forKey: .seq)
+		try container.encodeIfPresent(status, forKey: .status)
+		try container.encode(time, forKey: .time)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case active = "active"
+		case did = "did"
+		case seq = "seq"
+		case status = "status"
+		case time = "time"
+	}
+}
+
+
+public struct ComAtprotoSyncSubscribeReposCommit: Codable, Sendable, Equatable {
+	public let blobs: [CID]
+	public let blocks: Bytes
+	public let commit: CID
+	public let ops: [ComAtprotoSyncSubscribeReposRepoOp]
+	public let prevData: CID?
+	public let rebase: Bool
+	public let repo: DID
+	public let rev: TID
+	public let seq: Int
+	public let since: TID?
+	public let time: ATProtocolDate
+	public let tooBig: Bool
+
+	public init(
+		blobs: [CID],
+		blocks: Bytes,
+		commit: CID,
+		ops: [ComAtprotoSyncSubscribeReposRepoOp],
+		prevData: CID? = nil,
+		rebase: Bool,
+		repo: DID,
+		rev: TID,
+		seq: Int,
+		since: TID? = nil,
+		time: ATProtocolDate,
+		tooBig: Bool
+	) {
+		self.blobs = blobs
+		self.blocks = blocks
+		self.commit = commit
+		self.ops = ops
+		self.prevData = prevData
+		self.rebase = rebase
+		self.repo = repo
+		self.rev = rev
+		self.seq = seq
+		self.since = since
+		self.time = time
+		self.tooBig = tooBig
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		blobs = try container.decode([CID].self, forKey: .blobs)
+		blocks = try container.decode(Bytes.self, forKey: .blocks)
+		commit = try container.decode(CID.self, forKey: .commit)
+		ops = try container.decode([ComAtprotoSyncSubscribeReposRepoOp].self, forKey: .ops)
+		prevData = try container.decodeIfPresent(CID.self, forKey: .prevData)
+		rebase = try container.decode(Bool.self, forKey: .rebase)
+		repo = try container.decode(DID.self, forKey: .repo)
+		rev = try container.decode(TID.self, forKey: .rev)
+		seq = try container.decode(Int.self, forKey: .seq)
+		since = try container.decodeIfPresent(TID.self, forKey: .since)
+		time = try container.decode(ATProtocolDate.self, forKey: .time)
+		tooBig = try container.decode(Bool.self, forKey: .tooBig)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(blobs, forKey: .blobs)
+		try container.encode(blocks, forKey: .blocks)
+		try container.encode(commit, forKey: .commit)
+		try container.encode(ops, forKey: .ops)
+		try container.encodeIfPresent(prevData, forKey: .prevData)
+		try container.encode(rebase, forKey: .rebase)
+		try container.encode(repo, forKey: .repo)
+		try container.encode(rev, forKey: .rev)
+		try container.encode(seq, forKey: .seq)
+		try container.encodeIfPresent(since, forKey: .since)
+		try container.encode(time, forKey: .time)
+		try container.encode(tooBig, forKey: .tooBig)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case blobs = "blobs"
+		case blocks = "blocks"
+		case commit = "commit"
+		case ops = "ops"
+		case prevData = "prevData"
+		case rebase = "rebase"
+		case repo = "repo"
+		case rev = "rev"
+		case seq = "seq"
+		case since = "since"
+		case time = "time"
+		case tooBig = "tooBig"
+	}
+}
+
+
+public enum ComAtprotoSyncSubscribeReposError: String, Swift.Error, CaseIterable, Sendable {
+	case consumerTooSlow = "ConsumerTooSlow"
+	case futureCursor = "FutureCursor"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ComAtprotoSyncSubscribeReposIdentity: Codable, Sendable, Equatable {
+	public let did: DID
+	public let handle: Handle?
+	public let seq: Int
+	public let time: ATProtocolDate
+
+	public init(
+		did: DID,
+		handle: Handle? = nil,
+		seq: Int,
+		time: ATProtocolDate
+	) {
+		self.did = did
+		self.handle = handle
+		self.seq = seq
+		self.time = time
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		did = try container.decode(DID.self, forKey: .did)
+		handle = try container.decodeIfPresent(Handle.self, forKey: .handle)
+		seq = try container.decode(Int.self, forKey: .seq)
+		time = try container.decode(ATProtocolDate.self, forKey: .time)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(did, forKey: .did)
+		try container.encodeIfPresent(handle, forKey: .handle)
+		try container.encode(seq, forKey: .seq)
+		try container.encode(time, forKey: .time)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case did = "did"
+		case handle = "handle"
+		case seq = "seq"
+		case time = "time"
+	}
+}
+
+
+public struct ComAtprotoSyncSubscribeReposInfo: Codable, Sendable, Equatable {
+	public let message: String?
+	public let name: ComAtprotoSyncSubscribeReposInfoName
+
+	public init(
+		message: String? = nil,
+		name: ComAtprotoSyncSubscribeReposInfoName
+	) {
+		self.message = message
+		self.name = name
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		message = try container.decodeIfPresent(String.self, forKey: .message)
+		name = try container.decode(ComAtprotoSyncSubscribeReposInfoName.self, forKey: .name)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(message, forKey: .message)
+		try container.encode(name, forKey: .name)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case message = "message"
+		case name = "name"
+	}
+}
+
+
+public enum ComAtprotoSyncSubscribeReposInfoName: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case outdatedCursor = "OutdatedCursor"
+}
+
+
+public indirect enum ComAtprotoSyncSubscribeReposMessage: Codable, Sendable, Equatable {
+	case commit(ComAtprotoSyncSubscribeReposCommit)
+	case sync(ComAtprotoSyncSubscribeReposSync)
+	case identity(ComAtprotoSyncSubscribeReposIdentity)
+	case account(ComAtprotoSyncSubscribeReposAccount)
+	case info(ComAtprotoSyncSubscribeReposInfo)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "com.atproto.sync.subscribeRepos#commit": self = .commit(try ComAtprotoSyncSubscribeReposCommit(from: decoder))
+		case "com.atproto.sync.subscribeRepos#sync": self = .sync(try ComAtprotoSyncSubscribeReposSync(from: decoder))
+		case "com.atproto.sync.subscribeRepos#identity": self = .identity(try ComAtprotoSyncSubscribeReposIdentity(from: decoder))
+		case "com.atproto.sync.subscribeRepos#account": self = .account(try ComAtprotoSyncSubscribeReposAccount(from: decoder))
+		case "com.atproto.sync.subscribeRepos#info": self = .info(try ComAtprotoSyncSubscribeReposInfo(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .commit(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "com.atproto.sync.subscribeRepos#commit", to: encoder)
+		case .sync(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "com.atproto.sync.subscribeRepos#sync", to: encoder)
+		case .identity(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "com.atproto.sync.subscribeRepos#identity", to: encoder)
+		case .account(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "com.atproto.sync.subscribeRepos#account", to: encoder)
+		case .info(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "com.atproto.sync.subscribeRepos#info", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
+public struct ComAtprotoSyncSubscribeReposParameters: Codable, Sendable, Equatable {
+	public let cursor: Int?
+
+	public init(
+		cursor: Int? = nil
+	) {
+		self.cursor = cursor
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(Int.self, forKey: .cursor)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		if let value = cursor {
+			value.appendQueryItems(named: "cursor", to: &items)
+		}
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+	}
+}
+
+
+public struct ComAtprotoSyncSubscribeReposRepoOp: Codable, Sendable, Equatable {
+	public let action: ComAtprotoSyncSubscribeReposRepoOpAction
+	public let cid: CID?
+	public let path: String
+	public let prev: CID?
+
+	public init(
+		action: ComAtprotoSyncSubscribeReposRepoOpAction,
+		cid: CID? = nil,
+		path: String,
+		prev: CID? = nil
+	) {
+		self.action = action
+		self.cid = cid
+		self.path = path
+		self.prev = prev
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		action = try container.decode(ComAtprotoSyncSubscribeReposRepoOpAction.self, forKey: .action)
+		cid = try container.decodeIfPresent(CID.self, forKey: .cid)
+		path = try container.decode(String.self, forKey: .path)
+		prev = try container.decodeIfPresent(CID.self, forKey: .prev)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(action, forKey: .action)
+		try container.encodeIfPresent(cid, forKey: .cid)
+		try container.encode(path, forKey: .path)
+		try container.encodeIfPresent(prev, forKey: .prev)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case action = "action"
+		case cid = "cid"
+		case path = "path"
+		case prev = "prev"
+	}
+}
+
+
+public enum ComAtprotoSyncSubscribeReposRepoOpAction: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case create = "create"
+	case update = "update"
+	case delete = "delete"
+}
+
+
+public struct ComAtprotoSyncSubscribeReposSync: Codable, Sendable, Equatable {
+	public let blocks: Bytes
+	public let did: DID
+	public let rev: String
+	public let seq: Int
+	public let time: ATProtocolDate
+
+	public init(
+		blocks: Bytes,
+		did: DID,
+		rev: String,
+		seq: Int,
+		time: ATProtocolDate
+	) {
+		self.blocks = blocks
+		self.did = did
+		self.rev = rev
+		self.seq = seq
+		self.time = time
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		blocks = try container.decode(Bytes.self, forKey: .blocks)
+		did = try container.decode(DID.self, forKey: .did)
+		rev = try container.decode(String.self, forKey: .rev)
+		seq = try container.decode(Int.self, forKey: .seq)
+		time = try container.decode(ATProtocolDate.self, forKey: .time)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(blocks, forKey: .blocks)
+		try container.encode(did, forKey: .did)
+		try container.encode(rev, forKey: .rev)
+		try container.encode(seq, forKey: .seq)
+		try container.encode(time, forKey: .time)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case blocks = "blocks"
+		case did = "did"
+		case rev = "rev"
+		case seq = "seq"
+		case time = "time"
+	}
+}
+
+

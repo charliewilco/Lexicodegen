@@ -1,0 +1,554 @@
+import Foundation
+
+
+public enum ToolsOzoneSafelinkAddRuleError: String, Swift.Error, CaseIterable, Sendable {
+	case invalidUrl = "InvalidUrl"
+	case ruleAlreadyExists = "RuleAlreadyExists"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ToolsOzoneSafelinkAddRuleInput: Codable, Sendable, Equatable {
+	public let action: ToolsOzoneSafelinkDefsActionType
+	public let comment: String?
+	public let createdBy: DID?
+	public let pattern: ToolsOzoneSafelinkDefsPatternType
+	public let reason: ToolsOzoneSafelinkDefsReasonType
+	public let url: String
+
+	public init(
+		action: ToolsOzoneSafelinkDefsActionType,
+		comment: String? = nil,
+		createdBy: DID? = nil,
+		pattern: ToolsOzoneSafelinkDefsPatternType,
+		reason: ToolsOzoneSafelinkDefsReasonType,
+		url: String
+	) {
+		self.action = action
+		self.comment = comment
+		self.createdBy = createdBy
+		self.pattern = pattern
+		self.reason = reason
+		self.url = url
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		action = try container.decode(ToolsOzoneSafelinkDefsActionType.self, forKey: .action)
+		comment = try container.decodeIfPresent(String.self, forKey: .comment)
+		createdBy = try container.decodeIfPresent(DID.self, forKey: .createdBy)
+		pattern = try container.decode(ToolsOzoneSafelinkDefsPatternType.self, forKey: .pattern)
+		reason = try container.decode(ToolsOzoneSafelinkDefsReasonType.self, forKey: .reason)
+		url = try container.decode(String.self, forKey: .url)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(action, forKey: .action)
+		try container.encodeIfPresent(comment, forKey: .comment)
+		try container.encodeIfPresent(createdBy, forKey: .createdBy)
+		try container.encode(pattern, forKey: .pattern)
+		try container.encode(reason, forKey: .reason)
+		try container.encode(url, forKey: .url)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case action = "action"
+		case comment = "comment"
+		case createdBy = "createdBy"
+		case pattern = "pattern"
+		case reason = "reason"
+		case url = "url"
+	}
+}
+
+
+public typealias ToolsOzoneSafelinkAddRuleOutput = ToolsOzoneSafelinkDefsEvent
+
+
+public enum ToolsOzoneSafelinkDefsActionType: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case block = "block"
+	case warn = "warn"
+	case whitelist = "whitelist"
+}
+
+
+public struct ToolsOzoneSafelinkDefsEvent: Codable, Sendable, Equatable {
+	public let action: ToolsOzoneSafelinkDefsActionType
+	public let comment: String?
+	public let createdAt: ATProtocolDate
+	public let createdBy: DID
+	public let eventType: ToolsOzoneSafelinkDefsEventType
+	public let id: Int
+	public let pattern: ToolsOzoneSafelinkDefsPatternType
+	public let reason: ToolsOzoneSafelinkDefsReasonType
+	public let url: String
+
+	public init(
+		action: ToolsOzoneSafelinkDefsActionType,
+		comment: String? = nil,
+		createdAt: ATProtocolDate,
+		createdBy: DID,
+		eventType: ToolsOzoneSafelinkDefsEventType,
+		id: Int,
+		pattern: ToolsOzoneSafelinkDefsPatternType,
+		reason: ToolsOzoneSafelinkDefsReasonType,
+		url: String
+	) {
+		self.action = action
+		self.comment = comment
+		self.createdAt = createdAt
+		self.createdBy = createdBy
+		self.eventType = eventType
+		self.id = id
+		self.pattern = pattern
+		self.reason = reason
+		self.url = url
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		action = try container.decode(ToolsOzoneSafelinkDefsActionType.self, forKey: .action)
+		comment = try container.decodeIfPresent(String.self, forKey: .comment)
+		createdAt = try container.decode(ATProtocolDate.self, forKey: .createdAt)
+		createdBy = try container.decode(DID.self, forKey: .createdBy)
+		eventType = try container.decode(ToolsOzoneSafelinkDefsEventType.self, forKey: .eventType)
+		id = try container.decode(Int.self, forKey: .id)
+		pattern = try container.decode(ToolsOzoneSafelinkDefsPatternType.self, forKey: .pattern)
+		reason = try container.decode(ToolsOzoneSafelinkDefsReasonType.self, forKey: .reason)
+		url = try container.decode(String.self, forKey: .url)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(action, forKey: .action)
+		try container.encodeIfPresent(comment, forKey: .comment)
+		try container.encode(createdAt, forKey: .createdAt)
+		try container.encode(createdBy, forKey: .createdBy)
+		try container.encode(eventType, forKey: .eventType)
+		try container.encode(id, forKey: .id)
+		try container.encode(pattern, forKey: .pattern)
+		try container.encode(reason, forKey: .reason)
+		try container.encode(url, forKey: .url)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case action = "action"
+		case comment = "comment"
+		case createdAt = "createdAt"
+		case createdBy = "createdBy"
+		case eventType = "eventType"
+		case id = "id"
+		case pattern = "pattern"
+		case reason = "reason"
+		case url = "url"
+	}
+}
+
+
+public enum ToolsOzoneSafelinkDefsEventType: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case addRule = "addRule"
+	case updateRule = "updateRule"
+	case removeRule = "removeRule"
+}
+
+
+public enum ToolsOzoneSafelinkDefsPatternType: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case domain = "domain"
+	case url = "url"
+}
+
+
+public enum ToolsOzoneSafelinkDefsReasonType: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case csam = "csam"
+	case spam = "spam"
+	case phishing = "phishing"
+	case none = "none"
+}
+
+
+public struct ToolsOzoneSafelinkDefsUrlRule: Codable, Sendable, Equatable {
+	public let action: ToolsOzoneSafelinkDefsActionType
+	public let comment: String?
+	public let createdAt: ATProtocolDate
+	public let createdBy: DID
+	public let pattern: ToolsOzoneSafelinkDefsPatternType
+	public let reason: ToolsOzoneSafelinkDefsReasonType
+	public let updatedAt: ATProtocolDate
+	public let url: String
+
+	public init(
+		action: ToolsOzoneSafelinkDefsActionType,
+		comment: String? = nil,
+		createdAt: ATProtocolDate,
+		createdBy: DID,
+		pattern: ToolsOzoneSafelinkDefsPatternType,
+		reason: ToolsOzoneSafelinkDefsReasonType,
+		updatedAt: ATProtocolDate,
+		url: String
+	) {
+		self.action = action
+		self.comment = comment
+		self.createdAt = createdAt
+		self.createdBy = createdBy
+		self.pattern = pattern
+		self.reason = reason
+		self.updatedAt = updatedAt
+		self.url = url
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		action = try container.decode(ToolsOzoneSafelinkDefsActionType.self, forKey: .action)
+		comment = try container.decodeIfPresent(String.self, forKey: .comment)
+		createdAt = try container.decode(ATProtocolDate.self, forKey: .createdAt)
+		createdBy = try container.decode(DID.self, forKey: .createdBy)
+		pattern = try container.decode(ToolsOzoneSafelinkDefsPatternType.self, forKey: .pattern)
+		reason = try container.decode(ToolsOzoneSafelinkDefsReasonType.self, forKey: .reason)
+		updatedAt = try container.decode(ATProtocolDate.self, forKey: .updatedAt)
+		url = try container.decode(String.self, forKey: .url)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(action, forKey: .action)
+		try container.encodeIfPresent(comment, forKey: .comment)
+		try container.encode(createdAt, forKey: .createdAt)
+		try container.encode(createdBy, forKey: .createdBy)
+		try container.encode(pattern, forKey: .pattern)
+		try container.encode(reason, forKey: .reason)
+		try container.encode(updatedAt, forKey: .updatedAt)
+		try container.encode(url, forKey: .url)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case action = "action"
+		case comment = "comment"
+		case createdAt = "createdAt"
+		case createdBy = "createdBy"
+		case pattern = "pattern"
+		case reason = "reason"
+		case updatedAt = "updatedAt"
+		case url = "url"
+	}
+}
+
+
+public struct ToolsOzoneSafelinkQueryEventsInput: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let limit: Int?
+	public let patternType: String?
+	public let sortDirection: ToolsOzoneSafelinkQueryEventsInputSortDirection?
+	public let urls: [String]?
+
+	public init(
+		cursor: String? = nil,
+		limit: Int? = nil,
+		patternType: String? = nil,
+		sortDirection: ToolsOzoneSafelinkQueryEventsInputSortDirection? = nil,
+		urls: [String]? = nil
+	) {
+		self.cursor = cursor
+		self.limit = limit
+		self.patternType = patternType
+		self.sortDirection = sortDirection
+		self.urls = urls
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		limit = try container.decodeIfPresent(Int.self, forKey: .limit)
+		patternType = try container.decodeIfPresent(String.self, forKey: .patternType)
+		sortDirection = try container.decodeIfPresent(ToolsOzoneSafelinkQueryEventsInputSortDirection.self, forKey: .sortDirection)
+		urls = try container.decodeIfPresent([String].self, forKey: .urls)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encodeIfPresent(limit, forKey: .limit)
+		try container.encodeIfPresent(patternType, forKey: .patternType)
+		try container.encodeIfPresent(sortDirection, forKey: .sortDirection)
+		try container.encodeIfPresent(urls, forKey: .urls)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case limit = "limit"
+		case patternType = "patternType"
+		case sortDirection = "sortDirection"
+		case urls = "urls"
+	}
+}
+
+
+public enum ToolsOzoneSafelinkQueryEventsInputSortDirection: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case asc = "asc"
+	case desc = "desc"
+}
+
+
+public struct ToolsOzoneSafelinkQueryEventsOutput: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let events: [ToolsOzoneSafelinkDefsEvent]
+
+	public init(
+		cursor: String? = nil,
+		events: [ToolsOzoneSafelinkDefsEvent]
+	) {
+		self.cursor = cursor
+		self.events = events
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		events = try container.decode([ToolsOzoneSafelinkDefsEvent].self, forKey: .events)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encode(events, forKey: .events)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case events = "events"
+	}
+}
+
+
+public struct ToolsOzoneSafelinkQueryRulesInput: Codable, Sendable, Equatable {
+	public let actions: [String]?
+	public let createdBy: DID?
+	public let cursor: String?
+	public let limit: Int?
+	public let patternType: String?
+	public let reason: String?
+	public let sortDirection: ToolsOzoneSafelinkQueryEventsInputSortDirection?
+	public let urls: [String]?
+
+	public init(
+		actions: [String]? = nil,
+		createdBy: DID? = nil,
+		cursor: String? = nil,
+		limit: Int? = nil,
+		patternType: String? = nil,
+		reason: String? = nil,
+		sortDirection: ToolsOzoneSafelinkQueryEventsInputSortDirection? = nil,
+		urls: [String]? = nil
+	) {
+		self.actions = actions
+		self.createdBy = createdBy
+		self.cursor = cursor
+		self.limit = limit
+		self.patternType = patternType
+		self.reason = reason
+		self.sortDirection = sortDirection
+		self.urls = urls
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		actions = try container.decodeIfPresent([String].self, forKey: .actions)
+		createdBy = try container.decodeIfPresent(DID.self, forKey: .createdBy)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		limit = try container.decodeIfPresent(Int.self, forKey: .limit)
+		patternType = try container.decodeIfPresent(String.self, forKey: .patternType)
+		reason = try container.decodeIfPresent(String.self, forKey: .reason)
+		sortDirection = try container.decodeIfPresent(ToolsOzoneSafelinkQueryEventsInputSortDirection.self, forKey: .sortDirection)
+		urls = try container.decodeIfPresent([String].self, forKey: .urls)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(actions, forKey: .actions)
+		try container.encodeIfPresent(createdBy, forKey: .createdBy)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encodeIfPresent(limit, forKey: .limit)
+		try container.encodeIfPresent(patternType, forKey: .patternType)
+		try container.encodeIfPresent(reason, forKey: .reason)
+		try container.encodeIfPresent(sortDirection, forKey: .sortDirection)
+		try container.encodeIfPresent(urls, forKey: .urls)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case actions = "actions"
+		case createdBy = "createdBy"
+		case cursor = "cursor"
+		case limit = "limit"
+		case patternType = "patternType"
+		case reason = "reason"
+		case sortDirection = "sortDirection"
+		case urls = "urls"
+	}
+}
+
+
+public struct ToolsOzoneSafelinkQueryRulesOutput: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let rules: [ToolsOzoneSafelinkDefsUrlRule]
+
+	public init(
+		cursor: String? = nil,
+		rules: [ToolsOzoneSafelinkDefsUrlRule]
+	) {
+		self.cursor = cursor
+		self.rules = rules
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		rules = try container.decode([ToolsOzoneSafelinkDefsUrlRule].self, forKey: .rules)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encode(rules, forKey: .rules)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case rules = "rules"
+	}
+}
+
+
+public enum ToolsOzoneSafelinkRemoveRuleError: String, Swift.Error, CaseIterable, Sendable {
+	case ruleNotFound = "RuleNotFound"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ToolsOzoneSafelinkRemoveRuleInput: Codable, Sendable, Equatable {
+	public let comment: String?
+	public let createdBy: DID?
+	public let pattern: ToolsOzoneSafelinkDefsPatternType
+	public let url: String
+
+	public init(
+		comment: String? = nil,
+		createdBy: DID? = nil,
+		pattern: ToolsOzoneSafelinkDefsPatternType,
+		url: String
+	) {
+		self.comment = comment
+		self.createdBy = createdBy
+		self.pattern = pattern
+		self.url = url
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		comment = try container.decodeIfPresent(String.self, forKey: .comment)
+		createdBy = try container.decodeIfPresent(DID.self, forKey: .createdBy)
+		pattern = try container.decode(ToolsOzoneSafelinkDefsPatternType.self, forKey: .pattern)
+		url = try container.decode(String.self, forKey: .url)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(comment, forKey: .comment)
+		try container.encodeIfPresent(createdBy, forKey: .createdBy)
+		try container.encode(pattern, forKey: .pattern)
+		try container.encode(url, forKey: .url)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case comment = "comment"
+		case createdBy = "createdBy"
+		case pattern = "pattern"
+		case url = "url"
+	}
+}
+
+
+public typealias ToolsOzoneSafelinkRemoveRuleOutput = ToolsOzoneSafelinkDefsEvent
+
+
+public enum ToolsOzoneSafelinkUpdateRuleError: String, Swift.Error, CaseIterable, Sendable {
+	case ruleNotFound = "RuleNotFound"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ToolsOzoneSafelinkUpdateRuleInput: Codable, Sendable, Equatable {
+	public let action: ToolsOzoneSafelinkDefsActionType
+	public let comment: String?
+	public let createdBy: DID?
+	public let pattern: ToolsOzoneSafelinkDefsPatternType
+	public let reason: ToolsOzoneSafelinkDefsReasonType
+	public let url: String
+
+	public init(
+		action: ToolsOzoneSafelinkDefsActionType,
+		comment: String? = nil,
+		createdBy: DID? = nil,
+		pattern: ToolsOzoneSafelinkDefsPatternType,
+		reason: ToolsOzoneSafelinkDefsReasonType,
+		url: String
+	) {
+		self.action = action
+		self.comment = comment
+		self.createdBy = createdBy
+		self.pattern = pattern
+		self.reason = reason
+		self.url = url
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		action = try container.decode(ToolsOzoneSafelinkDefsActionType.self, forKey: .action)
+		comment = try container.decodeIfPresent(String.self, forKey: .comment)
+		createdBy = try container.decodeIfPresent(DID.self, forKey: .createdBy)
+		pattern = try container.decode(ToolsOzoneSafelinkDefsPatternType.self, forKey: .pattern)
+		reason = try container.decode(ToolsOzoneSafelinkDefsReasonType.self, forKey: .reason)
+		url = try container.decode(String.self, forKey: .url)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(action, forKey: .action)
+		try container.encodeIfPresent(comment, forKey: .comment)
+		try container.encodeIfPresent(createdBy, forKey: .createdBy)
+		try container.encode(pattern, forKey: .pattern)
+		try container.encode(reason, forKey: .reason)
+		try container.encode(url, forKey: .url)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case action = "action"
+		case comment = "comment"
+		case createdBy = "createdBy"
+		case pattern = "pattern"
+		case reason = "reason"
+		case url = "url"
+	}
+}
+
+
+public typealias ToolsOzoneSafelinkUpdateRuleOutput = ToolsOzoneSafelinkDefsEvent
+
+

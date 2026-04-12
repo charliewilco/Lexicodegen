@@ -1,0 +1,139 @@
+import Foundation
+
+
+public struct ChatBskyActorDeclaration: Codable, Sendable, Equatable {
+	public static let typeIdentifier = "chat.bsky.actor.declaration"
+
+	public let allowIncoming: ChatBskyActorDeclarationAllowIncoming
+
+	public init(
+		allowIncoming: ChatBskyActorDeclarationAllowIncoming
+	) {
+		self.allowIncoming = allowIncoming
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		_ = try container.decodeIfPresent(String.self, forKey: .typeIdentifier)
+		allowIncoming = try container.decode(ChatBskyActorDeclarationAllowIncoming.self, forKey: .allowIncoming)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(Self.typeIdentifier, forKey: .typeIdentifier)
+		try container.encode(allowIncoming, forKey: .allowIncoming)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case typeIdentifier = "$type"
+		case allowIncoming = "allowIncoming"
+	}
+}
+
+
+public enum ChatBskyActorDeclarationAllowIncoming: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case all = "all"
+	case none = "none"
+	case following = "following"
+}
+
+
+public struct ChatBskyActorDefsProfileViewBasic: Codable, Sendable, Equatable {
+	public let associated: AppBskyActorDefsProfileAssociated?
+	public let avatar: String?
+	public let chatDisabled: Bool?
+	public let did: DID
+	public let displayName: String?
+	public let handle: Handle
+	public let labels: [ComAtprotoLabelDefsLabel]?
+	public let verification: AppBskyActorDefsVerificationState?
+	public let viewer: AppBskyActorDefsViewerState?
+
+	public init(
+		associated: AppBskyActorDefsProfileAssociated? = nil,
+		avatar: String? = nil,
+		chatDisabled: Bool? = nil,
+		did: DID,
+		displayName: String? = nil,
+		handle: Handle,
+		labels: [ComAtprotoLabelDefsLabel]? = nil,
+		verification: AppBskyActorDefsVerificationState? = nil,
+		viewer: AppBskyActorDefsViewerState? = nil
+	) {
+		self.associated = associated
+		self.avatar = avatar
+		self.chatDisabled = chatDisabled
+		self.did = did
+		self.displayName = displayName
+		self.handle = handle
+		self.labels = labels
+		self.verification = verification
+		self.viewer = viewer
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		associated = try container.decodeIfPresent(AppBskyActorDefsProfileAssociated.self, forKey: .associated)
+		avatar = try container.decodeIfPresent(String.self, forKey: .avatar)
+		chatDisabled = try container.decodeIfPresent(Bool.self, forKey: .chatDisabled)
+		did = try container.decode(DID.self, forKey: .did)
+		displayName = try container.decodeIfPresent(String.self, forKey: .displayName)
+		handle = try container.decode(Handle.self, forKey: .handle)
+		labels = try container.decodeIfPresent([ComAtprotoLabelDefsLabel].self, forKey: .labels)
+		verification = try container.decodeIfPresent(AppBskyActorDefsVerificationState.self, forKey: .verification)
+		viewer = try container.decodeIfPresent(AppBskyActorDefsViewerState.self, forKey: .viewer)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(associated, forKey: .associated)
+		try container.encodeIfPresent(avatar, forKey: .avatar)
+		try container.encodeIfPresent(chatDisabled, forKey: .chatDisabled)
+		try container.encode(did, forKey: .did)
+		try container.encodeIfPresent(displayName, forKey: .displayName)
+		try container.encode(handle, forKey: .handle)
+		try container.encodeIfPresent(labels, forKey: .labels)
+		try container.encodeIfPresent(verification, forKey: .verification)
+		try container.encodeIfPresent(viewer, forKey: .viewer)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case associated = "associated"
+		case avatar = "avatar"
+		case chatDisabled = "chatDisabled"
+		case did = "did"
+		case displayName = "displayName"
+		case handle = "handle"
+		case labels = "labels"
+		case verification = "verification"
+		case viewer = "viewer"
+	}
+}
+
+
+public struct ChatBskyActorDeleteAccountOutput: Codable, Sendable, Equatable {
+
+	public init() {}
+
+	public init(from decoder: Decoder) throws {
+		_ = try decoder.container(keyedBy: CodingKeys.self)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		_ = encoder.container(keyedBy: CodingKeys.self)
+	}
+
+	private struct CodingKeys: CodingKey {
+		let stringValue = ""
+		init?(stringValue: String) {
+			return nil
+		}
+
+		let intValue: Int? = nil
+		init?(intValue: Int) {
+			return nil
+		}
+	}
+}
+
+

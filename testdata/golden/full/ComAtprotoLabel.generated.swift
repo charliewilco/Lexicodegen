@@ -1,0 +1,479 @@
+import Foundation
+
+
+public struct ComAtprotoLabelDefsLabel: Codable, Sendable, Equatable {
+	public let cid: CID?
+	public let cts: ATProtocolDate
+	public let exp: ATProtocolDate?
+	public let neg: Bool?
+	public let sig: Bytes?
+	public let src: DID
+	public let uri: String
+	public let val: String
+	public let ver: Int?
+
+	public init(
+		cid: CID? = nil,
+		cts: ATProtocolDate,
+		exp: ATProtocolDate? = nil,
+		neg: Bool? = nil,
+		sig: Bytes? = nil,
+		src: DID,
+		uri: String,
+		val: String,
+		ver: Int? = nil
+	) {
+		self.cid = cid
+		self.cts = cts
+		self.exp = exp
+		self.neg = neg
+		self.sig = sig
+		self.src = src
+		self.uri = uri
+		self.val = val
+		self.ver = ver
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cid = try container.decodeIfPresent(CID.self, forKey: .cid)
+		cts = try container.decode(ATProtocolDate.self, forKey: .cts)
+		exp = try container.decodeIfPresent(ATProtocolDate.self, forKey: .exp)
+		neg = try container.decodeIfPresent(Bool.self, forKey: .neg)
+		sig = try container.decodeIfPresent(Bytes.self, forKey: .sig)
+		src = try container.decode(DID.self, forKey: .src)
+		uri = try container.decode(String.self, forKey: .uri)
+		val = try container.decode(String.self, forKey: .val)
+		ver = try container.decodeIfPresent(Int.self, forKey: .ver)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cid, forKey: .cid)
+		try container.encode(cts, forKey: .cts)
+		try container.encodeIfPresent(exp, forKey: .exp)
+		try container.encodeIfPresent(neg, forKey: .neg)
+		try container.encodeIfPresent(sig, forKey: .sig)
+		try container.encode(src, forKey: .src)
+		try container.encode(uri, forKey: .uri)
+		try container.encode(val, forKey: .val)
+		try container.encodeIfPresent(ver, forKey: .ver)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cid = "cid"
+		case cts = "cts"
+		case exp = "exp"
+		case neg = "neg"
+		case sig = "sig"
+		case src = "src"
+		case uri = "uri"
+		case val = "val"
+		case ver = "ver"
+	}
+}
+
+
+public enum ComAtprotoLabelDefsLabelValue: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case hide = "!hide"
+	case noPromote = "!no-promote"
+	case warn = "!warn"
+	case noUnauthenticated = "!no-unauthenticated"
+	case dmcaViolation = "dmca-violation"
+	case doxxing = "doxxing"
+	case porn = "porn"
+	case sexual = "sexual"
+	case nudity = "nudity"
+	case nsfl = "nsfl"
+	case gore = "gore"
+}
+
+
+public struct ComAtprotoLabelDefsLabelValueDefinition: Codable, Sendable, Equatable {
+	public let adultOnly: Bool?
+	public let blurs: ComAtprotoLabelDefsLabelValueDefinitionBlurs
+	public let defaultSetting: ComAtprotoLabelDefsLabelValueDefinitionDefaultSetting?
+	public let identifier: String
+	public let locales: [ComAtprotoLabelDefsLabelValueDefinitionStrings]
+	public let severity: ComAtprotoLabelDefsLabelValueDefinitionSeverity
+
+	public init(
+		adultOnly: Bool? = nil,
+		blurs: ComAtprotoLabelDefsLabelValueDefinitionBlurs,
+		defaultSetting: ComAtprotoLabelDefsLabelValueDefinitionDefaultSetting? = nil,
+		identifier: String,
+		locales: [ComAtprotoLabelDefsLabelValueDefinitionStrings],
+		severity: ComAtprotoLabelDefsLabelValueDefinitionSeverity
+	) {
+		self.adultOnly = adultOnly
+		self.blurs = blurs
+		self.defaultSetting = defaultSetting
+		self.identifier = identifier
+		self.locales = locales
+		self.severity = severity
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		adultOnly = try container.decodeIfPresent(Bool.self, forKey: .adultOnly)
+		blurs = try container.decode(ComAtprotoLabelDefsLabelValueDefinitionBlurs.self, forKey: .blurs)
+		defaultSetting = try container.decodeIfPresent(ComAtprotoLabelDefsLabelValueDefinitionDefaultSetting.self, forKey: .defaultSetting)
+		identifier = try container.decode(String.self, forKey: .identifier)
+		locales = try container.decode([ComAtprotoLabelDefsLabelValueDefinitionStrings].self, forKey: .locales)
+		severity = try container.decode(ComAtprotoLabelDefsLabelValueDefinitionSeverity.self, forKey: .severity)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(adultOnly, forKey: .adultOnly)
+		try container.encode(blurs, forKey: .blurs)
+		try container.encodeIfPresent(defaultSetting, forKey: .defaultSetting)
+		try container.encode(identifier, forKey: .identifier)
+		try container.encode(locales, forKey: .locales)
+		try container.encode(severity, forKey: .severity)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case adultOnly = "adultOnly"
+		case blurs = "blurs"
+		case defaultSetting = "defaultSetting"
+		case identifier = "identifier"
+		case locales = "locales"
+		case severity = "severity"
+	}
+}
+
+
+public enum ComAtprotoLabelDefsLabelValueDefinitionBlurs: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case content = "content"
+	case media = "media"
+	case none = "none"
+}
+
+
+public enum ComAtprotoLabelDefsLabelValueDefinitionDefaultSetting: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case ignore = "ignore"
+	case warn = "warn"
+	case hide = "hide"
+}
+
+
+public enum ComAtprotoLabelDefsLabelValueDefinitionSeverity: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case inform = "inform"
+	case alert = "alert"
+	case none = "none"
+}
+
+
+public struct ComAtprotoLabelDefsLabelValueDefinitionStrings: Codable, Sendable, Equatable {
+	public let description: String
+	public let lang: String
+	public let name: String
+
+	public init(
+		description: String,
+		lang: String,
+		name: String
+	) {
+		self.description = description
+		self.lang = lang
+		self.name = name
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		description = try container.decode(String.self, forKey: .description)
+		lang = try container.decode(String.self, forKey: .lang)
+		name = try container.decode(String.self, forKey: .name)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(description, forKey: .description)
+		try container.encode(lang, forKey: .lang)
+		try container.encode(name, forKey: .name)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case description = "description"
+		case lang = "lang"
+		case name = "name"
+	}
+}
+
+
+public struct ComAtprotoLabelDefsSelfLabel: Codable, Sendable, Equatable {
+	public let val: String
+
+	public init(
+		val: String
+	) {
+		self.val = val
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		val = try container.decode(String.self, forKey: .val)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(val, forKey: .val)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case val = "val"
+	}
+}
+
+
+public struct ComAtprotoLabelDefsSelfLabels: Codable, Sendable, Equatable {
+	public let values: [ComAtprotoLabelDefsSelfLabel]
+
+	public init(
+		values: [ComAtprotoLabelDefsSelfLabel]
+	) {
+		self.values = values
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		values = try container.decode([ComAtprotoLabelDefsSelfLabel].self, forKey: .values)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(values, forKey: .values)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case values = "values"
+	}
+}
+
+
+public struct ComAtprotoLabelQueryLabelsOutput: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let labels: [ComAtprotoLabelDefsLabel]
+
+	public init(
+		cursor: String? = nil,
+		labels: [ComAtprotoLabelDefsLabel]
+	) {
+		self.cursor = cursor
+		self.labels = labels
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		labels = try container.decode([ComAtprotoLabelDefsLabel].self, forKey: .labels)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encode(labels, forKey: .labels)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case labels = "labels"
+	}
+}
+
+
+public struct ComAtprotoLabelQueryLabelsParameters: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let limit: Int?
+	public let sources: [DID]?
+	public let uriPatterns: [String]
+
+	public init(
+		cursor: String? = nil,
+		limit: Int? = nil,
+		sources: [DID]? = nil,
+		uriPatterns: [String]
+	) {
+		self.cursor = cursor
+		self.limit = limit
+		self.sources = sources
+		self.uriPatterns = uriPatterns
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		limit = try container.decodeIfPresent(Int.self, forKey: .limit)
+		sources = try container.decodeIfPresent([DID].self, forKey: .sources)
+		uriPatterns = try container.decode([String].self, forKey: .uriPatterns)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encodeIfPresent(limit, forKey: .limit)
+		try container.encodeIfPresent(sources, forKey: .sources)
+		try container.encode(uriPatterns, forKey: .uriPatterns)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		if let value = cursor {
+			value.appendQueryItems(named: "cursor", to: &items)
+		}
+		if let value = limit {
+			value.appendQueryItems(named: "limit", to: &items)
+		}
+		if let value = sources {
+			value.appendQueryItems(named: "sources", to: &items)
+		}
+		uriPatterns.appendQueryItems(named: "uriPatterns", to: &items)
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case limit = "limit"
+		case sources = "sources"
+		case uriPatterns = "uriPatterns"
+	}
+}
+
+
+public enum ComAtprotoLabelSubscribeLabelsError: String, Swift.Error, CaseIterable, Sendable {
+	case futureCursor = "FutureCursor"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ComAtprotoLabelSubscribeLabelsInfo: Codable, Sendable, Equatable {
+	public let message: String?
+	public let name: ComAtprotoLabelSubscribeLabelsInfoName
+
+	public init(
+		message: String? = nil,
+		name: ComAtprotoLabelSubscribeLabelsInfoName
+	) {
+		self.message = message
+		self.name = name
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		message = try container.decodeIfPresent(String.self, forKey: .message)
+		name = try container.decode(ComAtprotoLabelSubscribeLabelsInfoName.self, forKey: .name)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(message, forKey: .message)
+		try container.encode(name, forKey: .name)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case message = "message"
+		case name = "name"
+	}
+}
+
+
+public enum ComAtprotoLabelSubscribeLabelsInfoName: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case outdatedCursor = "OutdatedCursor"
+}
+
+
+public struct ComAtprotoLabelSubscribeLabelsLabels: Codable, Sendable, Equatable {
+	public let labels: [ComAtprotoLabelDefsLabel]
+	public let seq: Int
+
+	public init(
+		labels: [ComAtprotoLabelDefsLabel],
+		seq: Int
+	) {
+		self.labels = labels
+		self.seq = seq
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		labels = try container.decode([ComAtprotoLabelDefsLabel].self, forKey: .labels)
+		seq = try container.decode(Int.self, forKey: .seq)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(labels, forKey: .labels)
+		try container.encode(seq, forKey: .seq)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case labels = "labels"
+		case seq = "seq"
+	}
+}
+
+
+public indirect enum ComAtprotoLabelSubscribeLabelsMessage: Codable, Sendable, Equatable {
+	case labels(ComAtprotoLabelSubscribeLabelsLabels)
+	case info(ComAtprotoLabelSubscribeLabelsInfo)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "com.atproto.label.subscribeLabels#labels": self = .labels(try ComAtprotoLabelSubscribeLabelsLabels(from: decoder))
+		case "com.atproto.label.subscribeLabels#info": self = .info(try ComAtprotoLabelSubscribeLabelsInfo(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .labels(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "com.atproto.label.subscribeLabels#labels", to: encoder)
+		case .info(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "com.atproto.label.subscribeLabels#info", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
+public struct ComAtprotoLabelSubscribeLabelsParameters: Codable, Sendable, Equatable {
+	public let cursor: Int?
+
+	public init(
+		cursor: Int? = nil
+	) {
+		self.cursor = cursor
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(Int.self, forKey: .cursor)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		if let value = cursor {
+			value.appendQueryItems(named: "cursor", to: &items)
+		}
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+	}
+}
+
+

@@ -1,0 +1,4581 @@
+import Foundation
+
+
+public struct ToolsOzoneModerationCancelScheduledActionsCancellationResults: Codable, Sendable, Equatable {
+	public let failed: [ToolsOzoneModerationCancelScheduledActionsFailedCancellation]
+	public let succeeded: [DID]
+
+	public init(
+		failed: [ToolsOzoneModerationCancelScheduledActionsFailedCancellation],
+		succeeded: [DID]
+	) {
+		self.failed = failed
+		self.succeeded = succeeded
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		failed = try container.decode([ToolsOzoneModerationCancelScheduledActionsFailedCancellation].self, forKey: .failed)
+		succeeded = try container.decode([DID].self, forKey: .succeeded)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(failed, forKey: .failed)
+		try container.encode(succeeded, forKey: .succeeded)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case failed = "failed"
+		case succeeded = "succeeded"
+	}
+}
+
+
+public struct ToolsOzoneModerationCancelScheduledActionsFailedCancellation: Codable, Sendable, Equatable {
+	public let did: DID
+	public let error: String
+	public let errorCode: String?
+
+	public init(
+		did: DID,
+		error: String,
+		errorCode: String? = nil
+	) {
+		self.did = did
+		self.error = error
+		self.errorCode = errorCode
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		did = try container.decode(DID.self, forKey: .did)
+		error = try container.decode(String.self, forKey: .error)
+		errorCode = try container.decodeIfPresent(String.self, forKey: .errorCode)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(did, forKey: .did)
+		try container.encode(error, forKey: .error)
+		try container.encodeIfPresent(errorCode, forKey: .errorCode)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case did = "did"
+		case error = "error"
+		case errorCode = "errorCode"
+	}
+}
+
+
+public struct ToolsOzoneModerationCancelScheduledActionsInput: Codable, Sendable, Equatable {
+	public let comment: String?
+	public let subjects: [DID]
+
+	public init(
+		comment: String? = nil,
+		subjects: [DID]
+	) {
+		self.comment = comment
+		self.subjects = subjects
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		comment = try container.decodeIfPresent(String.self, forKey: .comment)
+		subjects = try container.decode([DID].self, forKey: .subjects)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(comment, forKey: .comment)
+		try container.encode(subjects, forKey: .subjects)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case comment = "comment"
+		case subjects = "subjects"
+	}
+}
+
+
+public typealias ToolsOzoneModerationCancelScheduledActionsOutput = ToolsOzoneModerationCancelScheduledActionsCancellationResults
+
+
+public struct ToolsOzoneModerationDefsAccountEvent: Codable, Sendable, Equatable {
+	public let active: Bool
+	public let comment: String?
+	public let status: ToolsOzoneModerationDefsAccountEventStatus?
+	public let timestamp: ATProtocolDate
+
+	public init(
+		active: Bool,
+		comment: String? = nil,
+		status: ToolsOzoneModerationDefsAccountEventStatus? = nil,
+		timestamp: ATProtocolDate
+	) {
+		self.active = active
+		self.comment = comment
+		self.status = status
+		self.timestamp = timestamp
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		active = try container.decode(Bool.self, forKey: .active)
+		comment = try container.decodeIfPresent(String.self, forKey: .comment)
+		status = try container.decodeIfPresent(ToolsOzoneModerationDefsAccountEventStatus.self, forKey: .status)
+		timestamp = try container.decode(ATProtocolDate.self, forKey: .timestamp)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(active, forKey: .active)
+		try container.encodeIfPresent(comment, forKey: .comment)
+		try container.encodeIfPresent(status, forKey: .status)
+		try container.encode(timestamp, forKey: .timestamp)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case active = "active"
+		case comment = "comment"
+		case status = "status"
+		case timestamp = "timestamp"
+	}
+}
+
+
+public enum ToolsOzoneModerationDefsAccountEventStatus: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case unknown = "unknown"
+	case deactivated = "deactivated"
+	case deleted = "deleted"
+	case takendown = "takendown"
+	case suspended = "suspended"
+	case tombstoned = "tombstoned"
+}
+
+
+public struct ToolsOzoneModerationDefsAccountHosting: Codable, Sendable, Equatable {
+	public let createdAt: ATProtocolDate?
+	public let deactivatedAt: ATProtocolDate?
+	public let deletedAt: ATProtocolDate?
+	public let reactivatedAt: ATProtocolDate?
+	public let status: ToolsOzoneModerationDefsAccountHostingStatus
+	public let updatedAt: ATProtocolDate?
+
+	public init(
+		createdAt: ATProtocolDate? = nil,
+		deactivatedAt: ATProtocolDate? = nil,
+		deletedAt: ATProtocolDate? = nil,
+		reactivatedAt: ATProtocolDate? = nil,
+		status: ToolsOzoneModerationDefsAccountHostingStatus,
+		updatedAt: ATProtocolDate? = nil
+	) {
+		self.createdAt = createdAt
+		self.deactivatedAt = deactivatedAt
+		self.deletedAt = deletedAt
+		self.reactivatedAt = reactivatedAt
+		self.status = status
+		self.updatedAt = updatedAt
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		createdAt = try container.decodeIfPresent(ATProtocolDate.self, forKey: .createdAt)
+		deactivatedAt = try container.decodeIfPresent(ATProtocolDate.self, forKey: .deactivatedAt)
+		deletedAt = try container.decodeIfPresent(ATProtocolDate.self, forKey: .deletedAt)
+		reactivatedAt = try container.decodeIfPresent(ATProtocolDate.self, forKey: .reactivatedAt)
+		status = try container.decode(ToolsOzoneModerationDefsAccountHostingStatus.self, forKey: .status)
+		updatedAt = try container.decodeIfPresent(ATProtocolDate.self, forKey: .updatedAt)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(createdAt, forKey: .createdAt)
+		try container.encodeIfPresent(deactivatedAt, forKey: .deactivatedAt)
+		try container.encodeIfPresent(deletedAt, forKey: .deletedAt)
+		try container.encodeIfPresent(reactivatedAt, forKey: .reactivatedAt)
+		try container.encode(status, forKey: .status)
+		try container.encodeIfPresent(updatedAt, forKey: .updatedAt)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case createdAt = "createdAt"
+		case deactivatedAt = "deactivatedAt"
+		case deletedAt = "deletedAt"
+		case reactivatedAt = "reactivatedAt"
+		case status = "status"
+		case updatedAt = "updatedAt"
+	}
+}
+
+
+public enum ToolsOzoneModerationDefsAccountHostingStatus: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case takendown = "takendown"
+	case suspended = "suspended"
+	case deleted = "deleted"
+	case deactivated = "deactivated"
+	case unknown = "unknown"
+}
+
+
+public struct ToolsOzoneModerationDefsAccountStats: Codable, Sendable, Equatable {
+	public let appealCount: Int?
+	public let escalateCount: Int?
+	public let reportCount: Int?
+	public let suspendCount: Int?
+	public let takedownCount: Int?
+
+	public init(
+		appealCount: Int? = nil,
+		escalateCount: Int? = nil,
+		reportCount: Int? = nil,
+		suspendCount: Int? = nil,
+		takedownCount: Int? = nil
+	) {
+		self.appealCount = appealCount
+		self.escalateCount = escalateCount
+		self.reportCount = reportCount
+		self.suspendCount = suspendCount
+		self.takedownCount = takedownCount
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		appealCount = try container.decodeIfPresent(Int.self, forKey: .appealCount)
+		escalateCount = try container.decodeIfPresent(Int.self, forKey: .escalateCount)
+		reportCount = try container.decodeIfPresent(Int.self, forKey: .reportCount)
+		suspendCount = try container.decodeIfPresent(Int.self, forKey: .suspendCount)
+		takedownCount = try container.decodeIfPresent(Int.self, forKey: .takedownCount)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(appealCount, forKey: .appealCount)
+		try container.encodeIfPresent(escalateCount, forKey: .escalateCount)
+		try container.encodeIfPresent(reportCount, forKey: .reportCount)
+		try container.encodeIfPresent(suspendCount, forKey: .suspendCount)
+		try container.encodeIfPresent(takedownCount, forKey: .takedownCount)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case appealCount = "appealCount"
+		case escalateCount = "escalateCount"
+		case reportCount = "reportCount"
+		case suspendCount = "suspendCount"
+		case takedownCount = "takedownCount"
+	}
+}
+
+
+public struct ToolsOzoneModerationDefsAccountStrike: Codable, Sendable, Equatable {
+	public let activeStrikeCount: Int?
+	public let firstStrikeAt: ATProtocolDate?
+	public let lastStrikeAt: ATProtocolDate?
+	public let totalStrikeCount: Int?
+
+	public init(
+		activeStrikeCount: Int? = nil,
+		firstStrikeAt: ATProtocolDate? = nil,
+		lastStrikeAt: ATProtocolDate? = nil,
+		totalStrikeCount: Int? = nil
+	) {
+		self.activeStrikeCount = activeStrikeCount
+		self.firstStrikeAt = firstStrikeAt
+		self.lastStrikeAt = lastStrikeAt
+		self.totalStrikeCount = totalStrikeCount
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		activeStrikeCount = try container.decodeIfPresent(Int.self, forKey: .activeStrikeCount)
+		firstStrikeAt = try container.decodeIfPresent(ATProtocolDate.self, forKey: .firstStrikeAt)
+		lastStrikeAt = try container.decodeIfPresent(ATProtocolDate.self, forKey: .lastStrikeAt)
+		totalStrikeCount = try container.decodeIfPresent(Int.self, forKey: .totalStrikeCount)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(activeStrikeCount, forKey: .activeStrikeCount)
+		try container.encodeIfPresent(firstStrikeAt, forKey: .firstStrikeAt)
+		try container.encodeIfPresent(lastStrikeAt, forKey: .lastStrikeAt)
+		try container.encodeIfPresent(totalStrikeCount, forKey: .totalStrikeCount)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case activeStrikeCount = "activeStrikeCount"
+		case firstStrikeAt = "firstStrikeAt"
+		case lastStrikeAt = "lastStrikeAt"
+		case totalStrikeCount = "totalStrikeCount"
+	}
+}
+
+
+public struct ToolsOzoneModerationDefsAgeAssuranceEvent: Codable, Sendable, Equatable {
+	public let access: AppBskyAgeassuranceDefsAccess?
+	public let attemptId: String
+	public let completeIp: String?
+	public let completeUa: String?
+	public let countryCode: String?
+	public let createdAt: ATProtocolDate
+	public let initIp: String?
+	public let initUa: String?
+	public let regionCode: String?
+	public let status: ToolsOzoneModerationDefsAgeAssuranceEventStatus
+
+	public init(
+		access: AppBskyAgeassuranceDefsAccess? = nil,
+		attemptId: String,
+		completeIp: String? = nil,
+		completeUa: String? = nil,
+		countryCode: String? = nil,
+		createdAt: ATProtocolDate,
+		initIp: String? = nil,
+		initUa: String? = nil,
+		regionCode: String? = nil,
+		status: ToolsOzoneModerationDefsAgeAssuranceEventStatus
+	) {
+		self.access = access
+		self.attemptId = attemptId
+		self.completeIp = completeIp
+		self.completeUa = completeUa
+		self.countryCode = countryCode
+		self.createdAt = createdAt
+		self.initIp = initIp
+		self.initUa = initUa
+		self.regionCode = regionCode
+		self.status = status
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		access = try container.decodeIfPresent(AppBskyAgeassuranceDefsAccess.self, forKey: .access)
+		attemptId = try container.decode(String.self, forKey: .attemptId)
+		completeIp = try container.decodeIfPresent(String.self, forKey: .completeIp)
+		completeUa = try container.decodeIfPresent(String.self, forKey: .completeUa)
+		countryCode = try container.decodeIfPresent(String.self, forKey: .countryCode)
+		createdAt = try container.decode(ATProtocolDate.self, forKey: .createdAt)
+		initIp = try container.decodeIfPresent(String.self, forKey: .initIp)
+		initUa = try container.decodeIfPresent(String.self, forKey: .initUa)
+		regionCode = try container.decodeIfPresent(String.self, forKey: .regionCode)
+		status = try container.decode(ToolsOzoneModerationDefsAgeAssuranceEventStatus.self, forKey: .status)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(access, forKey: .access)
+		try container.encode(attemptId, forKey: .attemptId)
+		try container.encodeIfPresent(completeIp, forKey: .completeIp)
+		try container.encodeIfPresent(completeUa, forKey: .completeUa)
+		try container.encodeIfPresent(countryCode, forKey: .countryCode)
+		try container.encode(createdAt, forKey: .createdAt)
+		try container.encodeIfPresent(initIp, forKey: .initIp)
+		try container.encodeIfPresent(initUa, forKey: .initUa)
+		try container.encodeIfPresent(regionCode, forKey: .regionCode)
+		try container.encode(status, forKey: .status)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case access = "access"
+		case attemptId = "attemptId"
+		case completeIp = "completeIp"
+		case completeUa = "completeUa"
+		case countryCode = "countryCode"
+		case createdAt = "createdAt"
+		case initIp = "initIp"
+		case initUa = "initUa"
+		case regionCode = "regionCode"
+		case status = "status"
+	}
+}
+
+
+public enum ToolsOzoneModerationDefsAgeAssuranceEventStatus: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case unknown = "unknown"
+	case pending = "pending"
+	case assured = "assured"
+}
+
+
+public struct ToolsOzoneModerationDefsAgeAssuranceOverrideEvent: Codable, Sendable, Equatable {
+	public let access: AppBskyAgeassuranceDefsAccess?
+	public let comment: String
+	public let status: ToolsOzoneModerationDefsAgeAssuranceOverrideEventStatus
+
+	public init(
+		access: AppBskyAgeassuranceDefsAccess? = nil,
+		comment: String,
+		status: ToolsOzoneModerationDefsAgeAssuranceOverrideEventStatus
+	) {
+		self.access = access
+		self.comment = comment
+		self.status = status
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		access = try container.decodeIfPresent(AppBskyAgeassuranceDefsAccess.self, forKey: .access)
+		comment = try container.decode(String.self, forKey: .comment)
+		status = try container.decode(ToolsOzoneModerationDefsAgeAssuranceOverrideEventStatus.self, forKey: .status)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(access, forKey: .access)
+		try container.encode(comment, forKey: .comment)
+		try container.encode(status, forKey: .status)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case access = "access"
+		case comment = "comment"
+		case status = "status"
+	}
+}
+
+
+public enum ToolsOzoneModerationDefsAgeAssuranceOverrideEventStatus: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case assured = "assured"
+	case reset = "reset"
+	case blocked = "blocked"
+}
+
+
+public struct ToolsOzoneModerationDefsAgeAssurancePurgeEvent: Codable, Sendable, Equatable {
+	public let comment: String
+
+	public init(
+		comment: String
+	) {
+		self.comment = comment
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		comment = try container.decode(String.self, forKey: .comment)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(comment, forKey: .comment)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case comment = "comment"
+	}
+}
+
+
+public struct ToolsOzoneModerationDefsBlobView: Codable, Sendable, Equatable {
+	public let cid: CID
+	public let createdAt: ATProtocolDate
+	public let details: ToolsOzoneModerationDefsBlobViewDetails?
+	public let mimeType: String
+	public let moderation: ToolsOzoneModerationDefsModeration?
+	public let size: Int
+
+	public init(
+		cid: CID,
+		createdAt: ATProtocolDate,
+		details: ToolsOzoneModerationDefsBlobViewDetails? = nil,
+		mimeType: String,
+		moderation: ToolsOzoneModerationDefsModeration? = nil,
+		size: Int
+	) {
+		self.cid = cid
+		self.createdAt = createdAt
+		self.details = details
+		self.mimeType = mimeType
+		self.moderation = moderation
+		self.size = size
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cid = try container.decode(CID.self, forKey: .cid)
+		createdAt = try container.decode(ATProtocolDate.self, forKey: .createdAt)
+		details = try container.decodeIfPresent(ToolsOzoneModerationDefsBlobViewDetails.self, forKey: .details)
+		mimeType = try container.decode(String.self, forKey: .mimeType)
+		moderation = try container.decodeIfPresent(ToolsOzoneModerationDefsModeration.self, forKey: .moderation)
+		size = try container.decode(Int.self, forKey: .size)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(cid, forKey: .cid)
+		try container.encode(createdAt, forKey: .createdAt)
+		try container.encodeIfPresent(details, forKey: .details)
+		try container.encode(mimeType, forKey: .mimeType)
+		try container.encodeIfPresent(moderation, forKey: .moderation)
+		try container.encode(size, forKey: .size)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cid = "cid"
+		case createdAt = "createdAt"
+		case details = "details"
+		case mimeType = "mimeType"
+		case moderation = "moderation"
+		case size = "size"
+	}
+}
+
+
+public indirect enum ToolsOzoneModerationDefsBlobViewDetails: Codable, Sendable, Equatable {
+	case imageDetails(ToolsOzoneModerationDefsImageDetails)
+	case videoDetails(ToolsOzoneModerationDefsVideoDetails)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "tools.ozone.moderation.defs#imageDetails": self = .imageDetails(try ToolsOzoneModerationDefsImageDetails(from: decoder))
+		case "tools.ozone.moderation.defs#videoDetails": self = .videoDetails(try ToolsOzoneModerationDefsVideoDetails(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .imageDetails(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#imageDetails", to: encoder)
+		case .videoDetails(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#videoDetails", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
+public struct ToolsOzoneModerationDefsCancelScheduledTakedownEvent: Codable, Sendable, Equatable {
+	public let comment: String?
+
+	public init(
+		comment: String? = nil
+	) {
+		self.comment = comment
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		comment = try container.decodeIfPresent(String.self, forKey: .comment)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(comment, forKey: .comment)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case comment = "comment"
+	}
+}
+
+
+public struct ToolsOzoneModerationDefsIdentityEvent: Codable, Sendable, Equatable {
+	public let comment: String?
+	public let handle: Handle?
+	public let pdsHost: String?
+	public let timestamp: ATProtocolDate
+	public let tombstone: Bool?
+
+	public init(
+		comment: String? = nil,
+		handle: Handle? = nil,
+		pdsHost: String? = nil,
+		timestamp: ATProtocolDate,
+		tombstone: Bool? = nil
+	) {
+		self.comment = comment
+		self.handle = handle
+		self.pdsHost = pdsHost
+		self.timestamp = timestamp
+		self.tombstone = tombstone
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		comment = try container.decodeIfPresent(String.self, forKey: .comment)
+		handle = try container.decodeIfPresent(Handle.self, forKey: .handle)
+		pdsHost = try container.decodeIfPresent(String.self, forKey: .pdsHost)
+		timestamp = try container.decode(ATProtocolDate.self, forKey: .timestamp)
+		tombstone = try container.decodeIfPresent(Bool.self, forKey: .tombstone)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(comment, forKey: .comment)
+		try container.encodeIfPresent(handle, forKey: .handle)
+		try container.encodeIfPresent(pdsHost, forKey: .pdsHost)
+		try container.encode(timestamp, forKey: .timestamp)
+		try container.encodeIfPresent(tombstone, forKey: .tombstone)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case comment = "comment"
+		case handle = "handle"
+		case pdsHost = "pdsHost"
+		case timestamp = "timestamp"
+		case tombstone = "tombstone"
+	}
+}
+
+
+public struct ToolsOzoneModerationDefsImageDetails: Codable, Sendable, Equatable {
+	public let height: Int
+	public let width: Int
+
+	public init(
+		height: Int,
+		width: Int
+	) {
+		self.height = height
+		self.width = width
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		height = try container.decode(Int.self, forKey: .height)
+		width = try container.decode(Int.self, forKey: .width)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(height, forKey: .height)
+		try container.encode(width, forKey: .width)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case height = "height"
+		case width = "width"
+	}
+}
+
+
+public struct ToolsOzoneModerationDefsModeration: Codable, Sendable, Equatable {
+	public let subjectStatus: ToolsOzoneModerationDefsSubjectStatusView?
+
+	public init(
+		subjectStatus: ToolsOzoneModerationDefsSubjectStatusView? = nil
+	) {
+		self.subjectStatus = subjectStatus
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		subjectStatus = try container.decodeIfPresent(ToolsOzoneModerationDefsSubjectStatusView.self, forKey: .subjectStatus)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(subjectStatus, forKey: .subjectStatus)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case subjectStatus = "subjectStatus"
+	}
+}
+
+
+public struct ToolsOzoneModerationDefsModerationDetail: Codable, Sendable, Equatable {
+	public let subjectStatus: ToolsOzoneModerationDefsSubjectStatusView?
+
+	public init(
+		subjectStatus: ToolsOzoneModerationDefsSubjectStatusView? = nil
+	) {
+		self.subjectStatus = subjectStatus
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		subjectStatus = try container.decodeIfPresent(ToolsOzoneModerationDefsSubjectStatusView.self, forKey: .subjectStatus)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(subjectStatus, forKey: .subjectStatus)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case subjectStatus = "subjectStatus"
+	}
+}
+
+
+public struct ToolsOzoneModerationDefsModEventAcknowledge: Codable, Sendable, Equatable {
+	public let acknowledgeAccountSubjects: Bool?
+	public let comment: String?
+
+	public init(
+		acknowledgeAccountSubjects: Bool? = nil,
+		comment: String? = nil
+	) {
+		self.acknowledgeAccountSubjects = acknowledgeAccountSubjects
+		self.comment = comment
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		acknowledgeAccountSubjects = try container.decodeIfPresent(Bool.self, forKey: .acknowledgeAccountSubjects)
+		comment = try container.decodeIfPresent(String.self, forKey: .comment)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(acknowledgeAccountSubjects, forKey: .acknowledgeAccountSubjects)
+		try container.encodeIfPresent(comment, forKey: .comment)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case acknowledgeAccountSubjects = "acknowledgeAccountSubjects"
+		case comment = "comment"
+	}
+}
+
+
+public struct ToolsOzoneModerationDefsModEventComment: Codable, Sendable, Equatable {
+	public let comment: String?
+	public let sticky: Bool?
+
+	public init(
+		comment: String? = nil,
+		sticky: Bool? = nil
+	) {
+		self.comment = comment
+		self.sticky = sticky
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		comment = try container.decodeIfPresent(String.self, forKey: .comment)
+		sticky = try container.decodeIfPresent(Bool.self, forKey: .sticky)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(comment, forKey: .comment)
+		try container.encodeIfPresent(sticky, forKey: .sticky)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case comment = "comment"
+		case sticky = "sticky"
+	}
+}
+
+
+public struct ToolsOzoneModerationDefsModEventDivert: Codable, Sendable, Equatable {
+	public let comment: String?
+
+	public init(
+		comment: String? = nil
+	) {
+		self.comment = comment
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		comment = try container.decodeIfPresent(String.self, forKey: .comment)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(comment, forKey: .comment)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case comment = "comment"
+	}
+}
+
+
+public struct ToolsOzoneModerationDefsModEventEmail: Codable, Sendable, Equatable {
+	public let comment: String?
+	public let content: String?
+	public let isDelivered: Bool?
+	public let policies: [String]?
+	public let severityLevel: String?
+	public let strikeCount: Int?
+	public let strikeExpiresAt: ATProtocolDate?
+	public let subjectLine: String
+
+	public init(
+		comment: String? = nil,
+		content: String? = nil,
+		isDelivered: Bool? = nil,
+		policies: [String]? = nil,
+		severityLevel: String? = nil,
+		strikeCount: Int? = nil,
+		strikeExpiresAt: ATProtocolDate? = nil,
+		subjectLine: String
+	) {
+		self.comment = comment
+		self.content = content
+		self.isDelivered = isDelivered
+		self.policies = policies
+		self.severityLevel = severityLevel
+		self.strikeCount = strikeCount
+		self.strikeExpiresAt = strikeExpiresAt
+		self.subjectLine = subjectLine
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		comment = try container.decodeIfPresent(String.self, forKey: .comment)
+		content = try container.decodeIfPresent(String.self, forKey: .content)
+		isDelivered = try container.decodeIfPresent(Bool.self, forKey: .isDelivered)
+		policies = try container.decodeIfPresent([String].self, forKey: .policies)
+		severityLevel = try container.decodeIfPresent(String.self, forKey: .severityLevel)
+		strikeCount = try container.decodeIfPresent(Int.self, forKey: .strikeCount)
+		strikeExpiresAt = try container.decodeIfPresent(ATProtocolDate.self, forKey: .strikeExpiresAt)
+		subjectLine = try container.decode(String.self, forKey: .subjectLine)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(comment, forKey: .comment)
+		try container.encodeIfPresent(content, forKey: .content)
+		try container.encodeIfPresent(isDelivered, forKey: .isDelivered)
+		try container.encodeIfPresent(policies, forKey: .policies)
+		try container.encodeIfPresent(severityLevel, forKey: .severityLevel)
+		try container.encodeIfPresent(strikeCount, forKey: .strikeCount)
+		try container.encodeIfPresent(strikeExpiresAt, forKey: .strikeExpiresAt)
+		try container.encode(subjectLine, forKey: .subjectLine)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case comment = "comment"
+		case content = "content"
+		case isDelivered = "isDelivered"
+		case policies = "policies"
+		case severityLevel = "severityLevel"
+		case strikeCount = "strikeCount"
+		case strikeExpiresAt = "strikeExpiresAt"
+		case subjectLine = "subjectLine"
+	}
+}
+
+
+public struct ToolsOzoneModerationDefsModEventEscalate: Codable, Sendable, Equatable {
+	public let comment: String?
+
+	public init(
+		comment: String? = nil
+	) {
+		self.comment = comment
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		comment = try container.decodeIfPresent(String.self, forKey: .comment)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(comment, forKey: .comment)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case comment = "comment"
+	}
+}
+
+
+public struct ToolsOzoneModerationDefsModEventLabel: Codable, Sendable, Equatable {
+	public let comment: String?
+	public let createLabelVals: [String]
+	public let durationInHours: Int?
+	public let negateLabelVals: [String]
+
+	public init(
+		comment: String? = nil,
+		createLabelVals: [String],
+		durationInHours: Int? = nil,
+		negateLabelVals: [String]
+	) {
+		self.comment = comment
+		self.createLabelVals = createLabelVals
+		self.durationInHours = durationInHours
+		self.negateLabelVals = negateLabelVals
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		comment = try container.decodeIfPresent(String.self, forKey: .comment)
+		createLabelVals = try container.decode([String].self, forKey: .createLabelVals)
+		durationInHours = try container.decodeIfPresent(Int.self, forKey: .durationInHours)
+		negateLabelVals = try container.decode([String].self, forKey: .negateLabelVals)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(comment, forKey: .comment)
+		try container.encode(createLabelVals, forKey: .createLabelVals)
+		try container.encodeIfPresent(durationInHours, forKey: .durationInHours)
+		try container.encode(negateLabelVals, forKey: .negateLabelVals)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case comment = "comment"
+		case createLabelVals = "createLabelVals"
+		case durationInHours = "durationInHours"
+		case negateLabelVals = "negateLabelVals"
+	}
+}
+
+
+public struct ToolsOzoneModerationDefsModEventMute: Codable, Sendable, Equatable {
+	public let comment: String?
+	public let durationInHours: Int
+
+	public init(
+		comment: String? = nil,
+		durationInHours: Int
+	) {
+		self.comment = comment
+		self.durationInHours = durationInHours
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		comment = try container.decodeIfPresent(String.self, forKey: .comment)
+		durationInHours = try container.decode(Int.self, forKey: .durationInHours)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(comment, forKey: .comment)
+		try container.encode(durationInHours, forKey: .durationInHours)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case comment = "comment"
+		case durationInHours = "durationInHours"
+	}
+}
+
+
+public struct ToolsOzoneModerationDefsModEventMuteReporter: Codable, Sendable, Equatable {
+	public let comment: String?
+	public let durationInHours: Int?
+
+	public init(
+		comment: String? = nil,
+		durationInHours: Int? = nil
+	) {
+		self.comment = comment
+		self.durationInHours = durationInHours
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		comment = try container.decodeIfPresent(String.self, forKey: .comment)
+		durationInHours = try container.decodeIfPresent(Int.self, forKey: .durationInHours)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(comment, forKey: .comment)
+		try container.encodeIfPresent(durationInHours, forKey: .durationInHours)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case comment = "comment"
+		case durationInHours = "durationInHours"
+	}
+}
+
+
+public struct ToolsOzoneModerationDefsModEventPriorityScore: Codable, Sendable, Equatable {
+	public let comment: String?
+	public let score: Int
+
+	public init(
+		comment: String? = nil,
+		score: Int
+	) {
+		self.comment = comment
+		self.score = score
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		comment = try container.decodeIfPresent(String.self, forKey: .comment)
+		score = try container.decode(Int.self, forKey: .score)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(comment, forKey: .comment)
+		try container.encode(score, forKey: .score)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case comment = "comment"
+		case score = "score"
+	}
+}
+
+
+public struct ToolsOzoneModerationDefsModEventReport: Codable, Sendable, Equatable {
+	public let comment: String?
+	public let isReporterMuted: Bool?
+	public let reportType: ComAtprotoModerationDefsReasonType
+
+	public init(
+		comment: String? = nil,
+		isReporterMuted: Bool? = nil,
+		reportType: ComAtprotoModerationDefsReasonType
+	) {
+		self.comment = comment
+		self.isReporterMuted = isReporterMuted
+		self.reportType = reportType
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		comment = try container.decodeIfPresent(String.self, forKey: .comment)
+		isReporterMuted = try container.decodeIfPresent(Bool.self, forKey: .isReporterMuted)
+		reportType = try container.decode(ComAtprotoModerationDefsReasonType.self, forKey: .reportType)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(comment, forKey: .comment)
+		try container.encodeIfPresent(isReporterMuted, forKey: .isReporterMuted)
+		try container.encode(reportType, forKey: .reportType)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case comment = "comment"
+		case isReporterMuted = "isReporterMuted"
+		case reportType = "reportType"
+	}
+}
+
+
+public struct ToolsOzoneModerationDefsModEventResolveAppeal: Codable, Sendable, Equatable {
+	public let comment: String?
+
+	public init(
+		comment: String? = nil
+	) {
+		self.comment = comment
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		comment = try container.decodeIfPresent(String.self, forKey: .comment)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(comment, forKey: .comment)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case comment = "comment"
+	}
+}
+
+
+public struct ToolsOzoneModerationDefsModEventReverseTakedown: Codable, Sendable, Equatable {
+	public let comment: String?
+	public let policies: [String]?
+	public let severityLevel: String?
+	public let strikeCount: Int?
+
+	public init(
+		comment: String? = nil,
+		policies: [String]? = nil,
+		severityLevel: String? = nil,
+		strikeCount: Int? = nil
+	) {
+		self.comment = comment
+		self.policies = policies
+		self.severityLevel = severityLevel
+		self.strikeCount = strikeCount
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		comment = try container.decodeIfPresent(String.self, forKey: .comment)
+		policies = try container.decodeIfPresent([String].self, forKey: .policies)
+		severityLevel = try container.decodeIfPresent(String.self, forKey: .severityLevel)
+		strikeCount = try container.decodeIfPresent(Int.self, forKey: .strikeCount)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(comment, forKey: .comment)
+		try container.encodeIfPresent(policies, forKey: .policies)
+		try container.encodeIfPresent(severityLevel, forKey: .severityLevel)
+		try container.encodeIfPresent(strikeCount, forKey: .strikeCount)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case comment = "comment"
+		case policies = "policies"
+		case severityLevel = "severityLevel"
+		case strikeCount = "strikeCount"
+	}
+}
+
+
+public struct ToolsOzoneModerationDefsModEventTag: Codable, Sendable, Equatable {
+	public let add: [String]
+	public let comment: String?
+	public let remove: [String]
+
+	public init(
+		add: [String],
+		comment: String? = nil,
+		remove: [String]
+	) {
+		self.add = add
+		self.comment = comment
+		self.remove = remove
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		add = try container.decode([String].self, forKey: .add)
+		comment = try container.decodeIfPresent(String.self, forKey: .comment)
+		remove = try container.decode([String].self, forKey: .remove)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(add, forKey: .add)
+		try container.encodeIfPresent(comment, forKey: .comment)
+		try container.encode(remove, forKey: .remove)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case add = "add"
+		case comment = "comment"
+		case remove = "remove"
+	}
+}
+
+
+public struct ToolsOzoneModerationDefsModEventTakedown: Codable, Sendable, Equatable {
+	public let acknowledgeAccountSubjects: Bool?
+	public let comment: String?
+	public let durationInHours: Int?
+	public let policies: [String]?
+	public let severityLevel: String?
+	public let strikeCount: Int?
+	public let strikeExpiresAt: ATProtocolDate?
+	public let targetServices: [ToolsOzoneModerationDefsModEventTakedownTargetServicesItem]?
+
+	public init(
+		acknowledgeAccountSubjects: Bool? = nil,
+		comment: String? = nil,
+		durationInHours: Int? = nil,
+		policies: [String]? = nil,
+		severityLevel: String? = nil,
+		strikeCount: Int? = nil,
+		strikeExpiresAt: ATProtocolDate? = nil,
+		targetServices: [ToolsOzoneModerationDefsModEventTakedownTargetServicesItem]? = nil
+	) {
+		self.acknowledgeAccountSubjects = acknowledgeAccountSubjects
+		self.comment = comment
+		self.durationInHours = durationInHours
+		self.policies = policies
+		self.severityLevel = severityLevel
+		self.strikeCount = strikeCount
+		self.strikeExpiresAt = strikeExpiresAt
+		self.targetServices = targetServices
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		acknowledgeAccountSubjects = try container.decodeIfPresent(Bool.self, forKey: .acknowledgeAccountSubjects)
+		comment = try container.decodeIfPresent(String.self, forKey: .comment)
+		durationInHours = try container.decodeIfPresent(Int.self, forKey: .durationInHours)
+		policies = try container.decodeIfPresent([String].self, forKey: .policies)
+		severityLevel = try container.decodeIfPresent(String.self, forKey: .severityLevel)
+		strikeCount = try container.decodeIfPresent(Int.self, forKey: .strikeCount)
+		strikeExpiresAt = try container.decodeIfPresent(ATProtocolDate.self, forKey: .strikeExpiresAt)
+		targetServices = try container.decodeIfPresent([ToolsOzoneModerationDefsModEventTakedownTargetServicesItem].self, forKey: .targetServices)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(acknowledgeAccountSubjects, forKey: .acknowledgeAccountSubjects)
+		try container.encodeIfPresent(comment, forKey: .comment)
+		try container.encodeIfPresent(durationInHours, forKey: .durationInHours)
+		try container.encodeIfPresent(policies, forKey: .policies)
+		try container.encodeIfPresent(severityLevel, forKey: .severityLevel)
+		try container.encodeIfPresent(strikeCount, forKey: .strikeCount)
+		try container.encodeIfPresent(strikeExpiresAt, forKey: .strikeExpiresAt)
+		try container.encodeIfPresent(targetServices, forKey: .targetServices)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case acknowledgeAccountSubjects = "acknowledgeAccountSubjects"
+		case comment = "comment"
+		case durationInHours = "durationInHours"
+		case policies = "policies"
+		case severityLevel = "severityLevel"
+		case strikeCount = "strikeCount"
+		case strikeExpiresAt = "strikeExpiresAt"
+		case targetServices = "targetServices"
+	}
+}
+
+
+public enum ToolsOzoneModerationDefsModEventTakedownTargetServicesItem: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case appview = "appview"
+	case pds = "pds"
+}
+
+
+public struct ToolsOzoneModerationDefsModEventUnmute: Codable, Sendable, Equatable {
+	public let comment: String?
+
+	public init(
+		comment: String? = nil
+	) {
+		self.comment = comment
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		comment = try container.decodeIfPresent(String.self, forKey: .comment)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(comment, forKey: .comment)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case comment = "comment"
+	}
+}
+
+
+public struct ToolsOzoneModerationDefsModEventUnmuteReporter: Codable, Sendable, Equatable {
+	public let comment: String?
+
+	public init(
+		comment: String? = nil
+	) {
+		self.comment = comment
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		comment = try container.decodeIfPresent(String.self, forKey: .comment)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(comment, forKey: .comment)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case comment = "comment"
+	}
+}
+
+
+public struct ToolsOzoneModerationDefsModEventView: Codable, Sendable, Equatable {
+	public let createdAt: ATProtocolDate
+	public let createdBy: DID
+	public let creatorHandle: String?
+	public let event: ToolsOzoneModerationDefsModEventViewEvent
+	public let id: Int
+	public let modTool: ToolsOzoneModerationDefsModTool?
+	public let subject: ToolsOzoneModerationDefsModEventViewSubject
+	public let subjectBlobCids: [String]
+	public let subjectHandle: String?
+
+	public init(
+		createdAt: ATProtocolDate,
+		createdBy: DID,
+		creatorHandle: String? = nil,
+		event: ToolsOzoneModerationDefsModEventViewEvent,
+		id: Int,
+		modTool: ToolsOzoneModerationDefsModTool? = nil,
+		subject: ToolsOzoneModerationDefsModEventViewSubject,
+		subjectBlobCids: [String],
+		subjectHandle: String? = nil
+	) {
+		self.createdAt = createdAt
+		self.createdBy = createdBy
+		self.creatorHandle = creatorHandle
+		self.event = event
+		self.id = id
+		self.modTool = modTool
+		self.subject = subject
+		self.subjectBlobCids = subjectBlobCids
+		self.subjectHandle = subjectHandle
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		createdAt = try container.decode(ATProtocolDate.self, forKey: .createdAt)
+		createdBy = try container.decode(DID.self, forKey: .createdBy)
+		creatorHandle = try container.decodeIfPresent(String.self, forKey: .creatorHandle)
+		event = try container.decode(ToolsOzoneModerationDefsModEventViewEvent.self, forKey: .event)
+		id = try container.decode(Int.self, forKey: .id)
+		modTool = try container.decodeIfPresent(ToolsOzoneModerationDefsModTool.self, forKey: .modTool)
+		subject = try container.decode(ToolsOzoneModerationDefsModEventViewSubject.self, forKey: .subject)
+		subjectBlobCids = try container.decode([String].self, forKey: .subjectBlobCids)
+		subjectHandle = try container.decodeIfPresent(String.self, forKey: .subjectHandle)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(createdAt, forKey: .createdAt)
+		try container.encode(createdBy, forKey: .createdBy)
+		try container.encodeIfPresent(creatorHandle, forKey: .creatorHandle)
+		try container.encode(event, forKey: .event)
+		try container.encode(id, forKey: .id)
+		try container.encodeIfPresent(modTool, forKey: .modTool)
+		try container.encode(subject, forKey: .subject)
+		try container.encode(subjectBlobCids, forKey: .subjectBlobCids)
+		try container.encodeIfPresent(subjectHandle, forKey: .subjectHandle)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case createdAt = "createdAt"
+		case createdBy = "createdBy"
+		case creatorHandle = "creatorHandle"
+		case event = "event"
+		case id = "id"
+		case modTool = "modTool"
+		case subject = "subject"
+		case subjectBlobCids = "subjectBlobCids"
+		case subjectHandle = "subjectHandle"
+	}
+}
+
+
+public struct ToolsOzoneModerationDefsModEventViewDetail: Codable, Sendable, Equatable {
+	public let createdAt: ATProtocolDate
+	public let createdBy: DID
+	public let event: ToolsOzoneModerationDefsModEventViewEvent
+	public let id: Int
+	public let modTool: ToolsOzoneModerationDefsModTool?
+	public let subject: ToolsOzoneModerationDefsModEventViewDetailSubject
+	public let subjectBlobs: [ToolsOzoneModerationDefsBlobView]
+
+	public init(
+		createdAt: ATProtocolDate,
+		createdBy: DID,
+		event: ToolsOzoneModerationDefsModEventViewEvent,
+		id: Int,
+		modTool: ToolsOzoneModerationDefsModTool? = nil,
+		subject: ToolsOzoneModerationDefsModEventViewDetailSubject,
+		subjectBlobs: [ToolsOzoneModerationDefsBlobView]
+	) {
+		self.createdAt = createdAt
+		self.createdBy = createdBy
+		self.event = event
+		self.id = id
+		self.modTool = modTool
+		self.subject = subject
+		self.subjectBlobs = subjectBlobs
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		createdAt = try container.decode(ATProtocolDate.self, forKey: .createdAt)
+		createdBy = try container.decode(DID.self, forKey: .createdBy)
+		event = try container.decode(ToolsOzoneModerationDefsModEventViewEvent.self, forKey: .event)
+		id = try container.decode(Int.self, forKey: .id)
+		modTool = try container.decodeIfPresent(ToolsOzoneModerationDefsModTool.self, forKey: .modTool)
+		subject = try container.decode(ToolsOzoneModerationDefsModEventViewDetailSubject.self, forKey: .subject)
+		subjectBlobs = try container.decode([ToolsOzoneModerationDefsBlobView].self, forKey: .subjectBlobs)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(createdAt, forKey: .createdAt)
+		try container.encode(createdBy, forKey: .createdBy)
+		try container.encode(event, forKey: .event)
+		try container.encode(id, forKey: .id)
+		try container.encodeIfPresent(modTool, forKey: .modTool)
+		try container.encode(subject, forKey: .subject)
+		try container.encode(subjectBlobs, forKey: .subjectBlobs)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case createdAt = "createdAt"
+		case createdBy = "createdBy"
+		case event = "event"
+		case id = "id"
+		case modTool = "modTool"
+		case subject = "subject"
+		case subjectBlobs = "subjectBlobs"
+	}
+}
+
+
+public indirect enum ToolsOzoneModerationDefsModEventViewDetailSubject: Codable, Sendable, Equatable {
+	case repoView(ToolsOzoneModerationDefsRepoView)
+	case repoViewNotFound(ToolsOzoneModerationDefsRepoViewNotFound)
+	case recordView(ToolsOzoneModerationDefsRecordView)
+	case recordViewNotFound(ToolsOzoneModerationDefsRecordViewNotFound)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "tools.ozone.moderation.defs#repoView": self = .repoView(try ToolsOzoneModerationDefsRepoView(from: decoder))
+		case "tools.ozone.moderation.defs#repoViewNotFound": self = .repoViewNotFound(try ToolsOzoneModerationDefsRepoViewNotFound(from: decoder))
+		case "tools.ozone.moderation.defs#recordView": self = .recordView(try ToolsOzoneModerationDefsRecordView(from: decoder))
+		case "tools.ozone.moderation.defs#recordViewNotFound": self = .recordViewNotFound(try ToolsOzoneModerationDefsRecordViewNotFound(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .repoView(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#repoView", to: encoder)
+		case .repoViewNotFound(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#repoViewNotFound", to: encoder)
+		case .recordView(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#recordView", to: encoder)
+		case .recordViewNotFound(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#recordViewNotFound", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
+public indirect enum ToolsOzoneModerationDefsModEventViewEvent: Codable, Sendable, Equatable {
+	case modEventTakedown(ToolsOzoneModerationDefsModEventTakedown)
+	case modEventReverseTakedown(ToolsOzoneModerationDefsModEventReverseTakedown)
+	case modEventComment(ToolsOzoneModerationDefsModEventComment)
+	case modEventReport(ToolsOzoneModerationDefsModEventReport)
+	case modEventLabel(ToolsOzoneModerationDefsModEventLabel)
+	case modEventAcknowledge(ToolsOzoneModerationDefsModEventAcknowledge)
+	case modEventEscalate(ToolsOzoneModerationDefsModEventEscalate)
+	case modEventMute(ToolsOzoneModerationDefsModEventMute)
+	case modEventUnmute(ToolsOzoneModerationDefsModEventUnmute)
+	case modEventMuteReporter(ToolsOzoneModerationDefsModEventMuteReporter)
+	case modEventUnmuteReporter(ToolsOzoneModerationDefsModEventUnmuteReporter)
+	case modEventEmail(ToolsOzoneModerationDefsModEventEmail)
+	case modEventResolveAppeal(ToolsOzoneModerationDefsModEventResolveAppeal)
+	case modEventDivert(ToolsOzoneModerationDefsModEventDivert)
+	case modEventTag(ToolsOzoneModerationDefsModEventTag)
+	case accountEvent(ToolsOzoneModerationDefsAccountEvent)
+	case identityEvent(ToolsOzoneModerationDefsIdentityEvent)
+	case recordEvent(ToolsOzoneModerationDefsRecordEvent)
+	case modEventPriorityScore(ToolsOzoneModerationDefsModEventPriorityScore)
+	case ageAssuranceEvent(ToolsOzoneModerationDefsAgeAssuranceEvent)
+	case ageAssuranceOverrideEvent(ToolsOzoneModerationDefsAgeAssuranceOverrideEvent)
+	case ageAssurancePurgeEvent(ToolsOzoneModerationDefsAgeAssurancePurgeEvent)
+	case revokeAccountCredentialsEvent(ToolsOzoneModerationDefsRevokeAccountCredentialsEvent)
+	case scheduleTakedownEvent(ToolsOzoneModerationDefsScheduleTakedownEvent)
+	case cancelScheduledTakedownEvent(ToolsOzoneModerationDefsCancelScheduledTakedownEvent)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "tools.ozone.moderation.defs#modEventTakedown": self = .modEventTakedown(try ToolsOzoneModerationDefsModEventTakedown(from: decoder))
+		case "tools.ozone.moderation.defs#modEventReverseTakedown": self = .modEventReverseTakedown(try ToolsOzoneModerationDefsModEventReverseTakedown(from: decoder))
+		case "tools.ozone.moderation.defs#modEventComment": self = .modEventComment(try ToolsOzoneModerationDefsModEventComment(from: decoder))
+		case "tools.ozone.moderation.defs#modEventReport": self = .modEventReport(try ToolsOzoneModerationDefsModEventReport(from: decoder))
+		case "tools.ozone.moderation.defs#modEventLabel": self = .modEventLabel(try ToolsOzoneModerationDefsModEventLabel(from: decoder))
+		case "tools.ozone.moderation.defs#modEventAcknowledge": self = .modEventAcknowledge(try ToolsOzoneModerationDefsModEventAcknowledge(from: decoder))
+		case "tools.ozone.moderation.defs#modEventEscalate": self = .modEventEscalate(try ToolsOzoneModerationDefsModEventEscalate(from: decoder))
+		case "tools.ozone.moderation.defs#modEventMute": self = .modEventMute(try ToolsOzoneModerationDefsModEventMute(from: decoder))
+		case "tools.ozone.moderation.defs#modEventUnmute": self = .modEventUnmute(try ToolsOzoneModerationDefsModEventUnmute(from: decoder))
+		case "tools.ozone.moderation.defs#modEventMuteReporter": self = .modEventMuteReporter(try ToolsOzoneModerationDefsModEventMuteReporter(from: decoder))
+		case "tools.ozone.moderation.defs#modEventUnmuteReporter": self = .modEventUnmuteReporter(try ToolsOzoneModerationDefsModEventUnmuteReporter(from: decoder))
+		case "tools.ozone.moderation.defs#modEventEmail": self = .modEventEmail(try ToolsOzoneModerationDefsModEventEmail(from: decoder))
+		case "tools.ozone.moderation.defs#modEventResolveAppeal": self = .modEventResolveAppeal(try ToolsOzoneModerationDefsModEventResolveAppeal(from: decoder))
+		case "tools.ozone.moderation.defs#modEventDivert": self = .modEventDivert(try ToolsOzoneModerationDefsModEventDivert(from: decoder))
+		case "tools.ozone.moderation.defs#modEventTag": self = .modEventTag(try ToolsOzoneModerationDefsModEventTag(from: decoder))
+		case "tools.ozone.moderation.defs#accountEvent": self = .accountEvent(try ToolsOzoneModerationDefsAccountEvent(from: decoder))
+		case "tools.ozone.moderation.defs#identityEvent": self = .identityEvent(try ToolsOzoneModerationDefsIdentityEvent(from: decoder))
+		case "tools.ozone.moderation.defs#recordEvent": self = .recordEvent(try ToolsOzoneModerationDefsRecordEvent(from: decoder))
+		case "tools.ozone.moderation.defs#modEventPriorityScore": self = .modEventPriorityScore(try ToolsOzoneModerationDefsModEventPriorityScore(from: decoder))
+		case "tools.ozone.moderation.defs#ageAssuranceEvent": self = .ageAssuranceEvent(try ToolsOzoneModerationDefsAgeAssuranceEvent(from: decoder))
+		case "tools.ozone.moderation.defs#ageAssuranceOverrideEvent": self = .ageAssuranceOverrideEvent(try ToolsOzoneModerationDefsAgeAssuranceOverrideEvent(from: decoder))
+		case "tools.ozone.moderation.defs#ageAssurancePurgeEvent": self = .ageAssurancePurgeEvent(try ToolsOzoneModerationDefsAgeAssurancePurgeEvent(from: decoder))
+		case "tools.ozone.moderation.defs#revokeAccountCredentialsEvent": self = .revokeAccountCredentialsEvent(try ToolsOzoneModerationDefsRevokeAccountCredentialsEvent(from: decoder))
+		case "tools.ozone.moderation.defs#scheduleTakedownEvent": self = .scheduleTakedownEvent(try ToolsOzoneModerationDefsScheduleTakedownEvent(from: decoder))
+		case "tools.ozone.moderation.defs#cancelScheduledTakedownEvent": self = .cancelScheduledTakedownEvent(try ToolsOzoneModerationDefsCancelScheduledTakedownEvent(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .modEventTakedown(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#modEventTakedown", to: encoder)
+		case .modEventReverseTakedown(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#modEventReverseTakedown", to: encoder)
+		case .modEventComment(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#modEventComment", to: encoder)
+		case .modEventReport(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#modEventReport", to: encoder)
+		case .modEventLabel(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#modEventLabel", to: encoder)
+		case .modEventAcknowledge(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#modEventAcknowledge", to: encoder)
+		case .modEventEscalate(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#modEventEscalate", to: encoder)
+		case .modEventMute(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#modEventMute", to: encoder)
+		case .modEventUnmute(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#modEventUnmute", to: encoder)
+		case .modEventMuteReporter(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#modEventMuteReporter", to: encoder)
+		case .modEventUnmuteReporter(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#modEventUnmuteReporter", to: encoder)
+		case .modEventEmail(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#modEventEmail", to: encoder)
+		case .modEventResolveAppeal(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#modEventResolveAppeal", to: encoder)
+		case .modEventDivert(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#modEventDivert", to: encoder)
+		case .modEventTag(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#modEventTag", to: encoder)
+		case .accountEvent(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#accountEvent", to: encoder)
+		case .identityEvent(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#identityEvent", to: encoder)
+		case .recordEvent(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#recordEvent", to: encoder)
+		case .modEventPriorityScore(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#modEventPriorityScore", to: encoder)
+		case .ageAssuranceEvent(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#ageAssuranceEvent", to: encoder)
+		case .ageAssuranceOverrideEvent(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#ageAssuranceOverrideEvent", to: encoder)
+		case .ageAssurancePurgeEvent(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#ageAssurancePurgeEvent", to: encoder)
+		case .revokeAccountCredentialsEvent(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#revokeAccountCredentialsEvent", to: encoder)
+		case .scheduleTakedownEvent(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#scheduleTakedownEvent", to: encoder)
+		case .cancelScheduledTakedownEvent(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#cancelScheduledTakedownEvent", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
+public indirect enum ToolsOzoneModerationDefsModEventViewSubject: Codable, Sendable, Equatable {
+	case repoRef(ComAtprotoAdminDefsRepoRef)
+	case strongRef(ComAtprotoRepoStrongRef)
+	case messageRef(ChatBskyConvoDefsMessageRef)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "com.atproto.admin.defs#repoRef": self = .repoRef(try ComAtprotoAdminDefsRepoRef(from: decoder))
+		case "com.atproto.repo.strongRef": self = .strongRef(try ComAtprotoRepoStrongRef(from: decoder))
+		case "chat.bsky.convo.defs#messageRef": self = .messageRef(try ChatBskyConvoDefsMessageRef(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .repoRef(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "com.atproto.admin.defs#repoRef", to: encoder)
+		case .strongRef(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "com.atproto.repo.strongRef", to: encoder)
+		case .messageRef(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#messageRef", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
+public struct ToolsOzoneModerationDefsModTool: Codable, Sendable, Equatable {
+	public let meta: ATProtocolValueContainer?
+	public let name: String
+
+	public init(
+		meta: ATProtocolValueContainer? = nil,
+		name: String
+	) {
+		self.meta = meta
+		self.name = name
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		meta = try container.decodeIfPresent(ATProtocolValueContainer.self, forKey: .meta)
+		name = try container.decode(String.self, forKey: .name)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(meta, forKey: .meta)
+		try container.encode(name, forKey: .name)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case meta = "meta"
+		case name = "name"
+	}
+}
+
+
+public struct ToolsOzoneModerationDefsRecordEvent: Codable, Sendable, Equatable {
+	public let cid: CID?
+	public let comment: String?
+	public let op: ToolsOzoneModerationDefsRecordEventOp
+	public let timestamp: ATProtocolDate
+
+	public init(
+		cid: CID? = nil,
+		comment: String? = nil,
+		op: ToolsOzoneModerationDefsRecordEventOp,
+		timestamp: ATProtocolDate
+	) {
+		self.cid = cid
+		self.comment = comment
+		self.op = op
+		self.timestamp = timestamp
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cid = try container.decodeIfPresent(CID.self, forKey: .cid)
+		comment = try container.decodeIfPresent(String.self, forKey: .comment)
+		op = try container.decode(ToolsOzoneModerationDefsRecordEventOp.self, forKey: .op)
+		timestamp = try container.decode(ATProtocolDate.self, forKey: .timestamp)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cid, forKey: .cid)
+		try container.encodeIfPresent(comment, forKey: .comment)
+		try container.encode(op, forKey: .op)
+		try container.encode(timestamp, forKey: .timestamp)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cid = "cid"
+		case comment = "comment"
+		case op = "op"
+		case timestamp = "timestamp"
+	}
+}
+
+
+public enum ToolsOzoneModerationDefsRecordEventOp: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case create = "create"
+	case update = "update"
+	case delete = "delete"
+}
+
+
+public struct ToolsOzoneModerationDefsRecordHosting: Codable, Sendable, Equatable {
+	public let createdAt: ATProtocolDate?
+	public let deletedAt: ATProtocolDate?
+	public let status: ToolsOzoneModerationDefsRecordHostingStatus
+	public let updatedAt: ATProtocolDate?
+
+	public init(
+		createdAt: ATProtocolDate? = nil,
+		deletedAt: ATProtocolDate? = nil,
+		status: ToolsOzoneModerationDefsRecordHostingStatus,
+		updatedAt: ATProtocolDate? = nil
+	) {
+		self.createdAt = createdAt
+		self.deletedAt = deletedAt
+		self.status = status
+		self.updatedAt = updatedAt
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		createdAt = try container.decodeIfPresent(ATProtocolDate.self, forKey: .createdAt)
+		deletedAt = try container.decodeIfPresent(ATProtocolDate.self, forKey: .deletedAt)
+		status = try container.decode(ToolsOzoneModerationDefsRecordHostingStatus.self, forKey: .status)
+		updatedAt = try container.decodeIfPresent(ATProtocolDate.self, forKey: .updatedAt)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(createdAt, forKey: .createdAt)
+		try container.encodeIfPresent(deletedAt, forKey: .deletedAt)
+		try container.encode(status, forKey: .status)
+		try container.encodeIfPresent(updatedAt, forKey: .updatedAt)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case createdAt = "createdAt"
+		case deletedAt = "deletedAt"
+		case status = "status"
+		case updatedAt = "updatedAt"
+	}
+}
+
+
+public enum ToolsOzoneModerationDefsRecordHostingStatus: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case deleted = "deleted"
+	case unknown = "unknown"
+}
+
+
+public struct ToolsOzoneModerationDefsRecordsStats: Codable, Sendable, Equatable {
+	public let appealedCount: Int?
+	public let escalatedCount: Int?
+	public let pendingCount: Int?
+	public let processedCount: Int?
+	public let reportedCount: Int?
+	public let subjectCount: Int?
+	public let takendownCount: Int?
+	public let totalReports: Int?
+
+	public init(
+		appealedCount: Int? = nil,
+		escalatedCount: Int? = nil,
+		pendingCount: Int? = nil,
+		processedCount: Int? = nil,
+		reportedCount: Int? = nil,
+		subjectCount: Int? = nil,
+		takendownCount: Int? = nil,
+		totalReports: Int? = nil
+	) {
+		self.appealedCount = appealedCount
+		self.escalatedCount = escalatedCount
+		self.pendingCount = pendingCount
+		self.processedCount = processedCount
+		self.reportedCount = reportedCount
+		self.subjectCount = subjectCount
+		self.takendownCount = takendownCount
+		self.totalReports = totalReports
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		appealedCount = try container.decodeIfPresent(Int.self, forKey: .appealedCount)
+		escalatedCount = try container.decodeIfPresent(Int.self, forKey: .escalatedCount)
+		pendingCount = try container.decodeIfPresent(Int.self, forKey: .pendingCount)
+		processedCount = try container.decodeIfPresent(Int.self, forKey: .processedCount)
+		reportedCount = try container.decodeIfPresent(Int.self, forKey: .reportedCount)
+		subjectCount = try container.decodeIfPresent(Int.self, forKey: .subjectCount)
+		takendownCount = try container.decodeIfPresent(Int.self, forKey: .takendownCount)
+		totalReports = try container.decodeIfPresent(Int.self, forKey: .totalReports)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(appealedCount, forKey: .appealedCount)
+		try container.encodeIfPresent(escalatedCount, forKey: .escalatedCount)
+		try container.encodeIfPresent(pendingCount, forKey: .pendingCount)
+		try container.encodeIfPresent(processedCount, forKey: .processedCount)
+		try container.encodeIfPresent(reportedCount, forKey: .reportedCount)
+		try container.encodeIfPresent(subjectCount, forKey: .subjectCount)
+		try container.encodeIfPresent(takendownCount, forKey: .takendownCount)
+		try container.encodeIfPresent(totalReports, forKey: .totalReports)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case appealedCount = "appealedCount"
+		case escalatedCount = "escalatedCount"
+		case pendingCount = "pendingCount"
+		case processedCount = "processedCount"
+		case reportedCount = "reportedCount"
+		case subjectCount = "subjectCount"
+		case takendownCount = "takendownCount"
+		case totalReports = "totalReports"
+	}
+}
+
+
+public struct ToolsOzoneModerationDefsRecordView: Codable, Sendable, Equatable {
+	public let blobCids: [CID]
+	public let cid: CID
+	public let indexedAt: ATProtocolDate
+	public let moderation: ToolsOzoneModerationDefsModeration
+	public let repo: ToolsOzoneModerationDefsRepoView
+	public let uri: ATURI
+	public let value: ATProtocolValueContainer
+
+	public init(
+		blobCids: [CID],
+		cid: CID,
+		indexedAt: ATProtocolDate,
+		moderation: ToolsOzoneModerationDefsModeration,
+		repo: ToolsOzoneModerationDefsRepoView,
+		uri: ATURI,
+		value: ATProtocolValueContainer
+	) {
+		self.blobCids = blobCids
+		self.cid = cid
+		self.indexedAt = indexedAt
+		self.moderation = moderation
+		self.repo = repo
+		self.uri = uri
+		self.value = value
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		blobCids = try container.decode([CID].self, forKey: .blobCids)
+		cid = try container.decode(CID.self, forKey: .cid)
+		indexedAt = try container.decode(ATProtocolDate.self, forKey: .indexedAt)
+		moderation = try container.decode(ToolsOzoneModerationDefsModeration.self, forKey: .moderation)
+		repo = try container.decode(ToolsOzoneModerationDefsRepoView.self, forKey: .repo)
+		uri = try container.decode(ATURI.self, forKey: .uri)
+		value = try container.decode(ATProtocolValueContainer.self, forKey: .value)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(blobCids, forKey: .blobCids)
+		try container.encode(cid, forKey: .cid)
+		try container.encode(indexedAt, forKey: .indexedAt)
+		try container.encode(moderation, forKey: .moderation)
+		try container.encode(repo, forKey: .repo)
+		try container.encode(uri, forKey: .uri)
+		try container.encode(value, forKey: .value)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case blobCids = "blobCids"
+		case cid = "cid"
+		case indexedAt = "indexedAt"
+		case moderation = "moderation"
+		case repo = "repo"
+		case uri = "uri"
+		case value = "value"
+	}
+}
+
+
+public struct ToolsOzoneModerationDefsRecordViewDetail: Codable, Sendable, Equatable {
+	public let blobs: [ToolsOzoneModerationDefsBlobView]
+	public let cid: CID
+	public let indexedAt: ATProtocolDate
+	public let labels: [ComAtprotoLabelDefsLabel]?
+	public let moderation: ToolsOzoneModerationDefsModerationDetail
+	public let repo: ToolsOzoneModerationDefsRepoView
+	public let uri: ATURI
+	public let value: ATProtocolValueContainer
+
+	public init(
+		blobs: [ToolsOzoneModerationDefsBlobView],
+		cid: CID,
+		indexedAt: ATProtocolDate,
+		labels: [ComAtprotoLabelDefsLabel]? = nil,
+		moderation: ToolsOzoneModerationDefsModerationDetail,
+		repo: ToolsOzoneModerationDefsRepoView,
+		uri: ATURI,
+		value: ATProtocolValueContainer
+	) {
+		self.blobs = blobs
+		self.cid = cid
+		self.indexedAt = indexedAt
+		self.labels = labels
+		self.moderation = moderation
+		self.repo = repo
+		self.uri = uri
+		self.value = value
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		blobs = try container.decode([ToolsOzoneModerationDefsBlobView].self, forKey: .blobs)
+		cid = try container.decode(CID.self, forKey: .cid)
+		indexedAt = try container.decode(ATProtocolDate.self, forKey: .indexedAt)
+		labels = try container.decodeIfPresent([ComAtprotoLabelDefsLabel].self, forKey: .labels)
+		moderation = try container.decode(ToolsOzoneModerationDefsModerationDetail.self, forKey: .moderation)
+		repo = try container.decode(ToolsOzoneModerationDefsRepoView.self, forKey: .repo)
+		uri = try container.decode(ATURI.self, forKey: .uri)
+		value = try container.decode(ATProtocolValueContainer.self, forKey: .value)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(blobs, forKey: .blobs)
+		try container.encode(cid, forKey: .cid)
+		try container.encode(indexedAt, forKey: .indexedAt)
+		try container.encodeIfPresent(labels, forKey: .labels)
+		try container.encode(moderation, forKey: .moderation)
+		try container.encode(repo, forKey: .repo)
+		try container.encode(uri, forKey: .uri)
+		try container.encode(value, forKey: .value)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case blobs = "blobs"
+		case cid = "cid"
+		case indexedAt = "indexedAt"
+		case labels = "labels"
+		case moderation = "moderation"
+		case repo = "repo"
+		case uri = "uri"
+		case value = "value"
+	}
+}
+
+
+public struct ToolsOzoneModerationDefsRecordViewNotFound: Codable, Sendable, Equatable {
+	public let uri: ATURI
+
+	public init(
+		uri: ATURI
+	) {
+		self.uri = uri
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		uri = try container.decode(ATURI.self, forKey: .uri)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(uri, forKey: .uri)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case uri = "uri"
+	}
+}
+
+
+public struct ToolsOzoneModerationDefsReporterStats: Codable, Sendable, Equatable {
+	public let accountReportCount: Int
+	public let did: DID
+	public let labeledAccountCount: Int
+	public let labeledRecordCount: Int
+	public let recordReportCount: Int
+	public let reportedAccountCount: Int
+	public let reportedRecordCount: Int
+	public let takendownAccountCount: Int
+	public let takendownRecordCount: Int
+
+	public init(
+		accountReportCount: Int,
+		did: DID,
+		labeledAccountCount: Int,
+		labeledRecordCount: Int,
+		recordReportCount: Int,
+		reportedAccountCount: Int,
+		reportedRecordCount: Int,
+		takendownAccountCount: Int,
+		takendownRecordCount: Int
+	) {
+		self.accountReportCount = accountReportCount
+		self.did = did
+		self.labeledAccountCount = labeledAccountCount
+		self.labeledRecordCount = labeledRecordCount
+		self.recordReportCount = recordReportCount
+		self.reportedAccountCount = reportedAccountCount
+		self.reportedRecordCount = reportedRecordCount
+		self.takendownAccountCount = takendownAccountCount
+		self.takendownRecordCount = takendownRecordCount
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		accountReportCount = try container.decode(Int.self, forKey: .accountReportCount)
+		did = try container.decode(DID.self, forKey: .did)
+		labeledAccountCount = try container.decode(Int.self, forKey: .labeledAccountCount)
+		labeledRecordCount = try container.decode(Int.self, forKey: .labeledRecordCount)
+		recordReportCount = try container.decode(Int.self, forKey: .recordReportCount)
+		reportedAccountCount = try container.decode(Int.self, forKey: .reportedAccountCount)
+		reportedRecordCount = try container.decode(Int.self, forKey: .reportedRecordCount)
+		takendownAccountCount = try container.decode(Int.self, forKey: .takendownAccountCount)
+		takendownRecordCount = try container.decode(Int.self, forKey: .takendownRecordCount)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(accountReportCount, forKey: .accountReportCount)
+		try container.encode(did, forKey: .did)
+		try container.encode(labeledAccountCount, forKey: .labeledAccountCount)
+		try container.encode(labeledRecordCount, forKey: .labeledRecordCount)
+		try container.encode(recordReportCount, forKey: .recordReportCount)
+		try container.encode(reportedAccountCount, forKey: .reportedAccountCount)
+		try container.encode(reportedRecordCount, forKey: .reportedRecordCount)
+		try container.encode(takendownAccountCount, forKey: .takendownAccountCount)
+		try container.encode(takendownRecordCount, forKey: .takendownRecordCount)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case accountReportCount = "accountReportCount"
+		case did = "did"
+		case labeledAccountCount = "labeledAccountCount"
+		case labeledRecordCount = "labeledRecordCount"
+		case recordReportCount = "recordReportCount"
+		case reportedAccountCount = "reportedAccountCount"
+		case reportedRecordCount = "reportedRecordCount"
+		case takendownAccountCount = "takendownAccountCount"
+		case takendownRecordCount = "takendownRecordCount"
+	}
+}
+
+
+public struct ToolsOzoneModerationDefsRepoView: Codable, Sendable, Equatable {
+	public let deactivatedAt: ATProtocolDate?
+	public let did: DID
+	public let email: String?
+	public let handle: Handle
+	public let indexedAt: ATProtocolDate
+	public let inviteNote: String?
+	public let invitedBy: ComAtprotoServerDefsInviteCode?
+	public let invitesDisabled: Bool?
+	public let moderation: ToolsOzoneModerationDefsModeration
+	public let relatedRecords: [ATProtocolValueContainer]
+	public let threatSignatures: [ComAtprotoAdminDefsThreatSignature]?
+
+	public init(
+		deactivatedAt: ATProtocolDate? = nil,
+		did: DID,
+		email: String? = nil,
+		handle: Handle,
+		indexedAt: ATProtocolDate,
+		inviteNote: String? = nil,
+		invitedBy: ComAtprotoServerDefsInviteCode? = nil,
+		invitesDisabled: Bool? = nil,
+		moderation: ToolsOzoneModerationDefsModeration,
+		relatedRecords: [ATProtocolValueContainer],
+		threatSignatures: [ComAtprotoAdminDefsThreatSignature]? = nil
+	) {
+		self.deactivatedAt = deactivatedAt
+		self.did = did
+		self.email = email
+		self.handle = handle
+		self.indexedAt = indexedAt
+		self.inviteNote = inviteNote
+		self.invitedBy = invitedBy
+		self.invitesDisabled = invitesDisabled
+		self.moderation = moderation
+		self.relatedRecords = relatedRecords
+		self.threatSignatures = threatSignatures
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		deactivatedAt = try container.decodeIfPresent(ATProtocolDate.self, forKey: .deactivatedAt)
+		did = try container.decode(DID.self, forKey: .did)
+		email = try container.decodeIfPresent(String.self, forKey: .email)
+		handle = try container.decode(Handle.self, forKey: .handle)
+		indexedAt = try container.decode(ATProtocolDate.self, forKey: .indexedAt)
+		inviteNote = try container.decodeIfPresent(String.self, forKey: .inviteNote)
+		invitedBy = try container.decodeIfPresent(ComAtprotoServerDefsInviteCode.self, forKey: .invitedBy)
+		invitesDisabled = try container.decodeIfPresent(Bool.self, forKey: .invitesDisabled)
+		moderation = try container.decode(ToolsOzoneModerationDefsModeration.self, forKey: .moderation)
+		relatedRecords = try container.decode([ATProtocolValueContainer].self, forKey: .relatedRecords)
+		threatSignatures = try container.decodeIfPresent([ComAtprotoAdminDefsThreatSignature].self, forKey: .threatSignatures)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(deactivatedAt, forKey: .deactivatedAt)
+		try container.encode(did, forKey: .did)
+		try container.encodeIfPresent(email, forKey: .email)
+		try container.encode(handle, forKey: .handle)
+		try container.encode(indexedAt, forKey: .indexedAt)
+		try container.encodeIfPresent(inviteNote, forKey: .inviteNote)
+		try container.encodeIfPresent(invitedBy, forKey: .invitedBy)
+		try container.encodeIfPresent(invitesDisabled, forKey: .invitesDisabled)
+		try container.encode(moderation, forKey: .moderation)
+		try container.encode(relatedRecords, forKey: .relatedRecords)
+		try container.encodeIfPresent(threatSignatures, forKey: .threatSignatures)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case deactivatedAt = "deactivatedAt"
+		case did = "did"
+		case email = "email"
+		case handle = "handle"
+		case indexedAt = "indexedAt"
+		case inviteNote = "inviteNote"
+		case invitedBy = "invitedBy"
+		case invitesDisabled = "invitesDisabled"
+		case moderation = "moderation"
+		case relatedRecords = "relatedRecords"
+		case threatSignatures = "threatSignatures"
+	}
+}
+
+
+public struct ToolsOzoneModerationDefsRepoViewDetail: Codable, Sendable, Equatable {
+	public let deactivatedAt: ATProtocolDate?
+	public let did: DID
+	public let email: String?
+	public let emailConfirmedAt: ATProtocolDate?
+	public let handle: Handle
+	public let indexedAt: ATProtocolDate
+	public let inviteNote: String?
+	public let invitedBy: ComAtprotoServerDefsInviteCode?
+	public let invites: [ComAtprotoServerDefsInviteCode]?
+	public let invitesDisabled: Bool?
+	public let labels: [ComAtprotoLabelDefsLabel]?
+	public let moderation: ToolsOzoneModerationDefsModerationDetail
+	public let relatedRecords: [ATProtocolValueContainer]
+	public let threatSignatures: [ComAtprotoAdminDefsThreatSignature]?
+
+	public init(
+		deactivatedAt: ATProtocolDate? = nil,
+		did: DID,
+		email: String? = nil,
+		emailConfirmedAt: ATProtocolDate? = nil,
+		handle: Handle,
+		indexedAt: ATProtocolDate,
+		inviteNote: String? = nil,
+		invitedBy: ComAtprotoServerDefsInviteCode? = nil,
+		invites: [ComAtprotoServerDefsInviteCode]? = nil,
+		invitesDisabled: Bool? = nil,
+		labels: [ComAtprotoLabelDefsLabel]? = nil,
+		moderation: ToolsOzoneModerationDefsModerationDetail,
+		relatedRecords: [ATProtocolValueContainer],
+		threatSignatures: [ComAtprotoAdminDefsThreatSignature]? = nil
+	) {
+		self.deactivatedAt = deactivatedAt
+		self.did = did
+		self.email = email
+		self.emailConfirmedAt = emailConfirmedAt
+		self.handle = handle
+		self.indexedAt = indexedAt
+		self.inviteNote = inviteNote
+		self.invitedBy = invitedBy
+		self.invites = invites
+		self.invitesDisabled = invitesDisabled
+		self.labels = labels
+		self.moderation = moderation
+		self.relatedRecords = relatedRecords
+		self.threatSignatures = threatSignatures
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		deactivatedAt = try container.decodeIfPresent(ATProtocolDate.self, forKey: .deactivatedAt)
+		did = try container.decode(DID.self, forKey: .did)
+		email = try container.decodeIfPresent(String.self, forKey: .email)
+		emailConfirmedAt = try container.decodeIfPresent(ATProtocolDate.self, forKey: .emailConfirmedAt)
+		handle = try container.decode(Handle.self, forKey: .handle)
+		indexedAt = try container.decode(ATProtocolDate.self, forKey: .indexedAt)
+		inviteNote = try container.decodeIfPresent(String.self, forKey: .inviteNote)
+		invitedBy = try container.decodeIfPresent(ComAtprotoServerDefsInviteCode.self, forKey: .invitedBy)
+		invites = try container.decodeIfPresent([ComAtprotoServerDefsInviteCode].self, forKey: .invites)
+		invitesDisabled = try container.decodeIfPresent(Bool.self, forKey: .invitesDisabled)
+		labels = try container.decodeIfPresent([ComAtprotoLabelDefsLabel].self, forKey: .labels)
+		moderation = try container.decode(ToolsOzoneModerationDefsModerationDetail.self, forKey: .moderation)
+		relatedRecords = try container.decode([ATProtocolValueContainer].self, forKey: .relatedRecords)
+		threatSignatures = try container.decodeIfPresent([ComAtprotoAdminDefsThreatSignature].self, forKey: .threatSignatures)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(deactivatedAt, forKey: .deactivatedAt)
+		try container.encode(did, forKey: .did)
+		try container.encodeIfPresent(email, forKey: .email)
+		try container.encodeIfPresent(emailConfirmedAt, forKey: .emailConfirmedAt)
+		try container.encode(handle, forKey: .handle)
+		try container.encode(indexedAt, forKey: .indexedAt)
+		try container.encodeIfPresent(inviteNote, forKey: .inviteNote)
+		try container.encodeIfPresent(invitedBy, forKey: .invitedBy)
+		try container.encodeIfPresent(invites, forKey: .invites)
+		try container.encodeIfPresent(invitesDisabled, forKey: .invitesDisabled)
+		try container.encodeIfPresent(labels, forKey: .labels)
+		try container.encode(moderation, forKey: .moderation)
+		try container.encode(relatedRecords, forKey: .relatedRecords)
+		try container.encodeIfPresent(threatSignatures, forKey: .threatSignatures)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case deactivatedAt = "deactivatedAt"
+		case did = "did"
+		case email = "email"
+		case emailConfirmedAt = "emailConfirmedAt"
+		case handle = "handle"
+		case indexedAt = "indexedAt"
+		case inviteNote = "inviteNote"
+		case invitedBy = "invitedBy"
+		case invites = "invites"
+		case invitesDisabled = "invitesDisabled"
+		case labels = "labels"
+		case moderation = "moderation"
+		case relatedRecords = "relatedRecords"
+		case threatSignatures = "threatSignatures"
+	}
+}
+
+
+public struct ToolsOzoneModerationDefsRepoViewNotFound: Codable, Sendable, Equatable {
+	public let did: DID
+
+	public init(
+		did: DID
+	) {
+		self.did = did
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		did = try container.decode(DID.self, forKey: .did)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(did, forKey: .did)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case did = "did"
+	}
+}
+
+
+public typealias ToolsOzoneModerationDefsReviewClosed = String
+
+
+public typealias ToolsOzoneModerationDefsReviewEscalated = String
+
+
+public typealias ToolsOzoneModerationDefsReviewNone = String
+
+
+public typealias ToolsOzoneModerationDefsReviewOpen = String
+
+
+public struct ToolsOzoneModerationDefsRevokeAccountCredentialsEvent: Codable, Sendable, Equatable {
+	public let comment: String
+
+	public init(
+		comment: String
+	) {
+		self.comment = comment
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		comment = try container.decode(String.self, forKey: .comment)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(comment, forKey: .comment)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case comment = "comment"
+	}
+}
+
+
+public struct ToolsOzoneModerationDefsScheduledActionView: Codable, Sendable, Equatable {
+	public let action: ToolsOzoneModerationDefsScheduledActionViewAction
+	public let createdAt: ATProtocolDate
+	public let createdBy: DID
+	public let did: DID
+	public let eventData: ATProtocolValueContainer?
+	public let executeAfter: ATProtocolDate?
+	public let executeAt: ATProtocolDate?
+	public let executeUntil: ATProtocolDate?
+	public let executionEventId: Int?
+	public let id: Int
+	public let lastExecutedAt: ATProtocolDate?
+	public let lastFailureReason: String?
+	public let randomizeExecution: Bool?
+	public let status: ToolsOzoneModerationDefsScheduledActionViewStatus
+	public let updatedAt: ATProtocolDate?
+
+	public init(
+		action: ToolsOzoneModerationDefsScheduledActionViewAction,
+		createdAt: ATProtocolDate,
+		createdBy: DID,
+		did: DID,
+		eventData: ATProtocolValueContainer? = nil,
+		executeAfter: ATProtocolDate? = nil,
+		executeAt: ATProtocolDate? = nil,
+		executeUntil: ATProtocolDate? = nil,
+		executionEventId: Int? = nil,
+		id: Int,
+		lastExecutedAt: ATProtocolDate? = nil,
+		lastFailureReason: String? = nil,
+		randomizeExecution: Bool? = nil,
+		status: ToolsOzoneModerationDefsScheduledActionViewStatus,
+		updatedAt: ATProtocolDate? = nil
+	) {
+		self.action = action
+		self.createdAt = createdAt
+		self.createdBy = createdBy
+		self.did = did
+		self.eventData = eventData
+		self.executeAfter = executeAfter
+		self.executeAt = executeAt
+		self.executeUntil = executeUntil
+		self.executionEventId = executionEventId
+		self.id = id
+		self.lastExecutedAt = lastExecutedAt
+		self.lastFailureReason = lastFailureReason
+		self.randomizeExecution = randomizeExecution
+		self.status = status
+		self.updatedAt = updatedAt
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		action = try container.decode(ToolsOzoneModerationDefsScheduledActionViewAction.self, forKey: .action)
+		createdAt = try container.decode(ATProtocolDate.self, forKey: .createdAt)
+		createdBy = try container.decode(DID.self, forKey: .createdBy)
+		did = try container.decode(DID.self, forKey: .did)
+		eventData = try container.decodeIfPresent(ATProtocolValueContainer.self, forKey: .eventData)
+		executeAfter = try container.decodeIfPresent(ATProtocolDate.self, forKey: .executeAfter)
+		executeAt = try container.decodeIfPresent(ATProtocolDate.self, forKey: .executeAt)
+		executeUntil = try container.decodeIfPresent(ATProtocolDate.self, forKey: .executeUntil)
+		executionEventId = try container.decodeIfPresent(Int.self, forKey: .executionEventId)
+		id = try container.decode(Int.self, forKey: .id)
+		lastExecutedAt = try container.decodeIfPresent(ATProtocolDate.self, forKey: .lastExecutedAt)
+		lastFailureReason = try container.decodeIfPresent(String.self, forKey: .lastFailureReason)
+		randomizeExecution = try container.decodeIfPresent(Bool.self, forKey: .randomizeExecution)
+		status = try container.decode(ToolsOzoneModerationDefsScheduledActionViewStatus.self, forKey: .status)
+		updatedAt = try container.decodeIfPresent(ATProtocolDate.self, forKey: .updatedAt)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(action, forKey: .action)
+		try container.encode(createdAt, forKey: .createdAt)
+		try container.encode(createdBy, forKey: .createdBy)
+		try container.encode(did, forKey: .did)
+		try container.encodeIfPresent(eventData, forKey: .eventData)
+		try container.encodeIfPresent(executeAfter, forKey: .executeAfter)
+		try container.encodeIfPresent(executeAt, forKey: .executeAt)
+		try container.encodeIfPresent(executeUntil, forKey: .executeUntil)
+		try container.encodeIfPresent(executionEventId, forKey: .executionEventId)
+		try container.encode(id, forKey: .id)
+		try container.encodeIfPresent(lastExecutedAt, forKey: .lastExecutedAt)
+		try container.encodeIfPresent(lastFailureReason, forKey: .lastFailureReason)
+		try container.encodeIfPresent(randomizeExecution, forKey: .randomizeExecution)
+		try container.encode(status, forKey: .status)
+		try container.encodeIfPresent(updatedAt, forKey: .updatedAt)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case action = "action"
+		case createdAt = "createdAt"
+		case createdBy = "createdBy"
+		case did = "did"
+		case eventData = "eventData"
+		case executeAfter = "executeAfter"
+		case executeAt = "executeAt"
+		case executeUntil = "executeUntil"
+		case executionEventId = "executionEventId"
+		case id = "id"
+		case lastExecutedAt = "lastExecutedAt"
+		case lastFailureReason = "lastFailureReason"
+		case randomizeExecution = "randomizeExecution"
+		case status = "status"
+		case updatedAt = "updatedAt"
+	}
+}
+
+
+public enum ToolsOzoneModerationDefsScheduledActionViewAction: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case takedown = "takedown"
+}
+
+
+public enum ToolsOzoneModerationDefsScheduledActionViewStatus: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case pending = "pending"
+	case executed = "executed"
+	case cancelled = "cancelled"
+	case failed = "failed"
+}
+
+
+public struct ToolsOzoneModerationDefsScheduleTakedownEvent: Codable, Sendable, Equatable {
+	public let comment: String?
+	public let executeAfter: ATProtocolDate?
+	public let executeAt: ATProtocolDate?
+	public let executeUntil: ATProtocolDate?
+
+	public init(
+		comment: String? = nil,
+		executeAfter: ATProtocolDate? = nil,
+		executeAt: ATProtocolDate? = nil,
+		executeUntil: ATProtocolDate? = nil
+	) {
+		self.comment = comment
+		self.executeAfter = executeAfter
+		self.executeAt = executeAt
+		self.executeUntil = executeUntil
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		comment = try container.decodeIfPresent(String.self, forKey: .comment)
+		executeAfter = try container.decodeIfPresent(ATProtocolDate.self, forKey: .executeAfter)
+		executeAt = try container.decodeIfPresent(ATProtocolDate.self, forKey: .executeAt)
+		executeUntil = try container.decodeIfPresent(ATProtocolDate.self, forKey: .executeUntil)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(comment, forKey: .comment)
+		try container.encodeIfPresent(executeAfter, forKey: .executeAfter)
+		try container.encodeIfPresent(executeAt, forKey: .executeAt)
+		try container.encodeIfPresent(executeUntil, forKey: .executeUntil)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case comment = "comment"
+		case executeAfter = "executeAfter"
+		case executeAt = "executeAt"
+		case executeUntil = "executeUntil"
+	}
+}
+
+
+public enum ToolsOzoneModerationDefsSubjectReviewState: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case toolsOzoneModerationDefsReviewOpen = "tools.ozone.moderation.defs#reviewOpen"
+	case toolsOzoneModerationDefsReviewEscalated = "tools.ozone.moderation.defs#reviewEscalated"
+	case toolsOzoneModerationDefsReviewClosed = "tools.ozone.moderation.defs#reviewClosed"
+	case toolsOzoneModerationDefsReviewNone = "tools.ozone.moderation.defs#reviewNone"
+}
+
+
+public struct ToolsOzoneModerationDefsSubjectStatusView: Codable, Sendable, Equatable {
+	public let accountStats: ToolsOzoneModerationDefsAccountStats?
+	public let accountStrike: ToolsOzoneModerationDefsAccountStrike?
+	public let ageAssuranceState: ToolsOzoneModerationDefsSubjectStatusViewAgeAssuranceState?
+	public let ageAssuranceUpdatedBy: ToolsOzoneModerationDefsSubjectStatusViewAgeAssuranceUpdatedBy?
+	public let appealed: Bool?
+	public let comment: String?
+	public let createdAt: ATProtocolDate
+	public let hosting: ToolsOzoneModerationDefsSubjectStatusViewHosting?
+	public let id: Int
+	public let lastAppealedAt: ATProtocolDate?
+	public let lastReportedAt: ATProtocolDate?
+	public let lastReviewedAt: ATProtocolDate?
+	public let lastReviewedBy: DID?
+	public let muteReportingUntil: ATProtocolDate?
+	public let muteUntil: ATProtocolDate?
+	public let priorityScore: Int?
+	public let recordsStats: ToolsOzoneModerationDefsRecordsStats?
+	public let reviewState: ToolsOzoneModerationDefsSubjectReviewState
+	public let subject: ToolsOzoneModerationDefsModEventViewSubject
+	public let subjectBlobCids: [CID]?
+	public let subjectRepoHandle: String?
+	public let suspendUntil: ATProtocolDate?
+	public let tags: [String]?
+	public let takendown: Bool?
+	public let updatedAt: ATProtocolDate
+
+	public init(
+		accountStats: ToolsOzoneModerationDefsAccountStats? = nil,
+		accountStrike: ToolsOzoneModerationDefsAccountStrike? = nil,
+		ageAssuranceState: ToolsOzoneModerationDefsSubjectStatusViewAgeAssuranceState? = nil,
+		ageAssuranceUpdatedBy: ToolsOzoneModerationDefsSubjectStatusViewAgeAssuranceUpdatedBy? = nil,
+		appealed: Bool? = nil,
+		comment: String? = nil,
+		createdAt: ATProtocolDate,
+		hosting: ToolsOzoneModerationDefsSubjectStatusViewHosting? = nil,
+		id: Int,
+		lastAppealedAt: ATProtocolDate? = nil,
+		lastReportedAt: ATProtocolDate? = nil,
+		lastReviewedAt: ATProtocolDate? = nil,
+		lastReviewedBy: DID? = nil,
+		muteReportingUntil: ATProtocolDate? = nil,
+		muteUntil: ATProtocolDate? = nil,
+		priorityScore: Int? = nil,
+		recordsStats: ToolsOzoneModerationDefsRecordsStats? = nil,
+		reviewState: ToolsOzoneModerationDefsSubjectReviewState,
+		subject: ToolsOzoneModerationDefsModEventViewSubject,
+		subjectBlobCids: [CID]? = nil,
+		subjectRepoHandle: String? = nil,
+		suspendUntil: ATProtocolDate? = nil,
+		tags: [String]? = nil,
+		takendown: Bool? = nil,
+		updatedAt: ATProtocolDate
+	) {
+		self.accountStats = accountStats
+		self.accountStrike = accountStrike
+		self.ageAssuranceState = ageAssuranceState
+		self.ageAssuranceUpdatedBy = ageAssuranceUpdatedBy
+		self.appealed = appealed
+		self.comment = comment
+		self.createdAt = createdAt
+		self.hosting = hosting
+		self.id = id
+		self.lastAppealedAt = lastAppealedAt
+		self.lastReportedAt = lastReportedAt
+		self.lastReviewedAt = lastReviewedAt
+		self.lastReviewedBy = lastReviewedBy
+		self.muteReportingUntil = muteReportingUntil
+		self.muteUntil = muteUntil
+		self.priorityScore = priorityScore
+		self.recordsStats = recordsStats
+		self.reviewState = reviewState
+		self.subject = subject
+		self.subjectBlobCids = subjectBlobCids
+		self.subjectRepoHandle = subjectRepoHandle
+		self.suspendUntil = suspendUntil
+		self.tags = tags
+		self.takendown = takendown
+		self.updatedAt = updatedAt
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		accountStats = try container.decodeIfPresent(ToolsOzoneModerationDefsAccountStats.self, forKey: .accountStats)
+		accountStrike = try container.decodeIfPresent(ToolsOzoneModerationDefsAccountStrike.self, forKey: .accountStrike)
+		ageAssuranceState = try container.decodeIfPresent(ToolsOzoneModerationDefsSubjectStatusViewAgeAssuranceState.self, forKey: .ageAssuranceState)
+		ageAssuranceUpdatedBy = try container.decodeIfPresent(ToolsOzoneModerationDefsSubjectStatusViewAgeAssuranceUpdatedBy.self, forKey: .ageAssuranceUpdatedBy)
+		appealed = try container.decodeIfPresent(Bool.self, forKey: .appealed)
+		comment = try container.decodeIfPresent(String.self, forKey: .comment)
+		createdAt = try container.decode(ATProtocolDate.self, forKey: .createdAt)
+		hosting = try container.decodeIfPresent(ToolsOzoneModerationDefsSubjectStatusViewHosting.self, forKey: .hosting)
+		id = try container.decode(Int.self, forKey: .id)
+		lastAppealedAt = try container.decodeIfPresent(ATProtocolDate.self, forKey: .lastAppealedAt)
+		lastReportedAt = try container.decodeIfPresent(ATProtocolDate.self, forKey: .lastReportedAt)
+		lastReviewedAt = try container.decodeIfPresent(ATProtocolDate.self, forKey: .lastReviewedAt)
+		lastReviewedBy = try container.decodeIfPresent(DID.self, forKey: .lastReviewedBy)
+		muteReportingUntil = try container.decodeIfPresent(ATProtocolDate.self, forKey: .muteReportingUntil)
+		muteUntil = try container.decodeIfPresent(ATProtocolDate.self, forKey: .muteUntil)
+		priorityScore = try container.decodeIfPresent(Int.self, forKey: .priorityScore)
+		recordsStats = try container.decodeIfPresent(ToolsOzoneModerationDefsRecordsStats.self, forKey: .recordsStats)
+		reviewState = try container.decode(ToolsOzoneModerationDefsSubjectReviewState.self, forKey: .reviewState)
+		subject = try container.decode(ToolsOzoneModerationDefsModEventViewSubject.self, forKey: .subject)
+		subjectBlobCids = try container.decodeIfPresent([CID].self, forKey: .subjectBlobCids)
+		subjectRepoHandle = try container.decodeIfPresent(String.self, forKey: .subjectRepoHandle)
+		suspendUntil = try container.decodeIfPresent(ATProtocolDate.self, forKey: .suspendUntil)
+		tags = try container.decodeIfPresent([String].self, forKey: .tags)
+		takendown = try container.decodeIfPresent(Bool.self, forKey: .takendown)
+		updatedAt = try container.decode(ATProtocolDate.self, forKey: .updatedAt)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(accountStats, forKey: .accountStats)
+		try container.encodeIfPresent(accountStrike, forKey: .accountStrike)
+		try container.encodeIfPresent(ageAssuranceState, forKey: .ageAssuranceState)
+		try container.encodeIfPresent(ageAssuranceUpdatedBy, forKey: .ageAssuranceUpdatedBy)
+		try container.encodeIfPresent(appealed, forKey: .appealed)
+		try container.encodeIfPresent(comment, forKey: .comment)
+		try container.encode(createdAt, forKey: .createdAt)
+		try container.encodeIfPresent(hosting, forKey: .hosting)
+		try container.encode(id, forKey: .id)
+		try container.encodeIfPresent(lastAppealedAt, forKey: .lastAppealedAt)
+		try container.encodeIfPresent(lastReportedAt, forKey: .lastReportedAt)
+		try container.encodeIfPresent(lastReviewedAt, forKey: .lastReviewedAt)
+		try container.encodeIfPresent(lastReviewedBy, forKey: .lastReviewedBy)
+		try container.encodeIfPresent(muteReportingUntil, forKey: .muteReportingUntil)
+		try container.encodeIfPresent(muteUntil, forKey: .muteUntil)
+		try container.encodeIfPresent(priorityScore, forKey: .priorityScore)
+		try container.encodeIfPresent(recordsStats, forKey: .recordsStats)
+		try container.encode(reviewState, forKey: .reviewState)
+		try container.encode(subject, forKey: .subject)
+		try container.encodeIfPresent(subjectBlobCids, forKey: .subjectBlobCids)
+		try container.encodeIfPresent(subjectRepoHandle, forKey: .subjectRepoHandle)
+		try container.encodeIfPresent(suspendUntil, forKey: .suspendUntil)
+		try container.encodeIfPresent(tags, forKey: .tags)
+		try container.encodeIfPresent(takendown, forKey: .takendown)
+		try container.encode(updatedAt, forKey: .updatedAt)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case accountStats = "accountStats"
+		case accountStrike = "accountStrike"
+		case ageAssuranceState = "ageAssuranceState"
+		case ageAssuranceUpdatedBy = "ageAssuranceUpdatedBy"
+		case appealed = "appealed"
+		case comment = "comment"
+		case createdAt = "createdAt"
+		case hosting = "hosting"
+		case id = "id"
+		case lastAppealedAt = "lastAppealedAt"
+		case lastReportedAt = "lastReportedAt"
+		case lastReviewedAt = "lastReviewedAt"
+		case lastReviewedBy = "lastReviewedBy"
+		case muteReportingUntil = "muteReportingUntil"
+		case muteUntil = "muteUntil"
+		case priorityScore = "priorityScore"
+		case recordsStats = "recordsStats"
+		case reviewState = "reviewState"
+		case subject = "subject"
+		case subjectBlobCids = "subjectBlobCids"
+		case subjectRepoHandle = "subjectRepoHandle"
+		case suspendUntil = "suspendUntil"
+		case tags = "tags"
+		case takendown = "takendown"
+		case updatedAt = "updatedAt"
+	}
+}
+
+
+public enum ToolsOzoneModerationDefsSubjectStatusViewAgeAssuranceState: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case pending = "pending"
+	case assured = "assured"
+	case unknown = "unknown"
+	case reset = "reset"
+	case blocked = "blocked"
+}
+
+
+public enum ToolsOzoneModerationDefsSubjectStatusViewAgeAssuranceUpdatedBy: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case admin = "admin"
+	case user = "user"
+}
+
+
+public indirect enum ToolsOzoneModerationDefsSubjectStatusViewHosting: Codable, Sendable, Equatable {
+	case accountHosting(ToolsOzoneModerationDefsAccountHosting)
+	case recordHosting(ToolsOzoneModerationDefsRecordHosting)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "tools.ozone.moderation.defs#accountHosting": self = .accountHosting(try ToolsOzoneModerationDefsAccountHosting(from: decoder))
+		case "tools.ozone.moderation.defs#recordHosting": self = .recordHosting(try ToolsOzoneModerationDefsRecordHosting(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .accountHosting(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#accountHosting", to: encoder)
+		case .recordHosting(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#recordHosting", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
+public struct ToolsOzoneModerationDefsSubjectView: Codable, Sendable, Equatable {
+	public let profile: ToolsOzoneModerationDefsSubjectViewProfile?
+	public let record: ToolsOzoneModerationDefsRecordViewDetail?
+	public let repo: ToolsOzoneModerationDefsRepoViewDetail?
+	public let status: ToolsOzoneModerationDefsSubjectStatusView?
+	public let subject: String
+	public let type: ComAtprotoModerationDefsSubjectType
+
+	public init(
+		profile: ToolsOzoneModerationDefsSubjectViewProfile? = nil,
+		record: ToolsOzoneModerationDefsRecordViewDetail? = nil,
+		repo: ToolsOzoneModerationDefsRepoViewDetail? = nil,
+		status: ToolsOzoneModerationDefsSubjectStatusView? = nil,
+		subject: String,
+		type: ComAtprotoModerationDefsSubjectType
+	) {
+		self.profile = profile
+		self.record = record
+		self.repo = repo
+		self.status = status
+		self.subject = subject
+		self.type = type
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		profile = try container.decodeIfPresent(ToolsOzoneModerationDefsSubjectViewProfile.self, forKey: .profile)
+		record = try container.decodeIfPresent(ToolsOzoneModerationDefsRecordViewDetail.self, forKey: .record)
+		repo = try container.decodeIfPresent(ToolsOzoneModerationDefsRepoViewDetail.self, forKey: .repo)
+		status = try container.decodeIfPresent(ToolsOzoneModerationDefsSubjectStatusView.self, forKey: .status)
+		subject = try container.decode(String.self, forKey: .subject)
+		type = try container.decode(ComAtprotoModerationDefsSubjectType.self, forKey: .type)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(profile, forKey: .profile)
+		try container.encodeIfPresent(record, forKey: .record)
+		try container.encodeIfPresent(repo, forKey: .repo)
+		try container.encodeIfPresent(status, forKey: .status)
+		try container.encode(subject, forKey: .subject)
+		try container.encode(type, forKey: .type)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case profile = "profile"
+		case record = "record"
+		case repo = "repo"
+		case status = "status"
+		case subject = "subject"
+		case type = "type"
+	}
+}
+
+
+public typealias ToolsOzoneModerationDefsSubjectViewProfile = ATProtocolValueContainer
+
+
+public typealias ToolsOzoneModerationDefsTimelineEventPlcCreate = String
+
+
+public typealias ToolsOzoneModerationDefsTimelineEventPlcOperation = String
+
+
+public typealias ToolsOzoneModerationDefsTimelineEventPlcTombstone = String
+
+
+public struct ToolsOzoneModerationDefsVideoDetails: Codable, Sendable, Equatable {
+	public let height: Int
+	public let length: Int
+	public let width: Int
+
+	public init(
+		height: Int,
+		length: Int,
+		width: Int
+	) {
+		self.height = height
+		self.length = length
+		self.width = width
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		height = try container.decode(Int.self, forKey: .height)
+		length = try container.decode(Int.self, forKey: .length)
+		width = try container.decode(Int.self, forKey: .width)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(height, forKey: .height)
+		try container.encode(length, forKey: .length)
+		try container.encode(width, forKey: .width)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case height = "height"
+		case length = "length"
+		case width = "width"
+	}
+}
+
+
+public enum ToolsOzoneModerationEmitEventError: String, Swift.Error, CaseIterable, Sendable {
+	case duplicateExternalId = "DuplicateExternalId"
+	case subjectHasAction = "SubjectHasAction"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ToolsOzoneModerationEmitEventInput: Codable, Sendable, Equatable {
+	public let createdBy: DID
+	public let event: ToolsOzoneModerationEmitEventInputEvent
+	public let externalId: String?
+	public let modTool: ToolsOzoneModerationDefsModTool?
+	public let subject: ToolsOzoneModerationEmitEventInputSubject
+	public let subjectBlobCids: [CID]?
+
+	public init(
+		createdBy: DID,
+		event: ToolsOzoneModerationEmitEventInputEvent,
+		externalId: String? = nil,
+		modTool: ToolsOzoneModerationDefsModTool? = nil,
+		subject: ToolsOzoneModerationEmitEventInputSubject,
+		subjectBlobCids: [CID]? = nil
+	) {
+		self.createdBy = createdBy
+		self.event = event
+		self.externalId = externalId
+		self.modTool = modTool
+		self.subject = subject
+		self.subjectBlobCids = subjectBlobCids
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		createdBy = try container.decode(DID.self, forKey: .createdBy)
+		event = try container.decode(ToolsOzoneModerationEmitEventInputEvent.self, forKey: .event)
+		externalId = try container.decodeIfPresent(String.self, forKey: .externalId)
+		modTool = try container.decodeIfPresent(ToolsOzoneModerationDefsModTool.self, forKey: .modTool)
+		subject = try container.decode(ToolsOzoneModerationEmitEventInputSubject.self, forKey: .subject)
+		subjectBlobCids = try container.decodeIfPresent([CID].self, forKey: .subjectBlobCids)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(createdBy, forKey: .createdBy)
+		try container.encode(event, forKey: .event)
+		try container.encodeIfPresent(externalId, forKey: .externalId)
+		try container.encodeIfPresent(modTool, forKey: .modTool)
+		try container.encode(subject, forKey: .subject)
+		try container.encodeIfPresent(subjectBlobCids, forKey: .subjectBlobCids)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case createdBy = "createdBy"
+		case event = "event"
+		case externalId = "externalId"
+		case modTool = "modTool"
+		case subject = "subject"
+		case subjectBlobCids = "subjectBlobCids"
+	}
+}
+
+
+public indirect enum ToolsOzoneModerationEmitEventInputEvent: Codable, Sendable, Equatable {
+	case modEventTakedown(ToolsOzoneModerationDefsModEventTakedown)
+	case modEventAcknowledge(ToolsOzoneModerationDefsModEventAcknowledge)
+	case modEventEscalate(ToolsOzoneModerationDefsModEventEscalate)
+	case modEventComment(ToolsOzoneModerationDefsModEventComment)
+	case modEventLabel(ToolsOzoneModerationDefsModEventLabel)
+	case modEventReport(ToolsOzoneModerationDefsModEventReport)
+	case modEventMute(ToolsOzoneModerationDefsModEventMute)
+	case modEventUnmute(ToolsOzoneModerationDefsModEventUnmute)
+	case modEventMuteReporter(ToolsOzoneModerationDefsModEventMuteReporter)
+	case modEventUnmuteReporter(ToolsOzoneModerationDefsModEventUnmuteReporter)
+	case modEventReverseTakedown(ToolsOzoneModerationDefsModEventReverseTakedown)
+	case modEventResolveAppeal(ToolsOzoneModerationDefsModEventResolveAppeal)
+	case modEventEmail(ToolsOzoneModerationDefsModEventEmail)
+	case modEventDivert(ToolsOzoneModerationDefsModEventDivert)
+	case modEventTag(ToolsOzoneModerationDefsModEventTag)
+	case accountEvent(ToolsOzoneModerationDefsAccountEvent)
+	case identityEvent(ToolsOzoneModerationDefsIdentityEvent)
+	case recordEvent(ToolsOzoneModerationDefsRecordEvent)
+	case modEventPriorityScore(ToolsOzoneModerationDefsModEventPriorityScore)
+	case ageAssuranceEvent(ToolsOzoneModerationDefsAgeAssuranceEvent)
+	case ageAssuranceOverrideEvent(ToolsOzoneModerationDefsAgeAssuranceOverrideEvent)
+	case ageAssurancePurgeEvent(ToolsOzoneModerationDefsAgeAssurancePurgeEvent)
+	case revokeAccountCredentialsEvent(ToolsOzoneModerationDefsRevokeAccountCredentialsEvent)
+	case scheduleTakedownEvent(ToolsOzoneModerationDefsScheduleTakedownEvent)
+	case cancelScheduledTakedownEvent(ToolsOzoneModerationDefsCancelScheduledTakedownEvent)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "tools.ozone.moderation.defs#modEventTakedown": self = .modEventTakedown(try ToolsOzoneModerationDefsModEventTakedown(from: decoder))
+		case "tools.ozone.moderation.defs#modEventAcknowledge": self = .modEventAcknowledge(try ToolsOzoneModerationDefsModEventAcknowledge(from: decoder))
+		case "tools.ozone.moderation.defs#modEventEscalate": self = .modEventEscalate(try ToolsOzoneModerationDefsModEventEscalate(from: decoder))
+		case "tools.ozone.moderation.defs#modEventComment": self = .modEventComment(try ToolsOzoneModerationDefsModEventComment(from: decoder))
+		case "tools.ozone.moderation.defs#modEventLabel": self = .modEventLabel(try ToolsOzoneModerationDefsModEventLabel(from: decoder))
+		case "tools.ozone.moderation.defs#modEventReport": self = .modEventReport(try ToolsOzoneModerationDefsModEventReport(from: decoder))
+		case "tools.ozone.moderation.defs#modEventMute": self = .modEventMute(try ToolsOzoneModerationDefsModEventMute(from: decoder))
+		case "tools.ozone.moderation.defs#modEventUnmute": self = .modEventUnmute(try ToolsOzoneModerationDefsModEventUnmute(from: decoder))
+		case "tools.ozone.moderation.defs#modEventMuteReporter": self = .modEventMuteReporter(try ToolsOzoneModerationDefsModEventMuteReporter(from: decoder))
+		case "tools.ozone.moderation.defs#modEventUnmuteReporter": self = .modEventUnmuteReporter(try ToolsOzoneModerationDefsModEventUnmuteReporter(from: decoder))
+		case "tools.ozone.moderation.defs#modEventReverseTakedown": self = .modEventReverseTakedown(try ToolsOzoneModerationDefsModEventReverseTakedown(from: decoder))
+		case "tools.ozone.moderation.defs#modEventResolveAppeal": self = .modEventResolveAppeal(try ToolsOzoneModerationDefsModEventResolveAppeal(from: decoder))
+		case "tools.ozone.moderation.defs#modEventEmail": self = .modEventEmail(try ToolsOzoneModerationDefsModEventEmail(from: decoder))
+		case "tools.ozone.moderation.defs#modEventDivert": self = .modEventDivert(try ToolsOzoneModerationDefsModEventDivert(from: decoder))
+		case "tools.ozone.moderation.defs#modEventTag": self = .modEventTag(try ToolsOzoneModerationDefsModEventTag(from: decoder))
+		case "tools.ozone.moderation.defs#accountEvent": self = .accountEvent(try ToolsOzoneModerationDefsAccountEvent(from: decoder))
+		case "tools.ozone.moderation.defs#identityEvent": self = .identityEvent(try ToolsOzoneModerationDefsIdentityEvent(from: decoder))
+		case "tools.ozone.moderation.defs#recordEvent": self = .recordEvent(try ToolsOzoneModerationDefsRecordEvent(from: decoder))
+		case "tools.ozone.moderation.defs#modEventPriorityScore": self = .modEventPriorityScore(try ToolsOzoneModerationDefsModEventPriorityScore(from: decoder))
+		case "tools.ozone.moderation.defs#ageAssuranceEvent": self = .ageAssuranceEvent(try ToolsOzoneModerationDefsAgeAssuranceEvent(from: decoder))
+		case "tools.ozone.moderation.defs#ageAssuranceOverrideEvent": self = .ageAssuranceOverrideEvent(try ToolsOzoneModerationDefsAgeAssuranceOverrideEvent(from: decoder))
+		case "tools.ozone.moderation.defs#ageAssurancePurgeEvent": self = .ageAssurancePurgeEvent(try ToolsOzoneModerationDefsAgeAssurancePurgeEvent(from: decoder))
+		case "tools.ozone.moderation.defs#revokeAccountCredentialsEvent": self = .revokeAccountCredentialsEvent(try ToolsOzoneModerationDefsRevokeAccountCredentialsEvent(from: decoder))
+		case "tools.ozone.moderation.defs#scheduleTakedownEvent": self = .scheduleTakedownEvent(try ToolsOzoneModerationDefsScheduleTakedownEvent(from: decoder))
+		case "tools.ozone.moderation.defs#cancelScheduledTakedownEvent": self = .cancelScheduledTakedownEvent(try ToolsOzoneModerationDefsCancelScheduledTakedownEvent(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .modEventTakedown(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#modEventTakedown", to: encoder)
+		case .modEventAcknowledge(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#modEventAcknowledge", to: encoder)
+		case .modEventEscalate(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#modEventEscalate", to: encoder)
+		case .modEventComment(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#modEventComment", to: encoder)
+		case .modEventLabel(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#modEventLabel", to: encoder)
+		case .modEventReport(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#modEventReport", to: encoder)
+		case .modEventMute(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#modEventMute", to: encoder)
+		case .modEventUnmute(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#modEventUnmute", to: encoder)
+		case .modEventMuteReporter(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#modEventMuteReporter", to: encoder)
+		case .modEventUnmuteReporter(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#modEventUnmuteReporter", to: encoder)
+		case .modEventReverseTakedown(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#modEventReverseTakedown", to: encoder)
+		case .modEventResolveAppeal(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#modEventResolveAppeal", to: encoder)
+		case .modEventEmail(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#modEventEmail", to: encoder)
+		case .modEventDivert(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#modEventDivert", to: encoder)
+		case .modEventTag(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#modEventTag", to: encoder)
+		case .accountEvent(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#accountEvent", to: encoder)
+		case .identityEvent(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#identityEvent", to: encoder)
+		case .recordEvent(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#recordEvent", to: encoder)
+		case .modEventPriorityScore(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#modEventPriorityScore", to: encoder)
+		case .ageAssuranceEvent(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#ageAssuranceEvent", to: encoder)
+		case .ageAssuranceOverrideEvent(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#ageAssuranceOverrideEvent", to: encoder)
+		case .ageAssurancePurgeEvent(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#ageAssurancePurgeEvent", to: encoder)
+		case .revokeAccountCredentialsEvent(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#revokeAccountCredentialsEvent", to: encoder)
+		case .scheduleTakedownEvent(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#scheduleTakedownEvent", to: encoder)
+		case .cancelScheduledTakedownEvent(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#cancelScheduledTakedownEvent", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
+public indirect enum ToolsOzoneModerationEmitEventInputSubject: Codable, Sendable, Equatable {
+	case repoRef(ComAtprotoAdminDefsRepoRef)
+	case strongRef(ComAtprotoRepoStrongRef)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "com.atproto.admin.defs#repoRef": self = .repoRef(try ComAtprotoAdminDefsRepoRef(from: decoder))
+		case "com.atproto.repo.strongRef": self = .strongRef(try ComAtprotoRepoStrongRef(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .repoRef(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "com.atproto.admin.defs#repoRef", to: encoder)
+		case .strongRef(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "com.atproto.repo.strongRef", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
+public typealias ToolsOzoneModerationEmitEventOutput = ToolsOzoneModerationDefsModEventView
+
+
+public enum ToolsOzoneModerationGetAccountTimelineError: String, Swift.Error, CaseIterable, Sendable {
+	case repoNotFound = "RepoNotFound"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ToolsOzoneModerationGetAccountTimelineOutput: Codable, Sendable, Equatable {
+	public let timeline: [ToolsOzoneModerationGetAccountTimelineTimelineItem]
+
+	public init(
+		timeline: [ToolsOzoneModerationGetAccountTimelineTimelineItem]
+	) {
+		self.timeline = timeline
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		timeline = try container.decode([ToolsOzoneModerationGetAccountTimelineTimelineItem].self, forKey: .timeline)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(timeline, forKey: .timeline)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case timeline = "timeline"
+	}
+}
+
+
+public struct ToolsOzoneModerationGetAccountTimelineParameters: Codable, Sendable, Equatable {
+	public let did: DID
+
+	public init(
+		did: DID
+	) {
+		self.did = did
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		did = try container.decode(DID.self, forKey: .did)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(did, forKey: .did)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		did.appendQueryItems(named: "did", to: &items)
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case did = "did"
+	}
+}
+
+
+public struct ToolsOzoneModerationGetAccountTimelineTimelineItem: Codable, Sendable, Equatable {
+	public let day: String
+	public let summary: [ToolsOzoneModerationGetAccountTimelineTimelineItemSummary]
+
+	public init(
+		day: String,
+		summary: [ToolsOzoneModerationGetAccountTimelineTimelineItemSummary]
+	) {
+		self.day = day
+		self.summary = summary
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		day = try container.decode(String.self, forKey: .day)
+		summary = try container.decode([ToolsOzoneModerationGetAccountTimelineTimelineItemSummary].self, forKey: .summary)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(day, forKey: .day)
+		try container.encode(summary, forKey: .summary)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case day = "day"
+		case summary = "summary"
+	}
+}
+
+
+public struct ToolsOzoneModerationGetAccountTimelineTimelineItemSummary: Codable, Sendable, Equatable {
+	public let count: Int
+	public let eventSubjectType: ToolsOzoneModerationGetAccountTimelineTimelineItemSummaryEventSubjectType
+	public let eventType: ToolsOzoneModerationGetAccountTimelineTimelineItemSummaryEventType
+
+	public init(
+		count: Int,
+		eventSubjectType: ToolsOzoneModerationGetAccountTimelineTimelineItemSummaryEventSubjectType,
+		eventType: ToolsOzoneModerationGetAccountTimelineTimelineItemSummaryEventType
+	) {
+		self.count = count
+		self.eventSubjectType = eventSubjectType
+		self.eventType = eventType
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		count = try container.decode(Int.self, forKey: .count)
+		eventSubjectType = try container.decode(ToolsOzoneModerationGetAccountTimelineTimelineItemSummaryEventSubjectType.self, forKey: .eventSubjectType)
+		eventType = try container.decode(ToolsOzoneModerationGetAccountTimelineTimelineItemSummaryEventType.self, forKey: .eventType)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(count, forKey: .count)
+		try container.encode(eventSubjectType, forKey: .eventSubjectType)
+		try container.encode(eventType, forKey: .eventType)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case count = "count"
+		case eventSubjectType = "eventSubjectType"
+		case eventType = "eventType"
+	}
+}
+
+
+public enum ToolsOzoneModerationGetAccountTimelineTimelineItemSummaryEventSubjectType: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case account = "account"
+	case record = "record"
+	case chat = "chat"
+}
+
+
+public enum ToolsOzoneModerationGetAccountTimelineTimelineItemSummaryEventType: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case toolsOzoneModerationDefsModEventTakedown = "tools.ozone.moderation.defs#modEventTakedown"
+	case toolsOzoneModerationDefsModEventReverseTakedown = "tools.ozone.moderation.defs#modEventReverseTakedown"
+	case toolsOzoneModerationDefsModEventComment = "tools.ozone.moderation.defs#modEventComment"
+	case toolsOzoneModerationDefsModEventReport = "tools.ozone.moderation.defs#modEventReport"
+	case toolsOzoneModerationDefsModEventLabel = "tools.ozone.moderation.defs#modEventLabel"
+	case toolsOzoneModerationDefsModEventAcknowledge = "tools.ozone.moderation.defs#modEventAcknowledge"
+	case toolsOzoneModerationDefsModEventEscalate = "tools.ozone.moderation.defs#modEventEscalate"
+	case toolsOzoneModerationDefsModEventMute = "tools.ozone.moderation.defs#modEventMute"
+	case toolsOzoneModerationDefsModEventUnmute = "tools.ozone.moderation.defs#modEventUnmute"
+	case toolsOzoneModerationDefsModEventMuteReporter = "tools.ozone.moderation.defs#modEventMuteReporter"
+	case toolsOzoneModerationDefsModEventUnmuteReporter = "tools.ozone.moderation.defs#modEventUnmuteReporter"
+	case toolsOzoneModerationDefsModEventEmail = "tools.ozone.moderation.defs#modEventEmail"
+	case toolsOzoneModerationDefsModEventResolveAppeal = "tools.ozone.moderation.defs#modEventResolveAppeal"
+	case toolsOzoneModerationDefsModEventDivert = "tools.ozone.moderation.defs#modEventDivert"
+	case toolsOzoneModerationDefsModEventTag = "tools.ozone.moderation.defs#modEventTag"
+	case toolsOzoneModerationDefsAccountEvent = "tools.ozone.moderation.defs#accountEvent"
+	case toolsOzoneModerationDefsIdentityEvent = "tools.ozone.moderation.defs#identityEvent"
+	case toolsOzoneModerationDefsRecordEvent = "tools.ozone.moderation.defs#recordEvent"
+	case toolsOzoneModerationDefsModEventPriorityScore = "tools.ozone.moderation.defs#modEventPriorityScore"
+	case toolsOzoneModerationDefsRevokeAccountCredentialsEvent = "tools.ozone.moderation.defs#revokeAccountCredentialsEvent"
+	case toolsOzoneModerationDefsAgeAssuranceEvent = "tools.ozone.moderation.defs#ageAssuranceEvent"
+	case toolsOzoneModerationDefsAgeAssuranceOverrideEvent = "tools.ozone.moderation.defs#ageAssuranceOverrideEvent"
+	case toolsOzoneModerationDefsTimelineEventPlcCreate = "tools.ozone.moderation.defs#timelineEventPlcCreate"
+	case toolsOzoneModerationDefsTimelineEventPlcOperation = "tools.ozone.moderation.defs#timelineEventPlcOperation"
+	case toolsOzoneModerationDefsTimelineEventPlcTombstone = "tools.ozone.moderation.defs#timelineEventPlcTombstone"
+	case toolsOzoneHostingGetAccountHistoryAccountCreated = "tools.ozone.hosting.getAccountHistory#accountCreated"
+	case toolsOzoneHostingGetAccountHistoryEmailConfirmed = "tools.ozone.hosting.getAccountHistory#emailConfirmed"
+	case toolsOzoneHostingGetAccountHistoryPasswordUpdated = "tools.ozone.hosting.getAccountHistory#passwordUpdated"
+	case toolsOzoneHostingGetAccountHistoryHandleUpdated = "tools.ozone.hosting.getAccountHistory#handleUpdated"
+	case toolsOzoneModerationDefsScheduleTakedownEvent = "tools.ozone.moderation.defs#scheduleTakedownEvent"
+	case toolsOzoneModerationDefsCancelScheduledTakedownEvent = "tools.ozone.moderation.defs#cancelScheduledTakedownEvent"
+}
+
+
+public typealias ToolsOzoneModerationGetEventOutput = ToolsOzoneModerationDefsModEventViewDetail
+
+
+public struct ToolsOzoneModerationGetEventParameters: Codable, Sendable, Equatable {
+	public let id: Int
+
+	public init(
+		id: Int
+	) {
+		self.id = id
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		id = try container.decode(Int.self, forKey: .id)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(id, forKey: .id)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		id.appendQueryItems(named: "id", to: &items)
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case id = "id"
+	}
+}
+
+
+public enum ToolsOzoneModerationGetRecordError: String, Swift.Error, CaseIterable, Sendable {
+	case recordNotFound = "RecordNotFound"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public typealias ToolsOzoneModerationGetRecordOutput = ToolsOzoneModerationDefsRecordViewDetail
+
+
+public struct ToolsOzoneModerationGetRecordParameters: Codable, Sendable, Equatable {
+	public let cid: CID?
+	public let uri: ATURI
+
+	public init(
+		cid: CID? = nil,
+		uri: ATURI
+	) {
+		self.cid = cid
+		self.uri = uri
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cid = try container.decodeIfPresent(CID.self, forKey: .cid)
+		uri = try container.decode(ATURI.self, forKey: .uri)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cid, forKey: .cid)
+		try container.encode(uri, forKey: .uri)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		if let value = cid {
+			value.appendQueryItems(named: "cid", to: &items)
+		}
+		uri.appendQueryItems(named: "uri", to: &items)
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cid = "cid"
+		case uri = "uri"
+	}
+}
+
+
+public struct ToolsOzoneModerationGetRecordsOutput: Codable, Sendable, Equatable {
+	public let records: [ToolsOzoneModerationGetRecordsOutputRecordsItem]
+
+	public init(
+		records: [ToolsOzoneModerationGetRecordsOutputRecordsItem]
+	) {
+		self.records = records
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		records = try container.decode([ToolsOzoneModerationGetRecordsOutputRecordsItem].self, forKey: .records)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(records, forKey: .records)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case records = "records"
+	}
+}
+
+
+public indirect enum ToolsOzoneModerationGetRecordsOutputRecordsItem: Codable, Sendable, Equatable {
+	case recordViewDetail(ToolsOzoneModerationDefsRecordViewDetail)
+	case recordViewNotFound(ToolsOzoneModerationDefsRecordViewNotFound)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "tools.ozone.moderation.defs#recordViewDetail": self = .recordViewDetail(try ToolsOzoneModerationDefsRecordViewDetail(from: decoder))
+		case "tools.ozone.moderation.defs#recordViewNotFound": self = .recordViewNotFound(try ToolsOzoneModerationDefsRecordViewNotFound(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .recordViewDetail(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#recordViewDetail", to: encoder)
+		case .recordViewNotFound(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#recordViewNotFound", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
+public struct ToolsOzoneModerationGetRecordsParameters: Codable, Sendable, Equatable {
+	public let uris: [ATURI]
+
+	public init(
+		uris: [ATURI]
+	) {
+		self.uris = uris
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		uris = try container.decode([ATURI].self, forKey: .uris)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(uris, forKey: .uris)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		uris.appendQueryItems(named: "uris", to: &items)
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case uris = "uris"
+	}
+}
+
+
+public enum ToolsOzoneModerationGetRepoError: String, Swift.Error, CaseIterable, Sendable {
+	case repoNotFound = "RepoNotFound"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public typealias ToolsOzoneModerationGetRepoOutput = ToolsOzoneModerationDefsRepoViewDetail
+
+
+public struct ToolsOzoneModerationGetRepoParameters: Codable, Sendable, Equatable {
+	public let did: DID
+
+	public init(
+		did: DID
+	) {
+		self.did = did
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		did = try container.decode(DID.self, forKey: .did)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(did, forKey: .did)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		did.appendQueryItems(named: "did", to: &items)
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case did = "did"
+	}
+}
+
+
+public struct ToolsOzoneModerationGetReporterStatsOutput: Codable, Sendable, Equatable {
+	public let stats: [ToolsOzoneModerationDefsReporterStats]
+
+	public init(
+		stats: [ToolsOzoneModerationDefsReporterStats]
+	) {
+		self.stats = stats
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		stats = try container.decode([ToolsOzoneModerationDefsReporterStats].self, forKey: .stats)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(stats, forKey: .stats)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case stats = "stats"
+	}
+}
+
+
+public struct ToolsOzoneModerationGetReporterStatsParameters: Codable, Sendable, Equatable {
+	public let dids: [DID]
+
+	public init(
+		dids: [DID]
+	) {
+		self.dids = dids
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		dids = try container.decode([DID].self, forKey: .dids)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(dids, forKey: .dids)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		dids.appendQueryItems(named: "dids", to: &items)
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case dids = "dids"
+	}
+}
+
+
+public struct ToolsOzoneModerationGetReposOutput: Codable, Sendable, Equatable {
+	public let repos: [ToolsOzoneModerationGetReposOutputReposItem]
+
+	public init(
+		repos: [ToolsOzoneModerationGetReposOutputReposItem]
+	) {
+		self.repos = repos
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		repos = try container.decode([ToolsOzoneModerationGetReposOutputReposItem].self, forKey: .repos)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(repos, forKey: .repos)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case repos = "repos"
+	}
+}
+
+
+public indirect enum ToolsOzoneModerationGetReposOutputReposItem: Codable, Sendable, Equatable {
+	case repoViewDetail(ToolsOzoneModerationDefsRepoViewDetail)
+	case repoViewNotFound(ToolsOzoneModerationDefsRepoViewNotFound)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "tools.ozone.moderation.defs#repoViewDetail": self = .repoViewDetail(try ToolsOzoneModerationDefsRepoViewDetail(from: decoder))
+		case "tools.ozone.moderation.defs#repoViewNotFound": self = .repoViewNotFound(try ToolsOzoneModerationDefsRepoViewNotFound(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .repoViewDetail(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#repoViewDetail", to: encoder)
+		case .repoViewNotFound(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.defs#repoViewNotFound", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
+public struct ToolsOzoneModerationGetReposParameters: Codable, Sendable, Equatable {
+	public let dids: [DID]
+
+	public init(
+		dids: [DID]
+	) {
+		self.dids = dids
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		dids = try container.decode([DID].self, forKey: .dids)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(dids, forKey: .dids)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		dids.appendQueryItems(named: "dids", to: &items)
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case dids = "dids"
+	}
+}
+
+
+public struct ToolsOzoneModerationGetSubjectsOutput: Codable, Sendable, Equatable {
+	public let subjects: [ToolsOzoneModerationDefsSubjectView]
+
+	public init(
+		subjects: [ToolsOzoneModerationDefsSubjectView]
+	) {
+		self.subjects = subjects
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		subjects = try container.decode([ToolsOzoneModerationDefsSubjectView].self, forKey: .subjects)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(subjects, forKey: .subjects)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case subjects = "subjects"
+	}
+}
+
+
+public struct ToolsOzoneModerationGetSubjectsParameters: Codable, Sendable, Equatable {
+	public let subjects: [String]
+
+	public init(
+		subjects: [String]
+	) {
+		self.subjects = subjects
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		subjects = try container.decode([String].self, forKey: .subjects)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(subjects, forKey: .subjects)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		subjects.appendQueryItems(named: "subjects", to: &items)
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case subjects = "subjects"
+	}
+}
+
+
+public struct ToolsOzoneModerationListScheduledActionsInput: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let endsBefore: ATProtocolDate?
+	public let limit: Int?
+	public let startsAfter: ATProtocolDate?
+	public let statuses: [ToolsOzoneModerationDefsScheduledActionViewStatus]
+	public let subjects: [DID]?
+
+	public init(
+		cursor: String? = nil,
+		endsBefore: ATProtocolDate? = nil,
+		limit: Int? = nil,
+		startsAfter: ATProtocolDate? = nil,
+		statuses: [ToolsOzoneModerationDefsScheduledActionViewStatus],
+		subjects: [DID]? = nil
+	) {
+		self.cursor = cursor
+		self.endsBefore = endsBefore
+		self.limit = limit
+		self.startsAfter = startsAfter
+		self.statuses = statuses
+		self.subjects = subjects
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		endsBefore = try container.decodeIfPresent(ATProtocolDate.self, forKey: .endsBefore)
+		limit = try container.decodeIfPresent(Int.self, forKey: .limit)
+		startsAfter = try container.decodeIfPresent(ATProtocolDate.self, forKey: .startsAfter)
+		statuses = try container.decode([ToolsOzoneModerationDefsScheduledActionViewStatus].self, forKey: .statuses)
+		subjects = try container.decodeIfPresent([DID].self, forKey: .subjects)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encodeIfPresent(endsBefore, forKey: .endsBefore)
+		try container.encodeIfPresent(limit, forKey: .limit)
+		try container.encodeIfPresent(startsAfter, forKey: .startsAfter)
+		try container.encode(statuses, forKey: .statuses)
+		try container.encodeIfPresent(subjects, forKey: .subjects)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case endsBefore = "endsBefore"
+		case limit = "limit"
+		case startsAfter = "startsAfter"
+		case statuses = "statuses"
+		case subjects = "subjects"
+	}
+}
+
+
+public struct ToolsOzoneModerationListScheduledActionsOutput: Codable, Sendable, Equatable {
+	public let actions: [ToolsOzoneModerationDefsScheduledActionView]
+	public let cursor: String?
+
+	public init(
+		actions: [ToolsOzoneModerationDefsScheduledActionView],
+		cursor: String? = nil
+	) {
+		self.actions = actions
+		self.cursor = cursor
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		actions = try container.decode([ToolsOzoneModerationDefsScheduledActionView].self, forKey: .actions)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(actions, forKey: .actions)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case actions = "actions"
+		case cursor = "cursor"
+	}
+}
+
+
+public struct ToolsOzoneModerationQueryEventsOutput: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let events: [ToolsOzoneModerationDefsModEventView]
+
+	public init(
+		cursor: String? = nil,
+		events: [ToolsOzoneModerationDefsModEventView]
+	) {
+		self.cursor = cursor
+		self.events = events
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		events = try container.decode([ToolsOzoneModerationDefsModEventView].self, forKey: .events)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encode(events, forKey: .events)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case events = "events"
+	}
+}
+
+
+public struct ToolsOzoneModerationQueryEventsParameters: Codable, Sendable, Equatable {
+	public let addedLabels: [String]?
+	public let addedTags: [String]?
+	public let ageAssuranceState: ToolsOzoneModerationDefsSubjectStatusViewAgeAssuranceState?
+	public let batchId: String?
+	public let collections: [NSID]?
+	public let comment: String?
+	public let createdAfter: ATProtocolDate?
+	public let createdBefore: ATProtocolDate?
+	public let createdBy: DID?
+	public let cursor: String?
+	public let hasComment: Bool?
+	public let includeAllUserRecords: Bool?
+	public let limit: Int?
+	public let modTool: [String]?
+	public let policies: [String]?
+	public let removedLabels: [String]?
+	public let removedTags: [String]?
+	public let reportTypes: [String]?
+	public let sortDirection: String?
+	public let subject: String?
+	public let subjectType: ToolsOzoneModerationQueryEventsParametersSubjectType?
+	public let types: [String]?
+	public let withStrike: Bool?
+
+	public init(
+		addedLabels: [String]? = nil,
+		addedTags: [String]? = nil,
+		ageAssuranceState: ToolsOzoneModerationDefsSubjectStatusViewAgeAssuranceState? = nil,
+		batchId: String? = nil,
+		collections: [NSID]? = nil,
+		comment: String? = nil,
+		createdAfter: ATProtocolDate? = nil,
+		createdBefore: ATProtocolDate? = nil,
+		createdBy: DID? = nil,
+		cursor: String? = nil,
+		hasComment: Bool? = nil,
+		includeAllUserRecords: Bool? = nil,
+		limit: Int? = nil,
+		modTool: [String]? = nil,
+		policies: [String]? = nil,
+		removedLabels: [String]? = nil,
+		removedTags: [String]? = nil,
+		reportTypes: [String]? = nil,
+		sortDirection: String? = nil,
+		subject: String? = nil,
+		subjectType: ToolsOzoneModerationQueryEventsParametersSubjectType? = nil,
+		types: [String]? = nil,
+		withStrike: Bool? = nil
+	) {
+		self.addedLabels = addedLabels
+		self.addedTags = addedTags
+		self.ageAssuranceState = ageAssuranceState
+		self.batchId = batchId
+		self.collections = collections
+		self.comment = comment
+		self.createdAfter = createdAfter
+		self.createdBefore = createdBefore
+		self.createdBy = createdBy
+		self.cursor = cursor
+		self.hasComment = hasComment
+		self.includeAllUserRecords = includeAllUserRecords
+		self.limit = limit
+		self.modTool = modTool
+		self.policies = policies
+		self.removedLabels = removedLabels
+		self.removedTags = removedTags
+		self.reportTypes = reportTypes
+		self.sortDirection = sortDirection
+		self.subject = subject
+		self.subjectType = subjectType
+		self.types = types
+		self.withStrike = withStrike
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		addedLabels = try container.decodeIfPresent([String].self, forKey: .addedLabels)
+		addedTags = try container.decodeIfPresent([String].self, forKey: .addedTags)
+		ageAssuranceState = try container.decodeIfPresent(ToolsOzoneModerationDefsSubjectStatusViewAgeAssuranceState.self, forKey: .ageAssuranceState)
+		batchId = try container.decodeIfPresent(String.self, forKey: .batchId)
+		collections = try container.decodeIfPresent([NSID].self, forKey: .collections)
+		comment = try container.decodeIfPresent(String.self, forKey: .comment)
+		createdAfter = try container.decodeIfPresent(ATProtocolDate.self, forKey: .createdAfter)
+		createdBefore = try container.decodeIfPresent(ATProtocolDate.self, forKey: .createdBefore)
+		createdBy = try container.decodeIfPresent(DID.self, forKey: .createdBy)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		hasComment = try container.decodeIfPresent(Bool.self, forKey: .hasComment)
+		includeAllUserRecords = try container.decodeIfPresent(Bool.self, forKey: .includeAllUserRecords)
+		limit = try container.decodeIfPresent(Int.self, forKey: .limit)
+		modTool = try container.decodeIfPresent([String].self, forKey: .modTool)
+		policies = try container.decodeIfPresent([String].self, forKey: .policies)
+		removedLabels = try container.decodeIfPresent([String].self, forKey: .removedLabels)
+		removedTags = try container.decodeIfPresent([String].self, forKey: .removedTags)
+		reportTypes = try container.decodeIfPresent([String].self, forKey: .reportTypes)
+		sortDirection = try container.decodeIfPresent(String.self, forKey: .sortDirection)
+		subject = try container.decodeIfPresent(String.self, forKey: .subject)
+		subjectType = try container.decodeIfPresent(ToolsOzoneModerationQueryEventsParametersSubjectType.self, forKey: .subjectType)
+		types = try container.decodeIfPresent([String].self, forKey: .types)
+		withStrike = try container.decodeIfPresent(Bool.self, forKey: .withStrike)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(addedLabels, forKey: .addedLabels)
+		try container.encodeIfPresent(addedTags, forKey: .addedTags)
+		try container.encodeIfPresent(ageAssuranceState, forKey: .ageAssuranceState)
+		try container.encodeIfPresent(batchId, forKey: .batchId)
+		try container.encodeIfPresent(collections, forKey: .collections)
+		try container.encodeIfPresent(comment, forKey: .comment)
+		try container.encodeIfPresent(createdAfter, forKey: .createdAfter)
+		try container.encodeIfPresent(createdBefore, forKey: .createdBefore)
+		try container.encodeIfPresent(createdBy, forKey: .createdBy)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encodeIfPresent(hasComment, forKey: .hasComment)
+		try container.encodeIfPresent(includeAllUserRecords, forKey: .includeAllUserRecords)
+		try container.encodeIfPresent(limit, forKey: .limit)
+		try container.encodeIfPresent(modTool, forKey: .modTool)
+		try container.encodeIfPresent(policies, forKey: .policies)
+		try container.encodeIfPresent(removedLabels, forKey: .removedLabels)
+		try container.encodeIfPresent(removedTags, forKey: .removedTags)
+		try container.encodeIfPresent(reportTypes, forKey: .reportTypes)
+		try container.encodeIfPresent(sortDirection, forKey: .sortDirection)
+		try container.encodeIfPresent(subject, forKey: .subject)
+		try container.encodeIfPresent(subjectType, forKey: .subjectType)
+		try container.encodeIfPresent(types, forKey: .types)
+		try container.encodeIfPresent(withStrike, forKey: .withStrike)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		if let value = addedLabels {
+			value.appendQueryItems(named: "addedLabels", to: &items)
+		}
+		if let value = addedTags {
+			value.appendQueryItems(named: "addedTags", to: &items)
+		}
+		if let value = ageAssuranceState {
+			value.appendQueryItems(named: "ageAssuranceState", to: &items)
+		}
+		if let value = batchId {
+			value.appendQueryItems(named: "batchId", to: &items)
+		}
+		if let value = collections {
+			value.appendQueryItems(named: "collections", to: &items)
+		}
+		if let value = comment {
+			value.appendQueryItems(named: "comment", to: &items)
+		}
+		if let value = createdAfter {
+			value.appendQueryItems(named: "createdAfter", to: &items)
+		}
+		if let value = createdBefore {
+			value.appendQueryItems(named: "createdBefore", to: &items)
+		}
+		if let value = createdBy {
+			value.appendQueryItems(named: "createdBy", to: &items)
+		}
+		if let value = cursor {
+			value.appendQueryItems(named: "cursor", to: &items)
+		}
+		if let value = hasComment {
+			value.appendQueryItems(named: "hasComment", to: &items)
+		}
+		if let value = includeAllUserRecords {
+			value.appendQueryItems(named: "includeAllUserRecords", to: &items)
+		}
+		if let value = limit {
+			value.appendQueryItems(named: "limit", to: &items)
+		}
+		if let value = modTool {
+			value.appendQueryItems(named: "modTool", to: &items)
+		}
+		if let value = policies {
+			value.appendQueryItems(named: "policies", to: &items)
+		}
+		if let value = removedLabels {
+			value.appendQueryItems(named: "removedLabels", to: &items)
+		}
+		if let value = removedTags {
+			value.appendQueryItems(named: "removedTags", to: &items)
+		}
+		if let value = reportTypes {
+			value.appendQueryItems(named: "reportTypes", to: &items)
+		}
+		if let value = sortDirection {
+			value.appendQueryItems(named: "sortDirection", to: &items)
+		}
+		if let value = subject {
+			value.appendQueryItems(named: "subject", to: &items)
+		}
+		if let value = subjectType {
+			value.appendQueryItems(named: "subjectType", to: &items)
+		}
+		if let value = types {
+			value.appendQueryItems(named: "types", to: &items)
+		}
+		if let value = withStrike {
+			value.appendQueryItems(named: "withStrike", to: &items)
+		}
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case addedLabels = "addedLabels"
+		case addedTags = "addedTags"
+		case ageAssuranceState = "ageAssuranceState"
+		case batchId = "batchId"
+		case collections = "collections"
+		case comment = "comment"
+		case createdAfter = "createdAfter"
+		case createdBefore = "createdBefore"
+		case createdBy = "createdBy"
+		case cursor = "cursor"
+		case hasComment = "hasComment"
+		case includeAllUserRecords = "includeAllUserRecords"
+		case limit = "limit"
+		case modTool = "modTool"
+		case policies = "policies"
+		case removedLabels = "removedLabels"
+		case removedTags = "removedTags"
+		case reportTypes = "reportTypes"
+		case sortDirection = "sortDirection"
+		case subject = "subject"
+		case subjectType = "subjectType"
+		case types = "types"
+		case withStrike = "withStrike"
+	}
+}
+
+
+public enum ToolsOzoneModerationQueryEventsParametersSubjectType: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case account = "account"
+	case record = "record"
+}
+
+
+public struct ToolsOzoneModerationQueryStatusesOutput: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let subjectStatuses: [ToolsOzoneModerationDefsSubjectStatusView]
+
+	public init(
+		cursor: String? = nil,
+		subjectStatuses: [ToolsOzoneModerationDefsSubjectStatusView]
+	) {
+		self.cursor = cursor
+		self.subjectStatuses = subjectStatuses
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		subjectStatuses = try container.decode([ToolsOzoneModerationDefsSubjectStatusView].self, forKey: .subjectStatuses)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encode(subjectStatuses, forKey: .subjectStatuses)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case subjectStatuses = "subjectStatuses"
+	}
+}
+
+
+public struct ToolsOzoneModerationQueryStatusesParameters: Codable, Sendable, Equatable {
+	public let ageAssuranceState: ToolsOzoneModerationDefsSubjectStatusViewAgeAssuranceState?
+	public let appealed: Bool?
+	public let collections: [NSID]?
+	public let comment: String?
+	public let cursor: String?
+	public let excludeTags: [String]?
+	public let hostingDeletedAfter: ATProtocolDate?
+	public let hostingDeletedBefore: ATProtocolDate?
+	public let hostingStatuses: [String]?
+	public let hostingUpdatedAfter: ATProtocolDate?
+	public let hostingUpdatedBefore: ATProtocolDate?
+	public let ignoreSubjects: [String]?
+	public let includeAllUserRecords: Bool?
+	public let includeMuted: Bool?
+	public let lastReviewedBy: DID?
+	public let limit: Int?
+	public let minAccountSuspendCount: Int?
+	public let minPriorityScore: Int?
+	public let minReportedRecordsCount: Int?
+	public let minStrikeCount: Int?
+	public let minTakendownRecordsCount: Int?
+	public let onlyMuted: Bool?
+	public let queueCount: Int?
+	public let queueIndex: Int?
+	public let queueSeed: String?
+	public let reportedAfter: ATProtocolDate?
+	public let reportedBefore: ATProtocolDate?
+	public let reviewState: ToolsOzoneModerationQueryStatusesParametersReviewState?
+	public let reviewedAfter: ATProtocolDate?
+	public let reviewedBefore: ATProtocolDate?
+	public let sortDirection: String?
+	public let sortField: String?
+	public let subject: String?
+	public let subjectType: ToolsOzoneModerationQueryEventsParametersSubjectType?
+	public let tags: [String]?
+	public let takendown: Bool?
+
+	public init(
+		ageAssuranceState: ToolsOzoneModerationDefsSubjectStatusViewAgeAssuranceState? = nil,
+		appealed: Bool? = nil,
+		collections: [NSID]? = nil,
+		comment: String? = nil,
+		cursor: String? = nil,
+		excludeTags: [String]? = nil,
+		hostingDeletedAfter: ATProtocolDate? = nil,
+		hostingDeletedBefore: ATProtocolDate? = nil,
+		hostingStatuses: [String]? = nil,
+		hostingUpdatedAfter: ATProtocolDate? = nil,
+		hostingUpdatedBefore: ATProtocolDate? = nil,
+		ignoreSubjects: [String]? = nil,
+		includeAllUserRecords: Bool? = nil,
+		includeMuted: Bool? = nil,
+		lastReviewedBy: DID? = nil,
+		limit: Int? = nil,
+		minAccountSuspendCount: Int? = nil,
+		minPriorityScore: Int? = nil,
+		minReportedRecordsCount: Int? = nil,
+		minStrikeCount: Int? = nil,
+		minTakendownRecordsCount: Int? = nil,
+		onlyMuted: Bool? = nil,
+		queueCount: Int? = nil,
+		queueIndex: Int? = nil,
+		queueSeed: String? = nil,
+		reportedAfter: ATProtocolDate? = nil,
+		reportedBefore: ATProtocolDate? = nil,
+		reviewState: ToolsOzoneModerationQueryStatusesParametersReviewState? = nil,
+		reviewedAfter: ATProtocolDate? = nil,
+		reviewedBefore: ATProtocolDate? = nil,
+		sortDirection: String? = nil,
+		sortField: String? = nil,
+		subject: String? = nil,
+		subjectType: ToolsOzoneModerationQueryEventsParametersSubjectType? = nil,
+		tags: [String]? = nil,
+		takendown: Bool? = nil
+	) {
+		self.ageAssuranceState = ageAssuranceState
+		self.appealed = appealed
+		self.collections = collections
+		self.comment = comment
+		self.cursor = cursor
+		self.excludeTags = excludeTags
+		self.hostingDeletedAfter = hostingDeletedAfter
+		self.hostingDeletedBefore = hostingDeletedBefore
+		self.hostingStatuses = hostingStatuses
+		self.hostingUpdatedAfter = hostingUpdatedAfter
+		self.hostingUpdatedBefore = hostingUpdatedBefore
+		self.ignoreSubjects = ignoreSubjects
+		self.includeAllUserRecords = includeAllUserRecords
+		self.includeMuted = includeMuted
+		self.lastReviewedBy = lastReviewedBy
+		self.limit = limit
+		self.minAccountSuspendCount = minAccountSuspendCount
+		self.minPriorityScore = minPriorityScore
+		self.minReportedRecordsCount = minReportedRecordsCount
+		self.minStrikeCount = minStrikeCount
+		self.minTakendownRecordsCount = minTakendownRecordsCount
+		self.onlyMuted = onlyMuted
+		self.queueCount = queueCount
+		self.queueIndex = queueIndex
+		self.queueSeed = queueSeed
+		self.reportedAfter = reportedAfter
+		self.reportedBefore = reportedBefore
+		self.reviewState = reviewState
+		self.reviewedAfter = reviewedAfter
+		self.reviewedBefore = reviewedBefore
+		self.sortDirection = sortDirection
+		self.sortField = sortField
+		self.subject = subject
+		self.subjectType = subjectType
+		self.tags = tags
+		self.takendown = takendown
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		ageAssuranceState = try container.decodeIfPresent(ToolsOzoneModerationDefsSubjectStatusViewAgeAssuranceState.self, forKey: .ageAssuranceState)
+		appealed = try container.decodeIfPresent(Bool.self, forKey: .appealed)
+		collections = try container.decodeIfPresent([NSID].self, forKey: .collections)
+		comment = try container.decodeIfPresent(String.self, forKey: .comment)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		excludeTags = try container.decodeIfPresent([String].self, forKey: .excludeTags)
+		hostingDeletedAfter = try container.decodeIfPresent(ATProtocolDate.self, forKey: .hostingDeletedAfter)
+		hostingDeletedBefore = try container.decodeIfPresent(ATProtocolDate.self, forKey: .hostingDeletedBefore)
+		hostingStatuses = try container.decodeIfPresent([String].self, forKey: .hostingStatuses)
+		hostingUpdatedAfter = try container.decodeIfPresent(ATProtocolDate.self, forKey: .hostingUpdatedAfter)
+		hostingUpdatedBefore = try container.decodeIfPresent(ATProtocolDate.self, forKey: .hostingUpdatedBefore)
+		ignoreSubjects = try container.decodeIfPresent([String].self, forKey: .ignoreSubjects)
+		includeAllUserRecords = try container.decodeIfPresent(Bool.self, forKey: .includeAllUserRecords)
+		includeMuted = try container.decodeIfPresent(Bool.self, forKey: .includeMuted)
+		lastReviewedBy = try container.decodeIfPresent(DID.self, forKey: .lastReviewedBy)
+		limit = try container.decodeIfPresent(Int.self, forKey: .limit)
+		minAccountSuspendCount = try container.decodeIfPresent(Int.self, forKey: .minAccountSuspendCount)
+		minPriorityScore = try container.decodeIfPresent(Int.self, forKey: .minPriorityScore)
+		minReportedRecordsCount = try container.decodeIfPresent(Int.self, forKey: .minReportedRecordsCount)
+		minStrikeCount = try container.decodeIfPresent(Int.self, forKey: .minStrikeCount)
+		minTakendownRecordsCount = try container.decodeIfPresent(Int.self, forKey: .minTakendownRecordsCount)
+		onlyMuted = try container.decodeIfPresent(Bool.self, forKey: .onlyMuted)
+		queueCount = try container.decodeIfPresent(Int.self, forKey: .queueCount)
+		queueIndex = try container.decodeIfPresent(Int.self, forKey: .queueIndex)
+		queueSeed = try container.decodeIfPresent(String.self, forKey: .queueSeed)
+		reportedAfter = try container.decodeIfPresent(ATProtocolDate.self, forKey: .reportedAfter)
+		reportedBefore = try container.decodeIfPresent(ATProtocolDate.self, forKey: .reportedBefore)
+		reviewState = try container.decodeIfPresent(ToolsOzoneModerationQueryStatusesParametersReviewState.self, forKey: .reviewState)
+		reviewedAfter = try container.decodeIfPresent(ATProtocolDate.self, forKey: .reviewedAfter)
+		reviewedBefore = try container.decodeIfPresent(ATProtocolDate.self, forKey: .reviewedBefore)
+		sortDirection = try container.decodeIfPresent(String.self, forKey: .sortDirection)
+		sortField = try container.decodeIfPresent(String.self, forKey: .sortField)
+		subject = try container.decodeIfPresent(String.self, forKey: .subject)
+		subjectType = try container.decodeIfPresent(ToolsOzoneModerationQueryEventsParametersSubjectType.self, forKey: .subjectType)
+		tags = try container.decodeIfPresent([String].self, forKey: .tags)
+		takendown = try container.decodeIfPresent(Bool.self, forKey: .takendown)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(ageAssuranceState, forKey: .ageAssuranceState)
+		try container.encodeIfPresent(appealed, forKey: .appealed)
+		try container.encodeIfPresent(collections, forKey: .collections)
+		try container.encodeIfPresent(comment, forKey: .comment)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encodeIfPresent(excludeTags, forKey: .excludeTags)
+		try container.encodeIfPresent(hostingDeletedAfter, forKey: .hostingDeletedAfter)
+		try container.encodeIfPresent(hostingDeletedBefore, forKey: .hostingDeletedBefore)
+		try container.encodeIfPresent(hostingStatuses, forKey: .hostingStatuses)
+		try container.encodeIfPresent(hostingUpdatedAfter, forKey: .hostingUpdatedAfter)
+		try container.encodeIfPresent(hostingUpdatedBefore, forKey: .hostingUpdatedBefore)
+		try container.encodeIfPresent(ignoreSubjects, forKey: .ignoreSubjects)
+		try container.encodeIfPresent(includeAllUserRecords, forKey: .includeAllUserRecords)
+		try container.encodeIfPresent(includeMuted, forKey: .includeMuted)
+		try container.encodeIfPresent(lastReviewedBy, forKey: .lastReviewedBy)
+		try container.encodeIfPresent(limit, forKey: .limit)
+		try container.encodeIfPresent(minAccountSuspendCount, forKey: .minAccountSuspendCount)
+		try container.encodeIfPresent(minPriorityScore, forKey: .minPriorityScore)
+		try container.encodeIfPresent(minReportedRecordsCount, forKey: .minReportedRecordsCount)
+		try container.encodeIfPresent(minStrikeCount, forKey: .minStrikeCount)
+		try container.encodeIfPresent(minTakendownRecordsCount, forKey: .minTakendownRecordsCount)
+		try container.encodeIfPresent(onlyMuted, forKey: .onlyMuted)
+		try container.encodeIfPresent(queueCount, forKey: .queueCount)
+		try container.encodeIfPresent(queueIndex, forKey: .queueIndex)
+		try container.encodeIfPresent(queueSeed, forKey: .queueSeed)
+		try container.encodeIfPresent(reportedAfter, forKey: .reportedAfter)
+		try container.encodeIfPresent(reportedBefore, forKey: .reportedBefore)
+		try container.encodeIfPresent(reviewState, forKey: .reviewState)
+		try container.encodeIfPresent(reviewedAfter, forKey: .reviewedAfter)
+		try container.encodeIfPresent(reviewedBefore, forKey: .reviewedBefore)
+		try container.encodeIfPresent(sortDirection, forKey: .sortDirection)
+		try container.encodeIfPresent(sortField, forKey: .sortField)
+		try container.encodeIfPresent(subject, forKey: .subject)
+		try container.encodeIfPresent(subjectType, forKey: .subjectType)
+		try container.encodeIfPresent(tags, forKey: .tags)
+		try container.encodeIfPresent(takendown, forKey: .takendown)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		if let value = ageAssuranceState {
+			value.appendQueryItems(named: "ageAssuranceState", to: &items)
+		}
+		if let value = appealed {
+			value.appendQueryItems(named: "appealed", to: &items)
+		}
+		if let value = collections {
+			value.appendQueryItems(named: "collections", to: &items)
+		}
+		if let value = comment {
+			value.appendQueryItems(named: "comment", to: &items)
+		}
+		if let value = cursor {
+			value.appendQueryItems(named: "cursor", to: &items)
+		}
+		if let value = excludeTags {
+			value.appendQueryItems(named: "excludeTags", to: &items)
+		}
+		if let value = hostingDeletedAfter {
+			value.appendQueryItems(named: "hostingDeletedAfter", to: &items)
+		}
+		if let value = hostingDeletedBefore {
+			value.appendQueryItems(named: "hostingDeletedBefore", to: &items)
+		}
+		if let value = hostingStatuses {
+			value.appendQueryItems(named: "hostingStatuses", to: &items)
+		}
+		if let value = hostingUpdatedAfter {
+			value.appendQueryItems(named: "hostingUpdatedAfter", to: &items)
+		}
+		if let value = hostingUpdatedBefore {
+			value.appendQueryItems(named: "hostingUpdatedBefore", to: &items)
+		}
+		if let value = ignoreSubjects {
+			value.appendQueryItems(named: "ignoreSubjects", to: &items)
+		}
+		if let value = includeAllUserRecords {
+			value.appendQueryItems(named: "includeAllUserRecords", to: &items)
+		}
+		if let value = includeMuted {
+			value.appendQueryItems(named: "includeMuted", to: &items)
+		}
+		if let value = lastReviewedBy {
+			value.appendQueryItems(named: "lastReviewedBy", to: &items)
+		}
+		if let value = limit {
+			value.appendQueryItems(named: "limit", to: &items)
+		}
+		if let value = minAccountSuspendCount {
+			value.appendQueryItems(named: "minAccountSuspendCount", to: &items)
+		}
+		if let value = minPriorityScore {
+			value.appendQueryItems(named: "minPriorityScore", to: &items)
+		}
+		if let value = minReportedRecordsCount {
+			value.appendQueryItems(named: "minReportedRecordsCount", to: &items)
+		}
+		if let value = minStrikeCount {
+			value.appendQueryItems(named: "minStrikeCount", to: &items)
+		}
+		if let value = minTakendownRecordsCount {
+			value.appendQueryItems(named: "minTakendownRecordsCount", to: &items)
+		}
+		if let value = onlyMuted {
+			value.appendQueryItems(named: "onlyMuted", to: &items)
+		}
+		if let value = queueCount {
+			value.appendQueryItems(named: "queueCount", to: &items)
+		}
+		if let value = queueIndex {
+			value.appendQueryItems(named: "queueIndex", to: &items)
+		}
+		if let value = queueSeed {
+			value.appendQueryItems(named: "queueSeed", to: &items)
+		}
+		if let value = reportedAfter {
+			value.appendQueryItems(named: "reportedAfter", to: &items)
+		}
+		if let value = reportedBefore {
+			value.appendQueryItems(named: "reportedBefore", to: &items)
+		}
+		if let value = reviewState {
+			value.appendQueryItems(named: "reviewState", to: &items)
+		}
+		if let value = reviewedAfter {
+			value.appendQueryItems(named: "reviewedAfter", to: &items)
+		}
+		if let value = reviewedBefore {
+			value.appendQueryItems(named: "reviewedBefore", to: &items)
+		}
+		if let value = sortDirection {
+			value.appendQueryItems(named: "sortDirection", to: &items)
+		}
+		if let value = sortField {
+			value.appendQueryItems(named: "sortField", to: &items)
+		}
+		if let value = subject {
+			value.appendQueryItems(named: "subject", to: &items)
+		}
+		if let value = subjectType {
+			value.appendQueryItems(named: "subjectType", to: &items)
+		}
+		if let value = tags {
+			value.appendQueryItems(named: "tags", to: &items)
+		}
+		if let value = takendown {
+			value.appendQueryItems(named: "takendown", to: &items)
+		}
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case ageAssuranceState = "ageAssuranceState"
+		case appealed = "appealed"
+		case collections = "collections"
+		case comment = "comment"
+		case cursor = "cursor"
+		case excludeTags = "excludeTags"
+		case hostingDeletedAfter = "hostingDeletedAfter"
+		case hostingDeletedBefore = "hostingDeletedBefore"
+		case hostingStatuses = "hostingStatuses"
+		case hostingUpdatedAfter = "hostingUpdatedAfter"
+		case hostingUpdatedBefore = "hostingUpdatedBefore"
+		case ignoreSubjects = "ignoreSubjects"
+		case includeAllUserRecords = "includeAllUserRecords"
+		case includeMuted = "includeMuted"
+		case lastReviewedBy = "lastReviewedBy"
+		case limit = "limit"
+		case minAccountSuspendCount = "minAccountSuspendCount"
+		case minPriorityScore = "minPriorityScore"
+		case minReportedRecordsCount = "minReportedRecordsCount"
+		case minStrikeCount = "minStrikeCount"
+		case minTakendownRecordsCount = "minTakendownRecordsCount"
+		case onlyMuted = "onlyMuted"
+		case queueCount = "queueCount"
+		case queueIndex = "queueIndex"
+		case queueSeed = "queueSeed"
+		case reportedAfter = "reportedAfter"
+		case reportedBefore = "reportedBefore"
+		case reviewState = "reviewState"
+		case reviewedAfter = "reviewedAfter"
+		case reviewedBefore = "reviewedBefore"
+		case sortDirection = "sortDirection"
+		case sortField = "sortField"
+		case subject = "subject"
+		case subjectType = "subjectType"
+		case tags = "tags"
+		case takendown = "takendown"
+	}
+}
+
+
+public enum ToolsOzoneModerationQueryStatusesParametersReviewState: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case toolsOzoneModerationDefsReviewOpen = "tools.ozone.moderation.defs#reviewOpen"
+	case toolsOzoneModerationDefsReviewClosed = "tools.ozone.moderation.defs#reviewClosed"
+	case toolsOzoneModerationDefsReviewEscalated = "tools.ozone.moderation.defs#reviewEscalated"
+	case toolsOzoneModerationDefsReviewNone = "tools.ozone.moderation.defs#reviewNone"
+}
+
+
+public struct ToolsOzoneModerationScheduleActionFailedScheduling: Codable, Sendable, Equatable {
+	public let error: String
+	public let errorCode: String?
+	public let subject: DID
+
+	public init(
+		error: String,
+		errorCode: String? = nil,
+		subject: DID
+	) {
+		self.error = error
+		self.errorCode = errorCode
+		self.subject = subject
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		error = try container.decode(String.self, forKey: .error)
+		errorCode = try container.decodeIfPresent(String.self, forKey: .errorCode)
+		subject = try container.decode(DID.self, forKey: .subject)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(error, forKey: .error)
+		try container.encodeIfPresent(errorCode, forKey: .errorCode)
+		try container.encode(subject, forKey: .subject)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case error = "error"
+		case errorCode = "errorCode"
+		case subject = "subject"
+	}
+}
+
+
+public struct ToolsOzoneModerationScheduleActionInput: Codable, Sendable, Equatable {
+	public let action: ToolsOzoneModerationScheduleActionInputAction
+	public let createdBy: DID
+	public let modTool: ToolsOzoneModerationDefsModTool?
+	public let scheduling: ToolsOzoneModerationScheduleActionSchedulingConfig
+	public let subjects: [DID]
+
+	public init(
+		action: ToolsOzoneModerationScheduleActionInputAction,
+		createdBy: DID,
+		modTool: ToolsOzoneModerationDefsModTool? = nil,
+		scheduling: ToolsOzoneModerationScheduleActionSchedulingConfig,
+		subjects: [DID]
+	) {
+		self.action = action
+		self.createdBy = createdBy
+		self.modTool = modTool
+		self.scheduling = scheduling
+		self.subjects = subjects
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		action = try container.decode(ToolsOzoneModerationScheduleActionInputAction.self, forKey: .action)
+		createdBy = try container.decode(DID.self, forKey: .createdBy)
+		modTool = try container.decodeIfPresent(ToolsOzoneModerationDefsModTool.self, forKey: .modTool)
+		scheduling = try container.decode(ToolsOzoneModerationScheduleActionSchedulingConfig.self, forKey: .scheduling)
+		subjects = try container.decode([DID].self, forKey: .subjects)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(action, forKey: .action)
+		try container.encode(createdBy, forKey: .createdBy)
+		try container.encodeIfPresent(modTool, forKey: .modTool)
+		try container.encode(scheduling, forKey: .scheduling)
+		try container.encode(subjects, forKey: .subjects)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case action = "action"
+		case createdBy = "createdBy"
+		case modTool = "modTool"
+		case scheduling = "scheduling"
+		case subjects = "subjects"
+	}
+}
+
+
+public indirect enum ToolsOzoneModerationScheduleActionInputAction: Codable, Sendable, Equatable {
+	case takedown(ToolsOzoneModerationScheduleActionTakedown)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "tools.ozone.moderation.scheduleAction#takedown": self = .takedown(try ToolsOzoneModerationScheduleActionTakedown(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .takedown(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.moderation.scheduleAction#takedown", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
+public typealias ToolsOzoneModerationScheduleActionOutput = ToolsOzoneModerationScheduleActionScheduledActionResults
+
+
+public struct ToolsOzoneModerationScheduleActionScheduledActionResults: Codable, Sendable, Equatable {
+	public let failed: [ToolsOzoneModerationScheduleActionFailedScheduling]
+	public let succeeded: [DID]
+
+	public init(
+		failed: [ToolsOzoneModerationScheduleActionFailedScheduling],
+		succeeded: [DID]
+	) {
+		self.failed = failed
+		self.succeeded = succeeded
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		failed = try container.decode([ToolsOzoneModerationScheduleActionFailedScheduling].self, forKey: .failed)
+		succeeded = try container.decode([DID].self, forKey: .succeeded)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(failed, forKey: .failed)
+		try container.encode(succeeded, forKey: .succeeded)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case failed = "failed"
+		case succeeded = "succeeded"
+	}
+}
+
+
+public struct ToolsOzoneModerationScheduleActionSchedulingConfig: Codable, Sendable, Equatable {
+	public let executeAfter: ATProtocolDate?
+	public let executeAt: ATProtocolDate?
+	public let executeUntil: ATProtocolDate?
+
+	public init(
+		executeAfter: ATProtocolDate? = nil,
+		executeAt: ATProtocolDate? = nil,
+		executeUntil: ATProtocolDate? = nil
+	) {
+		self.executeAfter = executeAfter
+		self.executeAt = executeAt
+		self.executeUntil = executeUntil
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		executeAfter = try container.decodeIfPresent(ATProtocolDate.self, forKey: .executeAfter)
+		executeAt = try container.decodeIfPresent(ATProtocolDate.self, forKey: .executeAt)
+		executeUntil = try container.decodeIfPresent(ATProtocolDate.self, forKey: .executeUntil)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(executeAfter, forKey: .executeAfter)
+		try container.encodeIfPresent(executeAt, forKey: .executeAt)
+		try container.encodeIfPresent(executeUntil, forKey: .executeUntil)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case executeAfter = "executeAfter"
+		case executeAt = "executeAt"
+		case executeUntil = "executeUntil"
+	}
+}
+
+
+public struct ToolsOzoneModerationScheduleActionTakedown: Codable, Sendable, Equatable {
+	public let acknowledgeAccountSubjects: Bool?
+	public let comment: String?
+	public let durationInHours: Int?
+	public let emailContent: String?
+	public let emailSubject: String?
+	public let policies: [String]?
+	public let severityLevel: String?
+	public let strikeCount: Int?
+	public let strikeExpiresAt: ATProtocolDate?
+
+	public init(
+		acknowledgeAccountSubjects: Bool? = nil,
+		comment: String? = nil,
+		durationInHours: Int? = nil,
+		emailContent: String? = nil,
+		emailSubject: String? = nil,
+		policies: [String]? = nil,
+		severityLevel: String? = nil,
+		strikeCount: Int? = nil,
+		strikeExpiresAt: ATProtocolDate? = nil
+	) {
+		self.acknowledgeAccountSubjects = acknowledgeAccountSubjects
+		self.comment = comment
+		self.durationInHours = durationInHours
+		self.emailContent = emailContent
+		self.emailSubject = emailSubject
+		self.policies = policies
+		self.severityLevel = severityLevel
+		self.strikeCount = strikeCount
+		self.strikeExpiresAt = strikeExpiresAt
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		acknowledgeAccountSubjects = try container.decodeIfPresent(Bool.self, forKey: .acknowledgeAccountSubjects)
+		comment = try container.decodeIfPresent(String.self, forKey: .comment)
+		durationInHours = try container.decodeIfPresent(Int.self, forKey: .durationInHours)
+		emailContent = try container.decodeIfPresent(String.self, forKey: .emailContent)
+		emailSubject = try container.decodeIfPresent(String.self, forKey: .emailSubject)
+		policies = try container.decodeIfPresent([String].self, forKey: .policies)
+		severityLevel = try container.decodeIfPresent(String.self, forKey: .severityLevel)
+		strikeCount = try container.decodeIfPresent(Int.self, forKey: .strikeCount)
+		strikeExpiresAt = try container.decodeIfPresent(ATProtocolDate.self, forKey: .strikeExpiresAt)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(acknowledgeAccountSubjects, forKey: .acknowledgeAccountSubjects)
+		try container.encodeIfPresent(comment, forKey: .comment)
+		try container.encodeIfPresent(durationInHours, forKey: .durationInHours)
+		try container.encodeIfPresent(emailContent, forKey: .emailContent)
+		try container.encodeIfPresent(emailSubject, forKey: .emailSubject)
+		try container.encodeIfPresent(policies, forKey: .policies)
+		try container.encodeIfPresent(severityLevel, forKey: .severityLevel)
+		try container.encodeIfPresent(strikeCount, forKey: .strikeCount)
+		try container.encodeIfPresent(strikeExpiresAt, forKey: .strikeExpiresAt)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case acknowledgeAccountSubjects = "acknowledgeAccountSubjects"
+		case comment = "comment"
+		case durationInHours = "durationInHours"
+		case emailContent = "emailContent"
+		case emailSubject = "emailSubject"
+		case policies = "policies"
+		case severityLevel = "severityLevel"
+		case strikeCount = "strikeCount"
+		case strikeExpiresAt = "strikeExpiresAt"
+	}
+}
+
+
+public struct ToolsOzoneModerationSearchReposOutput: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let repos: [ToolsOzoneModerationDefsRepoView]
+
+	public init(
+		cursor: String? = nil,
+		repos: [ToolsOzoneModerationDefsRepoView]
+	) {
+		self.cursor = cursor
+		self.repos = repos
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		repos = try container.decode([ToolsOzoneModerationDefsRepoView].self, forKey: .repos)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encode(repos, forKey: .repos)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case repos = "repos"
+	}
+}
+
+
+public struct ToolsOzoneModerationSearchReposParameters: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let limit: Int?
+	public let q: String?
+	public let term: String?
+
+	public init(
+		cursor: String? = nil,
+		limit: Int? = nil,
+		q: String? = nil,
+		term: String? = nil
+	) {
+		self.cursor = cursor
+		self.limit = limit
+		self.q = q
+		self.term = term
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		limit = try container.decodeIfPresent(Int.self, forKey: .limit)
+		q = try container.decodeIfPresent(String.self, forKey: .q)
+		term = try container.decodeIfPresent(String.self, forKey: .term)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encodeIfPresent(limit, forKey: .limit)
+		try container.encodeIfPresent(q, forKey: .q)
+		try container.encodeIfPresent(term, forKey: .term)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		if let value = cursor {
+			value.appendQueryItems(named: "cursor", to: &items)
+		}
+		if let value = limit {
+			value.appendQueryItems(named: "limit", to: &items)
+		}
+		if let value = q {
+			value.appendQueryItems(named: "q", to: &items)
+		}
+		if let value = term {
+			value.appendQueryItems(named: "term", to: &items)
+		}
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case limit = "limit"
+		case q = "q"
+		case term = "term"
+	}
+}
+
+

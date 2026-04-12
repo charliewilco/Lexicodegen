@@ -2,56 +2,52 @@
 help:
 	@just --list
 
+hooks-install:
+	go tool github.com/evilmartians/lefthook/v2 install
+
 build:
-	bun build ./main.ts --target bun --outfile ./dist/main.mjs
+	go build -o ./lexicodegen ./cmd/lexicodegen
 
-# Run TypeScript type-checking.
-typecheck:
-	bun run typecheck
-
-# Format generated Swift files, lexicon JSON files, and TypeScript sources.
+# Format Go sources.
 format:
-	bunx biome format --write .
+	gofmt -w ./cmd ./internal
 
-# Run Biome checks without writing.
+# Check Go formatting without writing.
 lint:
-	bunx biome check .
+	test -z "$$(gofmt -l ./cmd ./internal)"
 
 # Refresh lexicon JSON files from upstream sources.
 lexicons:
 	sh ./scripts/get-lexicons.sh
 
 test:
-	bun test
-
-test-ci:
-	bun test --coverage
+	go test ./...
 
 ci:
-	just typecheck
 	just lint
-	bun test
-	bun run build
+	just test
+	just build
 
 # Generate from installed executable and current local lexicons.
 generate:
-	bun ./main.ts ./lexicons --output ./output/swift
+	go run ./cmd/lexicodegen ./lexicons --output ./output/swift
 
 # Typecheck generated Swift output with swiftc.
 swift-check:
-	bun run check:swift
+	bash ./scripts/check-swift-compile.sh ./output/swift
 
 # Regenerate Swift output, then typecheck it with swiftc.
 verify-swift:
-	bun run verify:swift
+	just generate
+	just swift-check
 
 # Refresh upstream lexicons, then regenerate.
 regenerate: lexicons generate
 
-# Run full generation flow, then format all tracked artifacts.
+# Run full generation flow.
 all: regenerate
-	bunx biome format --write .
+	just swift-check
 
 clean:
-	rm -rf ./dist
+	rm -f ./lexicodegen
 	rm -rf ./output/swift

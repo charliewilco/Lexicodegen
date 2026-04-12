@@ -1,0 +1,116 @@
+import Foundation
+
+
+public struct ToolsOzoneServerGetConfigOutput: Codable, Sendable, Equatable {
+	public let appview: ToolsOzoneServerGetConfigServiceConfig?
+	public let blobDivert: ToolsOzoneServerGetConfigServiceConfig?
+	public let chat: ToolsOzoneServerGetConfigServiceConfig?
+	public let pds: ToolsOzoneServerGetConfigServiceConfig?
+	public let verifierDid: DID?
+	public let viewer: ToolsOzoneServerGetConfigViewerConfig?
+
+	public init(
+		appview: ToolsOzoneServerGetConfigServiceConfig? = nil,
+		blobDivert: ToolsOzoneServerGetConfigServiceConfig? = nil,
+		chat: ToolsOzoneServerGetConfigServiceConfig? = nil,
+		pds: ToolsOzoneServerGetConfigServiceConfig? = nil,
+		verifierDid: DID? = nil,
+		viewer: ToolsOzoneServerGetConfigViewerConfig? = nil
+	) {
+		self.appview = appview
+		self.blobDivert = blobDivert
+		self.chat = chat
+		self.pds = pds
+		self.verifierDid = verifierDid
+		self.viewer = viewer
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		appview = try container.decodeIfPresent(ToolsOzoneServerGetConfigServiceConfig.self, forKey: .appview)
+		blobDivert = try container.decodeIfPresent(ToolsOzoneServerGetConfigServiceConfig.self, forKey: .blobDivert)
+		chat = try container.decodeIfPresent(ToolsOzoneServerGetConfigServiceConfig.self, forKey: .chat)
+		pds = try container.decodeIfPresent(ToolsOzoneServerGetConfigServiceConfig.self, forKey: .pds)
+		verifierDid = try container.decodeIfPresent(DID.self, forKey: .verifierDid)
+		viewer = try container.decodeIfPresent(ToolsOzoneServerGetConfigViewerConfig.self, forKey: .viewer)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(appview, forKey: .appview)
+		try container.encodeIfPresent(blobDivert, forKey: .blobDivert)
+		try container.encodeIfPresent(chat, forKey: .chat)
+		try container.encodeIfPresent(pds, forKey: .pds)
+		try container.encodeIfPresent(verifierDid, forKey: .verifierDid)
+		try container.encodeIfPresent(viewer, forKey: .viewer)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case appview = "appview"
+		case blobDivert = "blobDivert"
+		case chat = "chat"
+		case pds = "pds"
+		case verifierDid = "verifierDid"
+		case viewer = "viewer"
+	}
+}
+
+
+public struct ToolsOzoneServerGetConfigServiceConfig: Codable, Sendable, Equatable {
+	public let url: String?
+
+	public init(
+		url: String? = nil
+	) {
+		self.url = url
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		url = try container.decodeIfPresent(String.self, forKey: .url)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(url, forKey: .url)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case url = "url"
+	}
+}
+
+
+public struct ToolsOzoneServerGetConfigViewerConfig: Codable, Sendable, Equatable {
+	public let role: ToolsOzoneServerGetConfigViewerConfigRole?
+
+	public init(
+		role: ToolsOzoneServerGetConfigViewerConfigRole? = nil
+	) {
+		self.role = role
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		role = try container.decodeIfPresent(ToolsOzoneServerGetConfigViewerConfigRole.self, forKey: .role)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(role, forKey: .role)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case role = "role"
+	}
+}
+
+
+public enum ToolsOzoneServerGetConfigViewerConfigRole: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case toolsOzoneTeamDefsRoleAdmin = "tools.ozone.team.defs#roleAdmin"
+	case toolsOzoneTeamDefsRoleModerator = "tools.ozone.team.defs#roleModerator"
+	case toolsOzoneTeamDefsRoleTriage = "tools.ozone.team.defs#roleTriage"
+	case toolsOzoneTeamDefsRoleVerifier = "tools.ozone.team.defs#roleVerifier"
+}
+
+

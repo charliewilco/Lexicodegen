@@ -1,0 +1,866 @@
+import Foundation
+
+
+public struct AppBskyEmbedDefsAspectRatio: Codable, Sendable, Equatable {
+	public let height: Int
+	public let width: Int
+
+	public init(
+		height: Int,
+		width: Int
+	) {
+		self.height = height
+		self.width = width
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		height = try container.decode(Int.self, forKey: .height)
+		width = try container.decode(Int.self, forKey: .width)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(height, forKey: .height)
+		try container.encode(width, forKey: .width)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case height = "height"
+		case width = "width"
+	}
+}
+
+
+public struct AppBskyEmbedExternal: Codable, Sendable, Equatable {
+	public let external: AppBskyEmbedExternalExternal
+
+	public init(
+		external: AppBskyEmbedExternalExternal
+	) {
+		self.external = external
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		external = try container.decode(AppBskyEmbedExternalExternal.self, forKey: .external)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(external, forKey: .external)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case external = "external"
+	}
+}
+
+
+public struct AppBskyEmbedExternalExternal: Codable, Sendable, Equatable {
+	public let description: String
+	public let thumb: Blob?
+	public let title: String
+	public let uri: String
+
+	public init(
+		description: String,
+		thumb: Blob? = nil,
+		title: String,
+		uri: String
+	) {
+		self.description = description
+		self.thumb = thumb
+		self.title = title
+		self.uri = uri
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		description = try container.decode(String.self, forKey: .description)
+		thumb = try container.decodeIfPresent(Blob.self, forKey: .thumb)
+		title = try container.decode(String.self, forKey: .title)
+		uri = try container.decode(String.self, forKey: .uri)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(description, forKey: .description)
+		try container.encodeIfPresent(thumb, forKey: .thumb)
+		try container.encode(title, forKey: .title)
+		try container.encode(uri, forKey: .uri)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case description = "description"
+		case thumb = "thumb"
+		case title = "title"
+		case uri = "uri"
+	}
+}
+
+
+public struct AppBskyEmbedExternalView: Codable, Sendable, Equatable {
+	public let external: AppBskyEmbedExternalViewExternal
+
+	public init(
+		external: AppBskyEmbedExternalViewExternal
+	) {
+		self.external = external
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		external = try container.decode(AppBskyEmbedExternalViewExternal.self, forKey: .external)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(external, forKey: .external)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case external = "external"
+	}
+}
+
+
+public struct AppBskyEmbedExternalViewExternal: Codable, Sendable, Equatable {
+	public let description: String
+	public let thumb: String?
+	public let title: String
+	public let uri: String
+
+	public init(
+		description: String,
+		thumb: String? = nil,
+		title: String,
+		uri: String
+	) {
+		self.description = description
+		self.thumb = thumb
+		self.title = title
+		self.uri = uri
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		description = try container.decode(String.self, forKey: .description)
+		thumb = try container.decodeIfPresent(String.self, forKey: .thumb)
+		title = try container.decode(String.self, forKey: .title)
+		uri = try container.decode(String.self, forKey: .uri)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(description, forKey: .description)
+		try container.encodeIfPresent(thumb, forKey: .thumb)
+		try container.encode(title, forKey: .title)
+		try container.encode(uri, forKey: .uri)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case description = "description"
+		case thumb = "thumb"
+		case title = "title"
+		case uri = "uri"
+	}
+}
+
+
+public struct AppBskyEmbedImages: Codable, Sendable, Equatable {
+	public let images: [AppBskyEmbedImagesImage]
+
+	public init(
+		images: [AppBskyEmbedImagesImage]
+	) {
+		self.images = images
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		images = try container.decode([AppBskyEmbedImagesImage].self, forKey: .images)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(images, forKey: .images)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case images = "images"
+	}
+}
+
+
+public struct AppBskyEmbedImagesImage: Codable, Sendable, Equatable {
+	public let alt: String
+	public let aspectRatio: AppBskyEmbedDefsAspectRatio?
+	public let image: Blob
+
+	public init(
+		alt: String,
+		aspectRatio: AppBskyEmbedDefsAspectRatio? = nil,
+		image: Blob
+	) {
+		self.alt = alt
+		self.aspectRatio = aspectRatio
+		self.image = image
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		alt = try container.decode(String.self, forKey: .alt)
+		aspectRatio = try container.decodeIfPresent(AppBskyEmbedDefsAspectRatio.self, forKey: .aspectRatio)
+		image = try container.decode(Blob.self, forKey: .image)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(alt, forKey: .alt)
+		try container.encodeIfPresent(aspectRatio, forKey: .aspectRatio)
+		try container.encode(image, forKey: .image)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case alt = "alt"
+		case aspectRatio = "aspectRatio"
+		case image = "image"
+	}
+}
+
+
+public struct AppBskyEmbedImagesView: Codable, Sendable, Equatable {
+	public let images: [AppBskyEmbedImagesViewImage]
+
+	public init(
+		images: [AppBskyEmbedImagesViewImage]
+	) {
+		self.images = images
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		images = try container.decode([AppBskyEmbedImagesViewImage].self, forKey: .images)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(images, forKey: .images)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case images = "images"
+	}
+}
+
+
+public struct AppBskyEmbedImagesViewImage: Codable, Sendable, Equatable {
+	public let alt: String
+	public let aspectRatio: AppBskyEmbedDefsAspectRatio?
+	public let fullsize: String
+	public let thumb: String
+
+	public init(
+		alt: String,
+		aspectRatio: AppBskyEmbedDefsAspectRatio? = nil,
+		fullsize: String,
+		thumb: String
+	) {
+		self.alt = alt
+		self.aspectRatio = aspectRatio
+		self.fullsize = fullsize
+		self.thumb = thumb
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		alt = try container.decode(String.self, forKey: .alt)
+		aspectRatio = try container.decodeIfPresent(AppBskyEmbedDefsAspectRatio.self, forKey: .aspectRatio)
+		fullsize = try container.decode(String.self, forKey: .fullsize)
+		thumb = try container.decode(String.self, forKey: .thumb)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(alt, forKey: .alt)
+		try container.encodeIfPresent(aspectRatio, forKey: .aspectRatio)
+		try container.encode(fullsize, forKey: .fullsize)
+		try container.encode(thumb, forKey: .thumb)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case alt = "alt"
+		case aspectRatio = "aspectRatio"
+		case fullsize = "fullsize"
+		case thumb = "thumb"
+	}
+}
+
+
+public struct AppBskyEmbedRecord: Codable, Sendable, Equatable {
+	public let record: ComAtprotoRepoStrongRef
+
+	public init(
+		record: ComAtprotoRepoStrongRef
+	) {
+		self.record = record
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		record = try container.decode(ComAtprotoRepoStrongRef.self, forKey: .record)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(record, forKey: .record)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case record = "record"
+	}
+}
+
+
+public struct AppBskyEmbedRecordView: Codable, Sendable, Equatable {
+	public let record: AppBskyEmbedRecordViewRecordUnion
+
+	public init(
+		record: AppBskyEmbedRecordViewRecordUnion
+	) {
+		self.record = record
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		record = try container.decode(AppBskyEmbedRecordViewRecordUnion.self, forKey: .record)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(record, forKey: .record)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case record = "record"
+	}
+}
+
+
+public struct AppBskyEmbedRecordViewBlocked: Codable, Sendable, Equatable {
+	public let author: AppBskyFeedDefsBlockedAuthor
+	public let blocked: Bool
+	public let uri: ATURI
+
+	public init(
+		author: AppBskyFeedDefsBlockedAuthor,
+		blocked: Bool,
+		uri: ATURI
+	) {
+		self.author = author
+		self.blocked = blocked
+		self.uri = uri
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		author = try container.decode(AppBskyFeedDefsBlockedAuthor.self, forKey: .author)
+		blocked = try container.decode(Bool.self, forKey: .blocked)
+		uri = try container.decode(ATURI.self, forKey: .uri)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(author, forKey: .author)
+		try container.encode(blocked, forKey: .blocked)
+		try container.encode(uri, forKey: .uri)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case author = "author"
+		case blocked = "blocked"
+		case uri = "uri"
+	}
+}
+
+
+public struct AppBskyEmbedRecordViewDetached: Codable, Sendable, Equatable {
+	public let detached: Bool
+	public let uri: ATURI
+
+	public init(
+		detached: Bool,
+		uri: ATURI
+	) {
+		self.detached = detached
+		self.uri = uri
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		detached = try container.decode(Bool.self, forKey: .detached)
+		uri = try container.decode(ATURI.self, forKey: .uri)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(detached, forKey: .detached)
+		try container.encode(uri, forKey: .uri)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case detached = "detached"
+		case uri = "uri"
+	}
+}
+
+
+public struct AppBskyEmbedRecordViewNotFound: Codable, Sendable, Equatable {
+	public let notFound: Bool
+	public let uri: ATURI
+
+	public init(
+		notFound: Bool,
+		uri: ATURI
+	) {
+		self.notFound = notFound
+		self.uri = uri
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		notFound = try container.decode(Bool.self, forKey: .notFound)
+		uri = try container.decode(ATURI.self, forKey: .uri)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(notFound, forKey: .notFound)
+		try container.encode(uri, forKey: .uri)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case notFound = "notFound"
+		case uri = "uri"
+	}
+}
+
+
+public struct AppBskyEmbedRecordViewRecord: Codable, Sendable, Equatable {
+	public let author: AppBskyActorDefsProfileViewBasic
+	public let cid: CID
+	public let embeds: [AppBskyEmbedRecordViewRecordEmbedsItem]?
+	public let indexedAt: ATProtocolDate
+	public let labels: [ComAtprotoLabelDefsLabel]?
+	public let likeCount: Int?
+	public let quoteCount: Int?
+	public let replyCount: Int?
+	public let repostCount: Int?
+	public let uri: ATURI
+	public let value: ATProtocolValueContainer
+
+	public init(
+		author: AppBskyActorDefsProfileViewBasic,
+		cid: CID,
+		embeds: [AppBskyEmbedRecordViewRecordEmbedsItem]? = nil,
+		indexedAt: ATProtocolDate,
+		labels: [ComAtprotoLabelDefsLabel]? = nil,
+		likeCount: Int? = nil,
+		quoteCount: Int? = nil,
+		replyCount: Int? = nil,
+		repostCount: Int? = nil,
+		uri: ATURI,
+		value: ATProtocolValueContainer
+	) {
+		self.author = author
+		self.cid = cid
+		self.embeds = embeds
+		self.indexedAt = indexedAt
+		self.labels = labels
+		self.likeCount = likeCount
+		self.quoteCount = quoteCount
+		self.replyCount = replyCount
+		self.repostCount = repostCount
+		self.uri = uri
+		self.value = value
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		author = try container.decode(AppBskyActorDefsProfileViewBasic.self, forKey: .author)
+		cid = try container.decode(CID.self, forKey: .cid)
+		embeds = try container.decodeIfPresent([AppBskyEmbedRecordViewRecordEmbedsItem].self, forKey: .embeds)
+		indexedAt = try container.decode(ATProtocolDate.self, forKey: .indexedAt)
+		labels = try container.decodeIfPresent([ComAtprotoLabelDefsLabel].self, forKey: .labels)
+		likeCount = try container.decodeIfPresent(Int.self, forKey: .likeCount)
+		quoteCount = try container.decodeIfPresent(Int.self, forKey: .quoteCount)
+		replyCount = try container.decodeIfPresent(Int.self, forKey: .replyCount)
+		repostCount = try container.decodeIfPresent(Int.self, forKey: .repostCount)
+		uri = try container.decode(ATURI.self, forKey: .uri)
+		value = try container.decode(ATProtocolValueContainer.self, forKey: .value)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(author, forKey: .author)
+		try container.encode(cid, forKey: .cid)
+		try container.encodeIfPresent(embeds, forKey: .embeds)
+		try container.encode(indexedAt, forKey: .indexedAt)
+		try container.encodeIfPresent(labels, forKey: .labels)
+		try container.encodeIfPresent(likeCount, forKey: .likeCount)
+		try container.encodeIfPresent(quoteCount, forKey: .quoteCount)
+		try container.encodeIfPresent(replyCount, forKey: .replyCount)
+		try container.encodeIfPresent(repostCount, forKey: .repostCount)
+		try container.encode(uri, forKey: .uri)
+		try container.encode(value, forKey: .value)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case author = "author"
+		case cid = "cid"
+		case embeds = "embeds"
+		case indexedAt = "indexedAt"
+		case labels = "labels"
+		case likeCount = "likeCount"
+		case quoteCount = "quoteCount"
+		case replyCount = "replyCount"
+		case repostCount = "repostCount"
+		case uri = "uri"
+		case value = "value"
+	}
+}
+
+
+public indirect enum AppBskyEmbedRecordViewRecordEmbedsItem: Codable, Sendable, Equatable {
+	case view(AppBskyEmbedImagesView)
+	case view2(AppBskyEmbedVideoView)
+	case view3(AppBskyEmbedExternalView)
+	case view4(AppBskyEmbedRecordView)
+	case view5(AppBskyEmbedRecordWithMediaView)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "app.bsky.embed.images#view": self = .view(try AppBskyEmbedImagesView(from: decoder))
+		case "app.bsky.embed.video#view": self = .view2(try AppBskyEmbedVideoView(from: decoder))
+		case "app.bsky.embed.external#view": self = .view3(try AppBskyEmbedExternalView(from: decoder))
+		case "app.bsky.embed.record#view": self = .view4(try AppBskyEmbedRecordView(from: decoder))
+		case "app.bsky.embed.recordWithMedia#view": self = .view5(try AppBskyEmbedRecordWithMediaView(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .view(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.embed.images#view", to: encoder)
+		case .view2(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.embed.video#view", to: encoder)
+		case .view3(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.embed.external#view", to: encoder)
+		case .view4(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.embed.record#view", to: encoder)
+		case .view5(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.embed.recordWithMedia#view", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
+public indirect enum AppBskyEmbedRecordViewRecordUnion: Codable, Sendable, Equatable {
+	case viewRecord(AppBskyEmbedRecordViewRecord)
+	case viewNotFound(AppBskyEmbedRecordViewNotFound)
+	case viewBlocked(AppBskyEmbedRecordViewBlocked)
+	case viewDetached(AppBskyEmbedRecordViewDetached)
+	case generatorView(AppBskyFeedDefsGeneratorView)
+	case listView(AppBskyGraphDefsListView)
+	case labelerView(AppBskyLabelerDefsLabelerView)
+	case starterPackViewBasic(AppBskyGraphDefsStarterPackViewBasic)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "app.bsky.embed.record#viewRecord": self = .viewRecord(try AppBskyEmbedRecordViewRecord(from: decoder))
+		case "app.bsky.embed.record#viewNotFound": self = .viewNotFound(try AppBskyEmbedRecordViewNotFound(from: decoder))
+		case "app.bsky.embed.record#viewBlocked": self = .viewBlocked(try AppBskyEmbedRecordViewBlocked(from: decoder))
+		case "app.bsky.embed.record#viewDetached": self = .viewDetached(try AppBskyEmbedRecordViewDetached(from: decoder))
+		case "app.bsky.feed.defs#generatorView": self = .generatorView(try AppBskyFeedDefsGeneratorView(from: decoder))
+		case "app.bsky.graph.defs#listView": self = .listView(try AppBskyGraphDefsListView(from: decoder))
+		case "app.bsky.labeler.defs#labelerView": self = .labelerView(try AppBskyLabelerDefsLabelerView(from: decoder))
+		case "app.bsky.graph.defs#starterPackViewBasic": self = .starterPackViewBasic(try AppBskyGraphDefsStarterPackViewBasic(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .viewRecord(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.embed.record#viewRecord", to: encoder)
+		case .viewNotFound(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.embed.record#viewNotFound", to: encoder)
+		case .viewBlocked(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.embed.record#viewBlocked", to: encoder)
+		case .viewDetached(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.embed.record#viewDetached", to: encoder)
+		case .generatorView(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.feed.defs#generatorView", to: encoder)
+		case .listView(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.graph.defs#listView", to: encoder)
+		case .labelerView(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.labeler.defs#labelerView", to: encoder)
+		case .starterPackViewBasic(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.graph.defs#starterPackViewBasic", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
+public struct AppBskyEmbedRecordWithMedia: Codable, Sendable, Equatable {
+	public let media: AppBskyEmbedRecordWithMediaMedia
+	public let record: AppBskyEmbedRecord
+
+	public init(
+		media: AppBskyEmbedRecordWithMediaMedia,
+		record: AppBskyEmbedRecord
+	) {
+		self.media = media
+		self.record = record
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		media = try container.decode(AppBskyEmbedRecordWithMediaMedia.self, forKey: .media)
+		record = try container.decode(AppBskyEmbedRecord.self, forKey: .record)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(media, forKey: .media)
+		try container.encode(record, forKey: .record)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case media = "media"
+		case record = "record"
+	}
+}
+
+
+public indirect enum AppBskyEmbedRecordWithMediaMedia: Codable, Sendable, Equatable {
+	case images(AppBskyEmbedImages)
+	case video(AppBskyEmbedVideo)
+	case external(AppBskyEmbedExternal)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "app.bsky.embed.images": self = .images(try AppBskyEmbedImages(from: decoder))
+		case "app.bsky.embed.video": self = .video(try AppBskyEmbedVideo(from: decoder))
+		case "app.bsky.embed.external": self = .external(try AppBskyEmbedExternal(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .images(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.embed.images", to: encoder)
+		case .video(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.embed.video", to: encoder)
+		case .external(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.embed.external", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
+public struct AppBskyEmbedRecordWithMediaView: Codable, Sendable, Equatable {
+	public let media: AppBskyEmbedRecordWithMediaViewMedia
+	public let record: AppBskyEmbedRecordView
+
+	public init(
+		media: AppBskyEmbedRecordWithMediaViewMedia,
+		record: AppBskyEmbedRecordView
+	) {
+		self.media = media
+		self.record = record
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		media = try container.decode(AppBskyEmbedRecordWithMediaViewMedia.self, forKey: .media)
+		record = try container.decode(AppBskyEmbedRecordView.self, forKey: .record)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(media, forKey: .media)
+		try container.encode(record, forKey: .record)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case media = "media"
+		case record = "record"
+	}
+}
+
+
+public indirect enum AppBskyEmbedRecordWithMediaViewMedia: Codable, Sendable, Equatable {
+	case view(AppBskyEmbedImagesView)
+	case view2(AppBskyEmbedVideoView)
+	case view3(AppBskyEmbedExternalView)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "app.bsky.embed.images#view": self = .view(try AppBskyEmbedImagesView(from: decoder))
+		case "app.bsky.embed.video#view": self = .view2(try AppBskyEmbedVideoView(from: decoder))
+		case "app.bsky.embed.external#view": self = .view3(try AppBskyEmbedExternalView(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .view(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.embed.images#view", to: encoder)
+		case .view2(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.embed.video#view", to: encoder)
+		case .view3(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.embed.external#view", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
+public struct AppBskyEmbedVideo: Codable, Sendable, Equatable {
+	public let alt: String?
+	public let aspectRatio: AppBskyEmbedDefsAspectRatio?
+	public let captions: [AppBskyEmbedVideoCaption]?
+	public let presentation: AppBskyEmbedVideoPresentation?
+	public let video: Blob
+
+	public init(
+		alt: String? = nil,
+		aspectRatio: AppBskyEmbedDefsAspectRatio? = nil,
+		captions: [AppBskyEmbedVideoCaption]? = nil,
+		presentation: AppBskyEmbedVideoPresentation? = nil,
+		video: Blob
+	) {
+		self.alt = alt
+		self.aspectRatio = aspectRatio
+		self.captions = captions
+		self.presentation = presentation
+		self.video = video
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		alt = try container.decodeIfPresent(String.self, forKey: .alt)
+		aspectRatio = try container.decodeIfPresent(AppBskyEmbedDefsAspectRatio.self, forKey: .aspectRatio)
+		captions = try container.decodeIfPresent([AppBskyEmbedVideoCaption].self, forKey: .captions)
+		presentation = try container.decodeIfPresent(AppBskyEmbedVideoPresentation.self, forKey: .presentation)
+		video = try container.decode(Blob.self, forKey: .video)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(alt, forKey: .alt)
+		try container.encodeIfPresent(aspectRatio, forKey: .aspectRatio)
+		try container.encodeIfPresent(captions, forKey: .captions)
+		try container.encodeIfPresent(presentation, forKey: .presentation)
+		try container.encode(video, forKey: .video)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case alt = "alt"
+		case aspectRatio = "aspectRatio"
+		case captions = "captions"
+		case presentation = "presentation"
+		case video = "video"
+	}
+}
+
+
+public struct AppBskyEmbedVideoCaption: Codable, Sendable, Equatable {
+	public let file: Blob
+	public let lang: String
+
+	public init(
+		file: Blob,
+		lang: String
+	) {
+		self.file = file
+		self.lang = lang
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		file = try container.decode(Blob.self, forKey: .file)
+		lang = try container.decode(String.self, forKey: .lang)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(file, forKey: .file)
+		try container.encode(lang, forKey: .lang)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case file = "file"
+		case lang = "lang"
+	}
+}
+
+
+public enum AppBskyEmbedVideoPresentation: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case _default_ = "default"
+	case gif = "gif"
+}
+
+
+public struct AppBskyEmbedVideoView: Codable, Sendable, Equatable {
+	public let alt: String?
+	public let aspectRatio: AppBskyEmbedDefsAspectRatio?
+	public let cid: CID
+	public let playlist: String
+	public let presentation: AppBskyEmbedVideoPresentation?
+	public let thumbnail: String?
+
+	public init(
+		alt: String? = nil,
+		aspectRatio: AppBskyEmbedDefsAspectRatio? = nil,
+		cid: CID,
+		playlist: String,
+		presentation: AppBskyEmbedVideoPresentation? = nil,
+		thumbnail: String? = nil
+	) {
+		self.alt = alt
+		self.aspectRatio = aspectRatio
+		self.cid = cid
+		self.playlist = playlist
+		self.presentation = presentation
+		self.thumbnail = thumbnail
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		alt = try container.decodeIfPresent(String.self, forKey: .alt)
+		aspectRatio = try container.decodeIfPresent(AppBskyEmbedDefsAspectRatio.self, forKey: .aspectRatio)
+		cid = try container.decode(CID.self, forKey: .cid)
+		playlist = try container.decode(String.self, forKey: .playlist)
+		presentation = try container.decodeIfPresent(AppBskyEmbedVideoPresentation.self, forKey: .presentation)
+		thumbnail = try container.decodeIfPresent(String.self, forKey: .thumbnail)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(alt, forKey: .alt)
+		try container.encodeIfPresent(aspectRatio, forKey: .aspectRatio)
+		try container.encode(cid, forKey: .cid)
+		try container.encode(playlist, forKey: .playlist)
+		try container.encodeIfPresent(presentation, forKey: .presentation)
+		try container.encodeIfPresent(thumbnail, forKey: .thumbnail)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case alt = "alt"
+		case aspectRatio = "aspectRatio"
+		case cid = "cid"
+		case playlist = "playlist"
+		case presentation = "presentation"
+		case thumbnail = "thumbnail"
+	}
+}
+
+

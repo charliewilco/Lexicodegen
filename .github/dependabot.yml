@@ -1,6 +1,6 @@
 version: 2
 updates:
-  - package-ecosystem: "npm"
+  - package-ecosystem: "gomod"
     directory: "/"
     schedule:
       interval: "weekly"
@@ -9,10 +9,6 @@ updates:
       - "dependencies"
     commit-message:
       prefix: "chore"
-    groups:
-      bun-dependencies:
-        patterns:
-          - "*"
 
   - package-ecosystem: "github-actions"
     directory: "/"

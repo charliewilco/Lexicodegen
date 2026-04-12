@@ -1,0 +1,52 @@
+import Foundation
+
+
+public struct AppBskyAuthManageNotifications: Codable, Sendable, Equatable {
+	public static let title: String? = "Manage Bluesky Notifications"
+	public static let detail: String? = "View and configure notifications for the Bluesky app."
+	public static let knownMethods: [AppBskyAuthManageNotificationsMethod] = [.appBskyNotificationGetPreferences, .appBskyNotificationGetUnreadCount, .appBskyNotificationListActivitySubscriptions, .appBskyNotificationListNotifications, .appBskyNotificationPutActivitySubscription, .appBskyNotificationPutPreferences, .appBskyNotificationPutPreferencesV2, .appBskyNotificationRegisterPush, .appBskyNotificationUnregisterPush, .appBskyNotificationUpdateSeen]
+
+	public let grantedMethods: [AppBskyAuthManageNotificationsMethod]
+
+	public init(grantedMethods: [AppBskyAuthManageNotificationsMethod] = []) {
+		self.grantedMethods = grantedMethods
+	}
+
+	public init(from decoder: Decoder) throws {
+		var container = try decoder.unkeyedContainer()
+		var grantedMethods: [AppBskyAuthManageNotificationsMethod] = []
+		while !container.isAtEnd {
+			grantedMethods.append(AppBskyAuthManageNotificationsMethod(rawValue: try container.decode(String.self)))
+		}
+		self.grantedMethods = grantedMethods
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.unkeyedContainer()
+		for method in grantedMethods {
+			try container.encode(method.rawValue)
+		}
+	}
+}
+
+
+public struct AppBskyAuthManageNotificationsMethod: RawRepresentable, Codable, Hashable, Sendable {
+	public let rawValue: String
+
+	public init(rawValue: String) {
+		self.rawValue = rawValue
+	}
+
+	public static let appBskyNotificationGetPreferences = Self(rawValue: "app.bsky.notification.getPreferences")
+	public static let appBskyNotificationGetUnreadCount = Self(rawValue: "app.bsky.notification.getUnreadCount")
+	public static let appBskyNotificationListActivitySubscriptions = Self(rawValue: "app.bsky.notification.listActivitySubscriptions")
+	public static let appBskyNotificationListNotifications = Self(rawValue: "app.bsky.notification.listNotifications")
+	public static let appBskyNotificationPutActivitySubscription = Self(rawValue: "app.bsky.notification.putActivitySubscription")
+	public static let appBskyNotificationPutPreferences = Self(rawValue: "app.bsky.notification.putPreferences")
+	public static let appBskyNotificationPutPreferencesV2 = Self(rawValue: "app.bsky.notification.putPreferencesV2")
+	public static let appBskyNotificationRegisterPush = Self(rawValue: "app.bsky.notification.registerPush")
+	public static let appBskyNotificationUnregisterPush = Self(rawValue: "app.bsky.notification.unregisterPush")
+	public static let appBskyNotificationUpdateSeen = Self(rawValue: "app.bsky.notification.updateSeen")
+}
+
+

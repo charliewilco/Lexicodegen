@@ -1,0 +1,375 @@
+import Foundation
+
+
+public struct AppBskyLabelerDefsLabelerPolicies: Codable, Sendable, Equatable {
+	public let labelValueDefinitions: [ComAtprotoLabelDefsLabelValueDefinition]?
+	public let labelValues: [ComAtprotoLabelDefsLabelValue]
+
+	public init(
+		labelValueDefinitions: [ComAtprotoLabelDefsLabelValueDefinition]? = nil,
+		labelValues: [ComAtprotoLabelDefsLabelValue]
+	) {
+		self.labelValueDefinitions = labelValueDefinitions
+		self.labelValues = labelValues
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		labelValueDefinitions = try container.decodeIfPresent([ComAtprotoLabelDefsLabelValueDefinition].self, forKey: .labelValueDefinitions)
+		labelValues = try container.decode([ComAtprotoLabelDefsLabelValue].self, forKey: .labelValues)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(labelValueDefinitions, forKey: .labelValueDefinitions)
+		try container.encode(labelValues, forKey: .labelValues)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case labelValueDefinitions = "labelValueDefinitions"
+		case labelValues = "labelValues"
+	}
+}
+
+
+public struct AppBskyLabelerDefsLabelerView: Codable, Sendable, Equatable {
+	public let cid: CID
+	public let creator: AppBskyActorDefsProfileView
+	public let indexedAt: ATProtocolDate
+	public let labels: [ComAtprotoLabelDefsLabel]?
+	public let likeCount: Int?
+	public let uri: ATURI
+	public let viewer: AppBskyLabelerDefsLabelerViewerState?
+
+	public init(
+		cid: CID,
+		creator: AppBskyActorDefsProfileView,
+		indexedAt: ATProtocolDate,
+		labels: [ComAtprotoLabelDefsLabel]? = nil,
+		likeCount: Int? = nil,
+		uri: ATURI,
+		viewer: AppBskyLabelerDefsLabelerViewerState? = nil
+	) {
+		self.cid = cid
+		self.creator = creator
+		self.indexedAt = indexedAt
+		self.labels = labels
+		self.likeCount = likeCount
+		self.uri = uri
+		self.viewer = viewer
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cid = try container.decode(CID.self, forKey: .cid)
+		creator = try container.decode(AppBskyActorDefsProfileView.self, forKey: .creator)
+		indexedAt = try container.decode(ATProtocolDate.self, forKey: .indexedAt)
+		labels = try container.decodeIfPresent([ComAtprotoLabelDefsLabel].self, forKey: .labels)
+		likeCount = try container.decodeIfPresent(Int.self, forKey: .likeCount)
+		uri = try container.decode(ATURI.self, forKey: .uri)
+		viewer = try container.decodeIfPresent(AppBskyLabelerDefsLabelerViewerState.self, forKey: .viewer)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(cid, forKey: .cid)
+		try container.encode(creator, forKey: .creator)
+		try container.encode(indexedAt, forKey: .indexedAt)
+		try container.encodeIfPresent(labels, forKey: .labels)
+		try container.encodeIfPresent(likeCount, forKey: .likeCount)
+		try container.encode(uri, forKey: .uri)
+		try container.encodeIfPresent(viewer, forKey: .viewer)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cid = "cid"
+		case creator = "creator"
+		case indexedAt = "indexedAt"
+		case labels = "labels"
+		case likeCount = "likeCount"
+		case uri = "uri"
+		case viewer = "viewer"
+	}
+}
+
+
+public struct AppBskyLabelerDefsLabelerViewDetailed: Codable, Sendable, Equatable {
+	public let cid: CID
+	public let creator: AppBskyActorDefsProfileView
+	public let indexedAt: ATProtocolDate
+	public let labels: [ComAtprotoLabelDefsLabel]?
+	public let likeCount: Int?
+	public let policies: AppBskyLabelerDefsLabelerPolicies
+	public let reasonTypes: [ComAtprotoModerationDefsReasonType]?
+	public let subjectCollections: [NSID]?
+	public let subjectTypes: [ComAtprotoModerationDefsSubjectType]?
+	public let uri: ATURI
+	public let viewer: AppBskyLabelerDefsLabelerViewerState?
+
+	public init(
+		cid: CID,
+		creator: AppBskyActorDefsProfileView,
+		indexedAt: ATProtocolDate,
+		labels: [ComAtprotoLabelDefsLabel]? = nil,
+		likeCount: Int? = nil,
+		policies: AppBskyLabelerDefsLabelerPolicies,
+		reasonTypes: [ComAtprotoModerationDefsReasonType]? = nil,
+		subjectCollections: [NSID]? = nil,
+		subjectTypes: [ComAtprotoModerationDefsSubjectType]? = nil,
+		uri: ATURI,
+		viewer: AppBskyLabelerDefsLabelerViewerState? = nil
+	) {
+		self.cid = cid
+		self.creator = creator
+		self.indexedAt = indexedAt
+		self.labels = labels
+		self.likeCount = likeCount
+		self.policies = policies
+		self.reasonTypes = reasonTypes
+		self.subjectCollections = subjectCollections
+		self.subjectTypes = subjectTypes
+		self.uri = uri
+		self.viewer = viewer
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cid = try container.decode(CID.self, forKey: .cid)
+		creator = try container.decode(AppBskyActorDefsProfileView.self, forKey: .creator)
+		indexedAt = try container.decode(ATProtocolDate.self, forKey: .indexedAt)
+		labels = try container.decodeIfPresent([ComAtprotoLabelDefsLabel].self, forKey: .labels)
+		likeCount = try container.decodeIfPresent(Int.self, forKey: .likeCount)
+		policies = try container.decode(AppBskyLabelerDefsLabelerPolicies.self, forKey: .policies)
+		reasonTypes = try container.decodeIfPresent([ComAtprotoModerationDefsReasonType].self, forKey: .reasonTypes)
+		subjectCollections = try container.decodeIfPresent([NSID].self, forKey: .subjectCollections)
+		subjectTypes = try container.decodeIfPresent([ComAtprotoModerationDefsSubjectType].self, forKey: .subjectTypes)
+		uri = try container.decode(ATURI.self, forKey: .uri)
+		viewer = try container.decodeIfPresent(AppBskyLabelerDefsLabelerViewerState.self, forKey: .viewer)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(cid, forKey: .cid)
+		try container.encode(creator, forKey: .creator)
+		try container.encode(indexedAt, forKey: .indexedAt)
+		try container.encodeIfPresent(labels, forKey: .labels)
+		try container.encodeIfPresent(likeCount, forKey: .likeCount)
+		try container.encode(policies, forKey: .policies)
+		try container.encodeIfPresent(reasonTypes, forKey: .reasonTypes)
+		try container.encodeIfPresent(subjectCollections, forKey: .subjectCollections)
+		try container.encodeIfPresent(subjectTypes, forKey: .subjectTypes)
+		try container.encode(uri, forKey: .uri)
+		try container.encodeIfPresent(viewer, forKey: .viewer)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cid = "cid"
+		case creator = "creator"
+		case indexedAt = "indexedAt"
+		case labels = "labels"
+		case likeCount = "likeCount"
+		case policies = "policies"
+		case reasonTypes = "reasonTypes"
+		case subjectCollections = "subjectCollections"
+		case subjectTypes = "subjectTypes"
+		case uri = "uri"
+		case viewer = "viewer"
+	}
+}
+
+
+public struct AppBskyLabelerDefsLabelerViewerState: Codable, Sendable, Equatable {
+	public let like: ATURI?
+
+	public init(
+		like: ATURI? = nil
+	) {
+		self.like = like
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		like = try container.decodeIfPresent(ATURI.self, forKey: .like)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(like, forKey: .like)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case like = "like"
+	}
+}
+
+
+public struct AppBskyLabelerGetServicesOutput: Codable, Sendable, Equatable {
+	public let views: [AppBskyLabelerGetServicesOutputViewsItem]
+
+	public init(
+		views: [AppBskyLabelerGetServicesOutputViewsItem]
+	) {
+		self.views = views
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		views = try container.decode([AppBskyLabelerGetServicesOutputViewsItem].self, forKey: .views)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(views, forKey: .views)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case views = "views"
+	}
+}
+
+
+public indirect enum AppBskyLabelerGetServicesOutputViewsItem: Codable, Sendable, Equatable {
+	case labelerView(AppBskyLabelerDefsLabelerView)
+	case labelerViewDetailed(AppBskyLabelerDefsLabelerViewDetailed)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "app.bsky.labeler.defs#labelerView": self = .labelerView(try AppBskyLabelerDefsLabelerView(from: decoder))
+		case "app.bsky.labeler.defs#labelerViewDetailed": self = .labelerViewDetailed(try AppBskyLabelerDefsLabelerViewDetailed(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .labelerView(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.labeler.defs#labelerView", to: encoder)
+		case .labelerViewDetailed(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.labeler.defs#labelerViewDetailed", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
+public struct AppBskyLabelerGetServicesParameters: Codable, Sendable, Equatable {
+	public let detailed: Bool?
+	public let dids: [DID]
+
+	public init(
+		detailed: Bool? = nil,
+		dids: [DID]
+	) {
+		self.detailed = detailed
+		self.dids = dids
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		detailed = try container.decodeIfPresent(Bool.self, forKey: .detailed)
+		dids = try container.decode([DID].self, forKey: .dids)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(detailed, forKey: .detailed)
+		try container.encode(dids, forKey: .dids)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		if let value = detailed {
+			value.appendQueryItems(named: "detailed", to: &items)
+		}
+		dids.appendQueryItems(named: "dids", to: &items)
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case detailed = "detailed"
+		case dids = "dids"
+	}
+}
+
+
+public struct AppBskyLabelerService: Codable, Sendable, Equatable {
+	public static let typeIdentifier = "app.bsky.labeler.service"
+
+	public let createdAt: ATProtocolDate
+	public let labels: AppBskyLabelerServiceLabels?
+	public let policies: AppBskyLabelerDefsLabelerPolicies
+	public let reasonTypes: [ComAtprotoModerationDefsReasonType]?
+	public let subjectCollections: [NSID]?
+	public let subjectTypes: [ComAtprotoModerationDefsSubjectType]?
+
+	public init(
+		createdAt: ATProtocolDate,
+		labels: AppBskyLabelerServiceLabels? = nil,
+		policies: AppBskyLabelerDefsLabelerPolicies,
+		reasonTypes: [ComAtprotoModerationDefsReasonType]? = nil,
+		subjectCollections: [NSID]? = nil,
+		subjectTypes: [ComAtprotoModerationDefsSubjectType]? = nil
+	) {
+		self.createdAt = createdAt
+		self.labels = labels
+		self.policies = policies
+		self.reasonTypes = reasonTypes
+		self.subjectCollections = subjectCollections
+		self.subjectTypes = subjectTypes
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		_ = try container.decodeIfPresent(String.self, forKey: .typeIdentifier)
+		createdAt = try container.decode(ATProtocolDate.self, forKey: .createdAt)
+		labels = try container.decodeIfPresent(AppBskyLabelerServiceLabels.self, forKey: .labels)
+		policies = try container.decode(AppBskyLabelerDefsLabelerPolicies.self, forKey: .policies)
+		reasonTypes = try container.decodeIfPresent([ComAtprotoModerationDefsReasonType].self, forKey: .reasonTypes)
+		subjectCollections = try container.decodeIfPresent([NSID].self, forKey: .subjectCollections)
+		subjectTypes = try container.decodeIfPresent([ComAtprotoModerationDefsSubjectType].self, forKey: .subjectTypes)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(Self.typeIdentifier, forKey: .typeIdentifier)
+		try container.encode(createdAt, forKey: .createdAt)
+		try container.encodeIfPresent(labels, forKey: .labels)
+		try container.encode(policies, forKey: .policies)
+		try container.encodeIfPresent(reasonTypes, forKey: .reasonTypes)
+		try container.encodeIfPresent(subjectCollections, forKey: .subjectCollections)
+		try container.encodeIfPresent(subjectTypes, forKey: .subjectTypes)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case typeIdentifier = "$type"
+		case createdAt = "createdAt"
+		case labels = "labels"
+		case policies = "policies"
+		case reasonTypes = "reasonTypes"
+		case subjectCollections = "subjectCollections"
+		case subjectTypes = "subjectTypes"
+	}
+}
+
+
+public indirect enum AppBskyLabelerServiceLabels: Codable, Sendable, Equatable {
+	case selfLabels(ComAtprotoLabelDefsSelfLabels)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "com.atproto.label.defs#selfLabels": self = .selfLabels(try ComAtprotoLabelDefsSelfLabels(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .selfLabels(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "com.atproto.label.defs#selfLabels", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+

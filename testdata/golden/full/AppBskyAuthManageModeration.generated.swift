@@ -1,0 +1,50 @@
+import Foundation
+
+
+public struct AppBskyAuthManageModeration: Codable, Sendable, Equatable {
+	public static let title: String? = "Manage Personal Moderation"
+	public static let detail: String? = "Control over blocks, mutes, mod lists, mod services, and preferences."
+	public static let knownMethods: [AppBskyAuthManageModerationMethod] = [.appBskyActorGetPreferences, .appBskyActorPutPreferences, .appBskyGraphMuteActor, .appBskyGraphMuteActorList, .appBskyGraphMuteThread, .appBskyGraphUnmuteActor, .appBskyGraphUnmuteActorList, .appBskyGraphUnmuteThread]
+
+	public let grantedMethods: [AppBskyAuthManageModerationMethod]
+
+	public init(grantedMethods: [AppBskyAuthManageModerationMethod] = []) {
+		self.grantedMethods = grantedMethods
+	}
+
+	public init(from decoder: Decoder) throws {
+		var container = try decoder.unkeyedContainer()
+		var grantedMethods: [AppBskyAuthManageModerationMethod] = []
+		while !container.isAtEnd {
+			grantedMethods.append(AppBskyAuthManageModerationMethod(rawValue: try container.decode(String.self)))
+		}
+		self.grantedMethods = grantedMethods
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.unkeyedContainer()
+		for method in grantedMethods {
+			try container.encode(method.rawValue)
+		}
+	}
+}
+
+
+public struct AppBskyAuthManageModerationMethod: RawRepresentable, Codable, Hashable, Sendable {
+	public let rawValue: String
+
+	public init(rawValue: String) {
+		self.rawValue = rawValue
+	}
+
+	public static let appBskyActorGetPreferences = Self(rawValue: "app.bsky.actor.getPreferences")
+	public static let appBskyActorPutPreferences = Self(rawValue: "app.bsky.actor.putPreferences")
+	public static let appBskyGraphMuteActor = Self(rawValue: "app.bsky.graph.muteActor")
+	public static let appBskyGraphMuteActorList = Self(rawValue: "app.bsky.graph.muteActorList")
+	public static let appBskyGraphMuteThread = Self(rawValue: "app.bsky.graph.muteThread")
+	public static let appBskyGraphUnmuteActor = Self(rawValue: "app.bsky.graph.unmuteActor")
+	public static let appBskyGraphUnmuteActorList = Self(rawValue: "app.bsky.graph.unmuteActorList")
+	public static let appBskyGraphUnmuteThread = Self(rawValue: "app.bsky.graph.unmuteThread")
+}
+
+

@@ -1,0 +1,41 @@
+import Foundation
+
+
+public struct AppBskyAuthManageFeedDeclarations: Codable, Sendable, Equatable {
+	public static let title: String? = "Manage Hosted Feeds"
+	public static let detail: String? = "Configure feed generator declaration records."
+	public static let knownMethods: [AppBskyAuthManageFeedDeclarationsMethod] = []
+
+	public let grantedMethods: [AppBskyAuthManageFeedDeclarationsMethod]
+
+	public init(grantedMethods: [AppBskyAuthManageFeedDeclarationsMethod] = []) {
+		self.grantedMethods = grantedMethods
+	}
+
+	public init(from decoder: Decoder) throws {
+		var container = try decoder.unkeyedContainer()
+		var grantedMethods: [AppBskyAuthManageFeedDeclarationsMethod] = []
+		while !container.isAtEnd {
+			grantedMethods.append(AppBskyAuthManageFeedDeclarationsMethod(rawValue: try container.decode(String.self)))
+		}
+		self.grantedMethods = grantedMethods
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.unkeyedContainer()
+		for method in grantedMethods {
+			try container.encode(method.rawValue)
+		}
+	}
+}
+
+
+public struct AppBskyAuthManageFeedDeclarationsMethod: RawRepresentable, Codable, Hashable, Sendable {
+	public let rawValue: String
+
+	public init(rawValue: String) {
+		self.rawValue = rawValue
+	}
+}
+
+

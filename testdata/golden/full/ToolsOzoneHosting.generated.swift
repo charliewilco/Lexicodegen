@@ -1,0 +1,303 @@
+import Foundation
+
+
+public struct ToolsOzoneHostingGetAccountHistoryAccountCreated: Codable, Sendable, Equatable {
+	public let email: String?
+	public let handle: Handle?
+
+	public init(
+		email: String? = nil,
+		handle: Handle? = nil
+	) {
+		self.email = email
+		self.handle = handle
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		email = try container.decodeIfPresent(String.self, forKey: .email)
+		handle = try container.decodeIfPresent(Handle.self, forKey: .handle)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(email, forKey: .email)
+		try container.encodeIfPresent(handle, forKey: .handle)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case email = "email"
+		case handle = "handle"
+	}
+}
+
+
+public struct ToolsOzoneHostingGetAccountHistoryEmailConfirmed: Codable, Sendable, Equatable {
+	public let email: String
+
+	public init(
+		email: String
+	) {
+		self.email = email
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		email = try container.decode(String.self, forKey: .email)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(email, forKey: .email)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case email = "email"
+	}
+}
+
+
+public struct ToolsOzoneHostingGetAccountHistoryEmailUpdated: Codable, Sendable, Equatable {
+	public let email: String
+
+	public init(
+		email: String
+	) {
+		self.email = email
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		email = try container.decode(String.self, forKey: .email)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(email, forKey: .email)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case email = "email"
+	}
+}
+
+
+public struct ToolsOzoneHostingGetAccountHistoryEvent: Codable, Sendable, Equatable {
+	public let createdAt: ATProtocolDate
+	public let createdBy: String
+	public let details: ToolsOzoneHostingGetAccountHistoryEventDetails
+
+	public init(
+		createdAt: ATProtocolDate,
+		createdBy: String,
+		details: ToolsOzoneHostingGetAccountHistoryEventDetails
+	) {
+		self.createdAt = createdAt
+		self.createdBy = createdBy
+		self.details = details
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		createdAt = try container.decode(ATProtocolDate.self, forKey: .createdAt)
+		createdBy = try container.decode(String.self, forKey: .createdBy)
+		details = try container.decode(ToolsOzoneHostingGetAccountHistoryEventDetails.self, forKey: .details)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(createdAt, forKey: .createdAt)
+		try container.encode(createdBy, forKey: .createdBy)
+		try container.encode(details, forKey: .details)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case createdAt = "createdAt"
+		case createdBy = "createdBy"
+		case details = "details"
+	}
+}
+
+
+public indirect enum ToolsOzoneHostingGetAccountHistoryEventDetails: Codable, Sendable, Equatable {
+	case accountCreated(ToolsOzoneHostingGetAccountHistoryAccountCreated)
+	case emailUpdated(ToolsOzoneHostingGetAccountHistoryEmailUpdated)
+	case emailConfirmed(ToolsOzoneHostingGetAccountHistoryEmailConfirmed)
+	case passwordUpdated(ToolsOzoneHostingGetAccountHistoryPasswordUpdated)
+	case handleUpdated(ToolsOzoneHostingGetAccountHistoryHandleUpdated)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "tools.ozone.hosting.getAccountHistory#accountCreated": self = .accountCreated(try ToolsOzoneHostingGetAccountHistoryAccountCreated(from: decoder))
+		case "tools.ozone.hosting.getAccountHistory#emailUpdated": self = .emailUpdated(try ToolsOzoneHostingGetAccountHistoryEmailUpdated(from: decoder))
+		case "tools.ozone.hosting.getAccountHistory#emailConfirmed": self = .emailConfirmed(try ToolsOzoneHostingGetAccountHistoryEmailConfirmed(from: decoder))
+		case "tools.ozone.hosting.getAccountHistory#passwordUpdated": self = .passwordUpdated(try ToolsOzoneHostingGetAccountHistoryPasswordUpdated(from: decoder))
+		case "tools.ozone.hosting.getAccountHistory#handleUpdated": self = .handleUpdated(try ToolsOzoneHostingGetAccountHistoryHandleUpdated(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .accountCreated(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.hosting.getAccountHistory#accountCreated", to: encoder)
+		case .emailUpdated(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.hosting.getAccountHistory#emailUpdated", to: encoder)
+		case .emailConfirmed(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.hosting.getAccountHistory#emailConfirmed", to: encoder)
+		case .passwordUpdated(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.hosting.getAccountHistory#passwordUpdated", to: encoder)
+		case .handleUpdated(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "tools.ozone.hosting.getAccountHistory#handleUpdated", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
+public struct ToolsOzoneHostingGetAccountHistoryHandleUpdated: Codable, Sendable, Equatable {
+	public let handle: Handle
+
+	public init(
+		handle: Handle
+	) {
+		self.handle = handle
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		handle = try container.decode(Handle.self, forKey: .handle)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(handle, forKey: .handle)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case handle = "handle"
+	}
+}
+
+
+public struct ToolsOzoneHostingGetAccountHistoryOutput: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let events: [ToolsOzoneHostingGetAccountHistoryEvent]
+
+	public init(
+		cursor: String? = nil,
+		events: [ToolsOzoneHostingGetAccountHistoryEvent]
+	) {
+		self.cursor = cursor
+		self.events = events
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		events = try container.decode([ToolsOzoneHostingGetAccountHistoryEvent].self, forKey: .events)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encode(events, forKey: .events)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case events = "events"
+	}
+}
+
+
+public struct ToolsOzoneHostingGetAccountHistoryParameters: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let did: DID
+	public let events: [ToolsOzoneHostingGetAccountHistoryParametersEventsItem]?
+	public let limit: Int?
+
+	public init(
+		cursor: String? = nil,
+		did: DID,
+		events: [ToolsOzoneHostingGetAccountHistoryParametersEventsItem]? = nil,
+		limit: Int? = nil
+	) {
+		self.cursor = cursor
+		self.did = did
+		self.events = events
+		self.limit = limit
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		did = try container.decode(DID.self, forKey: .did)
+		events = try container.decodeIfPresent([ToolsOzoneHostingGetAccountHistoryParametersEventsItem].self, forKey: .events)
+		limit = try container.decodeIfPresent(Int.self, forKey: .limit)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encode(did, forKey: .did)
+		try container.encodeIfPresent(events, forKey: .events)
+		try container.encodeIfPresent(limit, forKey: .limit)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		if let value = cursor {
+			value.appendQueryItems(named: "cursor", to: &items)
+		}
+		did.appendQueryItems(named: "did", to: &items)
+		if let value = events {
+			value.appendQueryItems(named: "events", to: &items)
+		}
+		if let value = limit {
+			value.appendQueryItems(named: "limit", to: &items)
+		}
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case did = "did"
+		case events = "events"
+		case limit = "limit"
+	}
+}
+
+
+public enum ToolsOzoneHostingGetAccountHistoryParametersEventsItem: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case accountCreated = "accountCreated"
+	case emailUpdated = "emailUpdated"
+	case emailConfirmed = "emailConfirmed"
+	case passwordUpdated = "passwordUpdated"
+	case handleUpdated = "handleUpdated"
+}
+
+
+public struct ToolsOzoneHostingGetAccountHistoryPasswordUpdated: Codable, Sendable, Equatable {
+
+	public init() {}
+
+	public init(from decoder: Decoder) throws {
+		_ = try decoder.container(keyedBy: CodingKeys.self)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		_ = encoder.container(keyedBy: CodingKeys.self)
+	}
+
+	private struct CodingKeys: CodingKey {
+		let stringValue = ""
+		init?(stringValue: String) {
+			return nil
+		}
+
+		let intValue: Int? = nil
+		init?(intValue: Int) {
+			return nil
+		}
+	}
+}
+
+

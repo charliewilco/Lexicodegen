@@ -1,0 +1,167 @@
+import Foundation
+
+
+public typealias ToolsOzoneReportDefsReasonAppeal = String
+
+
+public typealias ToolsOzoneReportDefsReasonChildSafetyCSAM = String
+
+
+public typealias ToolsOzoneReportDefsReasonChildSafetyGroom = String
+
+
+public typealias ToolsOzoneReportDefsReasonChildSafetyHarassment = String
+
+
+public typealias ToolsOzoneReportDefsReasonChildSafetyOther = String
+
+
+public typealias ToolsOzoneReportDefsReasonChildSafetyPrivacy = String
+
+
+public typealias ToolsOzoneReportDefsReasonHarassmentDoxxing = String
+
+
+public typealias ToolsOzoneReportDefsReasonHarassmentHateSpeech = String
+
+
+public typealias ToolsOzoneReportDefsReasonHarassmentOther = String
+
+
+public typealias ToolsOzoneReportDefsReasonHarassmentTargeted = String
+
+
+public typealias ToolsOzoneReportDefsReasonHarassmentTroll = String
+
+
+public typealias ToolsOzoneReportDefsReasonMisleadingBot = String
+
+
+public typealias ToolsOzoneReportDefsReasonMisleadingElections = String
+
+
+public typealias ToolsOzoneReportDefsReasonMisleadingImpersonation = String
+
+
+public typealias ToolsOzoneReportDefsReasonMisleadingOther = String
+
+
+public typealias ToolsOzoneReportDefsReasonMisleadingScam = String
+
+
+public typealias ToolsOzoneReportDefsReasonMisleadingSpam = String
+
+
+public typealias ToolsOzoneReportDefsReasonOther = String
+
+
+public typealias ToolsOzoneReportDefsReasonRuleBanEvasion = String
+
+
+public typealias ToolsOzoneReportDefsReasonRuleOther = String
+
+
+public typealias ToolsOzoneReportDefsReasonRuleProhibitedSales = String
+
+
+public typealias ToolsOzoneReportDefsReasonRuleSiteSecurity = String
+
+
+public typealias ToolsOzoneReportDefsReasonSelfHarmContent = String
+
+
+public typealias ToolsOzoneReportDefsReasonSelfHarmED = String
+
+
+public typealias ToolsOzoneReportDefsReasonSelfHarmOther = String
+
+
+public typealias ToolsOzoneReportDefsReasonSelfHarmStunts = String
+
+
+public typealias ToolsOzoneReportDefsReasonSelfHarmSubstances = String
+
+
+public typealias ToolsOzoneReportDefsReasonSexualAbuseContent = String
+
+
+public typealias ToolsOzoneReportDefsReasonSexualAnimal = String
+
+
+public typealias ToolsOzoneReportDefsReasonSexualDeepfake = String
+
+
+public typealias ToolsOzoneReportDefsReasonSexualNCII = String
+
+
+public typealias ToolsOzoneReportDefsReasonSexualOther = String
+
+
+public typealias ToolsOzoneReportDefsReasonSexualUnlabeled = String
+
+
+public enum ToolsOzoneReportDefsReasonType: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case toolsOzoneReportDefsReasonAppeal = "tools.ozone.report.defs#reasonAppeal"
+	case toolsOzoneReportDefsReasonOther = "tools.ozone.report.defs#reasonOther"
+	case toolsOzoneReportDefsReasonViolenceAnimal = "tools.ozone.report.defs#reasonViolenceAnimal"
+	case toolsOzoneReportDefsReasonViolenceThreats = "tools.ozone.report.defs#reasonViolenceThreats"
+	case toolsOzoneReportDefsReasonViolenceGraphicContent = "tools.ozone.report.defs#reasonViolenceGraphicContent"
+	case toolsOzoneReportDefsReasonViolenceGlorification = "tools.ozone.report.defs#reasonViolenceGlorification"
+	case toolsOzoneReportDefsReasonViolenceExtremistContent = "tools.ozone.report.defs#reasonViolenceExtremistContent"
+	case toolsOzoneReportDefsReasonViolenceTrafficking = "tools.ozone.report.defs#reasonViolenceTrafficking"
+	case toolsOzoneReportDefsReasonViolenceOther = "tools.ozone.report.defs#reasonViolenceOther"
+	case toolsOzoneReportDefsReasonSexualAbuseContent = "tools.ozone.report.defs#reasonSexualAbuseContent"
+	case toolsOzoneReportDefsReasonSexualNcii = "tools.ozone.report.defs#reasonSexualNCII"
+	case toolsOzoneReportDefsReasonSexualDeepfake = "tools.ozone.report.defs#reasonSexualDeepfake"
+	case toolsOzoneReportDefsReasonSexualAnimal = "tools.ozone.report.defs#reasonSexualAnimal"
+	case toolsOzoneReportDefsReasonSexualUnlabeled = "tools.ozone.report.defs#reasonSexualUnlabeled"
+	case toolsOzoneReportDefsReasonSexualOther = "tools.ozone.report.defs#reasonSexualOther"
+	case toolsOzoneReportDefsReasonChildSafetyCsam = "tools.ozone.report.defs#reasonChildSafetyCSAM"
+	case toolsOzoneReportDefsReasonChildSafetyGroom = "tools.ozone.report.defs#reasonChildSafetyGroom"
+	case toolsOzoneReportDefsReasonChildSafetyPrivacy = "tools.ozone.report.defs#reasonChildSafetyPrivacy"
+	case toolsOzoneReportDefsReasonChildSafetyHarassment = "tools.ozone.report.defs#reasonChildSafetyHarassment"
+	case toolsOzoneReportDefsReasonChildSafetyOther = "tools.ozone.report.defs#reasonChildSafetyOther"
+	case toolsOzoneReportDefsReasonHarassmentTroll = "tools.ozone.report.defs#reasonHarassmentTroll"
+	case toolsOzoneReportDefsReasonHarassmentTargeted = "tools.ozone.report.defs#reasonHarassmentTargeted"
+	case toolsOzoneReportDefsReasonHarassmentHateSpeech = "tools.ozone.report.defs#reasonHarassmentHateSpeech"
+	case toolsOzoneReportDefsReasonHarassmentDoxxing = "tools.ozone.report.defs#reasonHarassmentDoxxing"
+	case toolsOzoneReportDefsReasonHarassmentOther = "tools.ozone.report.defs#reasonHarassmentOther"
+	case toolsOzoneReportDefsReasonMisleadingBot = "tools.ozone.report.defs#reasonMisleadingBot"
+	case toolsOzoneReportDefsReasonMisleadingImpersonation = "tools.ozone.report.defs#reasonMisleadingImpersonation"
+	case toolsOzoneReportDefsReasonMisleadingSpam = "tools.ozone.report.defs#reasonMisleadingSpam"
+	case toolsOzoneReportDefsReasonMisleadingScam = "tools.ozone.report.defs#reasonMisleadingScam"
+	case toolsOzoneReportDefsReasonMisleadingElections = "tools.ozone.report.defs#reasonMisleadingElections"
+	case toolsOzoneReportDefsReasonMisleadingOther = "tools.ozone.report.defs#reasonMisleadingOther"
+	case toolsOzoneReportDefsReasonRuleSiteSecurity = "tools.ozone.report.defs#reasonRuleSiteSecurity"
+	case toolsOzoneReportDefsReasonRuleProhibitedSales = "tools.ozone.report.defs#reasonRuleProhibitedSales"
+	case toolsOzoneReportDefsReasonRuleBanEvasion = "tools.ozone.report.defs#reasonRuleBanEvasion"
+	case toolsOzoneReportDefsReasonRuleOther = "tools.ozone.report.defs#reasonRuleOther"
+	case toolsOzoneReportDefsReasonSelfHarmContent = "tools.ozone.report.defs#reasonSelfHarmContent"
+	case toolsOzoneReportDefsReasonSelfHarmEd = "tools.ozone.report.defs#reasonSelfHarmED"
+	case toolsOzoneReportDefsReasonSelfHarmStunts = "tools.ozone.report.defs#reasonSelfHarmStunts"
+	case toolsOzoneReportDefsReasonSelfHarmSubstances = "tools.ozone.report.defs#reasonSelfHarmSubstances"
+	case toolsOzoneReportDefsReasonSelfHarmOther = "tools.ozone.report.defs#reasonSelfHarmOther"
+}
+
+
+public typealias ToolsOzoneReportDefsReasonViolenceAnimal = String
+
+
+public typealias ToolsOzoneReportDefsReasonViolenceExtremistContent = String
+
+
+public typealias ToolsOzoneReportDefsReasonViolenceGlorification = String
+
+
+public typealias ToolsOzoneReportDefsReasonViolenceGraphicContent = String
+
+
+public typealias ToolsOzoneReportDefsReasonViolenceOther = String
+
+
+public typealias ToolsOzoneReportDefsReasonViolenceThreats = String
+
+
+public typealias ToolsOzoneReportDefsReasonViolenceTrafficking = String
+
+
