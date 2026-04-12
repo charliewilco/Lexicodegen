@@ -69,7 +69,7 @@ go run ./cmd/lexicodegen ./lexicons --output ./output/swift
 
 ## Git Hooks
 
-Lefthook is configured as a project-local Go tool and tracked in `go.mod`.
+Lefthook is configured as a project-local Go tool and tracked in `go.mod`. The repo config lives in `lefthook.toml`.
 
 Install the hooks with:
 
