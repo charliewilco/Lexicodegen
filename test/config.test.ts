@@ -32,6 +32,7 @@ describe("loadGeneratorConfig", () => {
 				targets: ["swift"],
 				output: {
 					swiftOutDir: "./output/custom",
+					swiftFilePrefix: "ATProto_",
 				},
 			}),
 			"utf8",
@@ -57,6 +58,7 @@ describe("loadGeneratorConfig", () => {
 		expect(config.output.swiftOutDir).toBe(
 			path.resolve(process.cwd(), "./output/custom"),
 		);
+		expect(config.output.swiftFilePrefix).toBe("ATProto_");
 	});
 
 	test("loads TOML config and applies CLI overrides", async () => {
@@ -83,6 +85,7 @@ describe("loadGeneratorConfig", () => {
 			"",
 			"[output]",
 			'swiftOutDir = "./output/toml"',
+			'swiftFilePrefix = "Generated_"',
 		].join("\n");
 
 		await fs.writeFile(configPath, toml, "utf8");
@@ -98,6 +101,7 @@ describe("loadGeneratorConfig", () => {
 		expect(config.output.swiftOutDir).toBe(
 			path.resolve(process.cwd(), "./cli-output"),
 		);
+		expect(config.output.swiftFilePrefix).toBe("Generated_");
 		expect(config.sources).toEqual([
 			{
 				kind: "local",
@@ -131,10 +135,32 @@ describe("loadGeneratorConfig", () => {
 		expect(config.output.swiftOutDir).toBe(
 			path.resolve(repoRoot, "./output/merged"),
 		);
+		expect(config.output.swiftFilePrefix).toBe("");
 		expect(config.filters.denyPrefixes).toEqual([
 			"com.atproto.lexicon.resolveLexicon",
 		]);
 		expect(config.filters.denyUnspecced).toBeTrue();
 		expect(config.targets).toEqual(["swift"]);
+	});
+
+	test("rejects swift file prefixes that contain path separators", async () => {
+		const configDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), "lexicodegen-invalid-prefix-config-"),
+		);
+		const configPath = path.join(configDir, "config.json");
+
+		await fs.writeFile(
+			configPath,
+			JSON.stringify({
+				output: {
+					swiftFilePrefix: "../generated-",
+				},
+			}),
+			"utf8",
+		);
+
+		await expect(loadGeneratorConfig(["--config", configPath])).rejects.toThrow(
+			"output.swiftFilePrefix cannot contain path separators",
+		);
 	});
 });

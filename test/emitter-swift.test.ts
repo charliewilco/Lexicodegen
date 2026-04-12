@@ -548,6 +548,52 @@ describe("emitSwiftFromIR", () => {
 		}
 	});
 
+	test("prefixes generated Swift filenames when configured", async () => {
+		const outputDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), "lexicodegen-swift-prefixed-files-"),
+		);
+
+		const namedTypes: IRNamedType[] = [
+			{
+				id: "app.bsky.feed.defs",
+				name: "postView",
+				fullName: "app.bsky.feed.defs.postView",
+				definition: {
+					type: "object",
+					required: ["uri"],
+					properties: {
+						uri: { type: "string", format: "at-uri" },
+					},
+				},
+				source: "app.bsky.feed.defs",
+				tag: "app.bsky.feed",
+				type: "object",
+			},
+		];
+
+		const ir: LexiconIR = {
+			documents: [],
+			namedTypes,
+			endpoints: [basicEndpoint("app.bsky.feed.getTimeline", "query")],
+			definitionIndex: new Map(
+				namedTypes.map((namedType): [string, IRNamedType] => [
+					namedType.fullName,
+					namedType,
+				]),
+			),
+		};
+
+		await emitSwiftFromIR(ir, outputDir, { filePrefix: "Generated_" });
+
+		const generatedFiles = (await fs.readdir(outputDir)).sort();
+
+		expect(generatedFiles).toEqual([
+			"Generated_AppBskyFeed.generated.swift",
+			"Generated_Endpoints.swift",
+			"Generated_Models.swift",
+		]);
+	});
+
 	test("resolves relative refs from named defs against the lexicon id", async () => {
 		const outputDir = await fs.mkdtemp(
 			path.join(os.tmpdir(), "lexicodegen-swift-relative-ref-"),

@@ -60,6 +60,10 @@ type ObjectDeclarationOptions = {
 	protocols?: string[];
 };
 
+export type SwiftEmitterOptions = {
+	filePrefix?: string;
+};
+
 type StoredProperty = {
 	key: string;
 	swiftName: string;
@@ -179,8 +183,12 @@ function modelGroupFromId(id: string): string {
 	return parts.slice(0, Math.min(parts.length, 3)).join(".");
 }
 
-function modelFileName(group: string): string {
-	return `${toPascalCase(group)}.generated.swift`;
+function prefixedFileName(fileName: string, filePrefix: string): string {
+	return `${filePrefix}${fileName}`;
+}
+
+function modelFileName(group: string, filePrefix: string): string {
+	return prefixedFileName(`${toPascalCase(group)}.generated.swift`, filePrefix);
 }
 
 function ensureModel(
@@ -1274,8 +1282,10 @@ function renderEndpointNamespaces(endpoints: EndpointSurface[]): string {
 export async function emitSwiftFromIR(
 	ir: LexiconIR,
 	outputDir: string,
+	options: SwiftEmitterOptions = {},
 ): Promise<void> {
 	const outDir = path.resolve(outputDir);
+	const filePrefix = options.filePrefix ?? "";
 	await fs.mkdir(outDir, { recursive: true });
 
 	const context: GeneratedContext = {
@@ -1329,10 +1339,13 @@ export async function emitSwiftFromIR(
 	const endpointsText = renderEndpointNamespaces(endpointSurfaces);
 
 	await Promise.all([
-		fs.writeFile(path.join(outDir, "Models.swift"), runtimeText),
+		fs.writeFile(
+			path.join(outDir, prefixedFileName("Models.swift", filePrefix)),
+			runtimeText,
+		),
 		...Array.from(groupedModels.entries()).map(([group, models]) =>
 			fs.writeFile(
-				path.join(outDir, modelFileName(group)),
+				path.join(outDir, modelFileName(group, filePrefix)),
 				ejs.render(
 					modelsTemplateText,
 					{ models },
@@ -1340,6 +1353,9 @@ export async function emitSwiftFromIR(
 				),
 			),
 		),
-		fs.writeFile(path.join(outDir, "Endpoints.swift"), endpointsText),
+		fs.writeFile(
+			path.join(outDir, prefixedFileName("Endpoints.swift", filePrefix)),
+			endpointsText,
+		),
 	]);
 }

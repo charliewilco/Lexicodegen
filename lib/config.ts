@@ -27,6 +27,7 @@ export type GeneratorConfig = {
 	targets: Target[];
 	output: {
 		swiftOutDir: string;
+		swiftFilePrefix: string;
 	};
 };
 
@@ -36,6 +37,7 @@ type RawConfig = {
 	targets?: string[];
 	output?: {
 		swiftOutDir?: string;
+		swiftFilePrefix?: string;
 	};
 };
 
@@ -72,6 +74,7 @@ type RawCli = {
 
 const DEFAULT_OUTPUT = {
 	swiftOutDir: "./output/swift",
+	swiftFilePrefix: "",
 };
 
 const DEFAULT_CONFIG: GeneratorConfig = {
@@ -136,6 +139,19 @@ function normalizeTargets(values: string[] | undefined): Target[] {
 
 function normalizeConfigPath(raw: string): string {
 	return path.resolve(process.cwd(), raw);
+}
+
+function normalizeSwiftFilePrefix(prefix: string | undefined): string {
+	const normalized = prefix?.trim() ?? "";
+
+	if (
+		normalized.includes(path.posix.sep) ||
+		normalized.includes(path.win32.sep)
+	) {
+		throw new Error("output.swiftFilePrefix cannot contain path separators");
+	}
+
+	return normalized;
 }
 
 function parseArgs(argv: string[]): RawCli {
@@ -305,6 +321,9 @@ export async function loadGeneratorConfig(
 			cli.swiftOutputDir ??
 			fileConfig.output?.swiftOutDir ??
 			defaults.output.swiftOutDir,
+		swiftFilePrefix: normalizeSwiftFilePrefix(
+			fileConfig.output?.swiftFilePrefix ?? defaults.output.swiftFilePrefix,
+		),
 	};
 
 	return {
@@ -313,6 +332,7 @@ export async function loadGeneratorConfig(
 		targets: mergedTargets,
 		output: {
 			swiftOutDir: path.resolve(process.cwd(), mergedOutput.swiftOutDir),
+			swiftFilePrefix: mergedOutput.swiftFilePrefix,
 		},
 	};
 }
