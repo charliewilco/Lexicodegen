@@ -37,6 +37,7 @@ Treat `bun run verify:swift` as the clearest end-to-end generation signal, becau
 - Shared helper files are emitted as:
 	- `Models.swift`
 	- `Endpoints.swift`
+- `output.swiftFilePrefix` can prepend every generated Swift filename, for example `Generated_Models.swift`
 
 ## Project layout
 
@@ -173,12 +174,20 @@ Both config formats are supported:
 - `--config path/to/config.json`
 - `--config path/to/config.toml`
 
-### Config keys
+### Config shape
 
-- `sources`: list of source objects
-- `filters`: namespace and type filtering options
-- `targets`: array, currently expected to be `["swift"]`
-- `output.swiftOutDir`: generated Swift directory
+| Key | Type | Default | Notes |
+|---|---|---|---|
+| `sources` | `LexiconSource[]` | `[{ kind: "local", path: "./lexicons", recursive: true }]` | Replaced entirely if any CLI source is provided |
+| `filters.allowPrefixes` | `string[]` | `[]` | Keep only matching lexicon IDs |
+| `filters.denyPrefixes` | `string[]` | `[]` | Exclude matching lexicon IDs |
+| `filters.denyUnspecced` | `boolean` | `false` | Skip unspecced defs |
+| `filters.denyDeprecated` | `boolean` | `false` | Skip deprecated defs |
+| `targets` | `string[]` | `["swift"]` | Only `swift` is currently meaningful |
+| `output.swiftOutDir` | `string` | `"./output/swift"` | Resolved relative to the current working directory |
+| `output.swiftFilePrefix` | `string` | `""` | Prepends every generated Swift filename; path separators are rejected |
+
+This repo already supports filter prefixes in config via `filters.allowPrefixes` and `filters.denyPrefixes`. `output.swiftFilePrefix` is separate: it changes generated filenames, not lexicon filtering.
 
 ### `sources` schema
 
@@ -234,7 +243,8 @@ Each source is one of:
 	},
 	"targets": ["swift"],
 	"output": {
-		"swiftOutDir": "./output/swift"
+		"swiftOutDir": "./output/swift",
+		"swiftFilePrefix": "Generated_"
 	}
 }
 ```
@@ -257,7 +267,10 @@ denyDeprecated = false
 
 [output]
 swiftOutDir = "./output/swift"
+swiftFilePrefix = "Generated_"
 ```
+
+`output.swiftFilePrefix` is applied verbatim. If you want a separator, include it yourself, for example `Generated_` or `ATProto`.
 
 ### Config precedence
 
@@ -268,6 +281,7 @@ swiftOutDir = "./output/swift"
 - Source behavior:
 	- if any CLI source is provided (`--source` or positional), config and default `sources` are ignored
 	- otherwise config or default sources are used
+- `output.swiftFilePrefix` is currently config-only
 - Targets default to `["swift"]` if nothing is specified
 
 ## Supported lexicon definitions
@@ -363,7 +377,7 @@ Current state:
 - Empty generation:
 	- check filters: `--allow-prefix`, `--deny-prefix`, `--deny-unspecced`, `--deny-deprecated`
 - Unexpected file names:
-	- filenames are namespace-derived and grouped by generated naming in the output directory
+	- filenames are namespace-derived by default; if `output.swiftFilePrefix` is set, that string is prepended to every generated Swift file
 - Tarball source not loading:
 	- confirm the URL serves a valid tarball and that lexicon JSON files exist at the extracted path
 

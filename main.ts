@@ -27,7 +27,9 @@ async function run() {
 				styleText("yellow", "Generating Swift"),
 				styleText("blue", config.output.swiftOutDir),
 			);
-			await emitSwiftFromIR(ir, config.output.swiftOutDir);
+			await emitSwiftFromIR(ir, config.output.swiftOutDir, {
+				filePrefix: config.output.swiftFilePrefix,
+			});
 		}
 	}
 }
