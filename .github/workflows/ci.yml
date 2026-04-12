@@ -13,7 +13,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     env:
-      SWIFT_MODULE_CACHE_PATH: ${{ runner.temp }}/swift-module-cache
+      SWIFT_MODULE_CACHE_PATH: .swift-module-cache
 
     steps:
       - name: Checkout
