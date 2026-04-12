@@ -1,0 +1,3342 @@
+import Foundation
+
+
+public struct AppBskyFeedDefsBlockedAuthor: Codable, Sendable, Equatable {
+	public let did: DID
+	public let viewer: AppBskyActorDefsViewerState?
+
+	public init(
+		did: DID,
+		viewer: AppBskyActorDefsViewerState? = nil
+	) {
+		self.did = did
+		self.viewer = viewer
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		did = try container.decode(DID.self, forKey: .did)
+		viewer = try container.decodeIfPresent(AppBskyActorDefsViewerState.self, forKey: .viewer)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(did, forKey: .did)
+		try container.encodeIfPresent(viewer, forKey: .viewer)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case did = "did"
+		case viewer = "viewer"
+	}
+}
+
+
+public struct AppBskyFeedDefsBlockedPost: Codable, Sendable, Equatable {
+	public let author: AppBskyFeedDefsBlockedAuthor
+	public let blocked: Bool
+	public let uri: ATURI
+
+	public init(
+		author: AppBskyFeedDefsBlockedAuthor,
+		blocked: Bool,
+		uri: ATURI
+	) {
+		self.author = author
+		self.blocked = blocked
+		self.uri = uri
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		author = try container.decode(AppBskyFeedDefsBlockedAuthor.self, forKey: .author)
+		blocked = try container.decode(Bool.self, forKey: .blocked)
+		uri = try container.decode(ATURI.self, forKey: .uri)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(author, forKey: .author)
+		try container.encode(blocked, forKey: .blocked)
+		try container.encode(uri, forKey: .uri)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case author = "author"
+		case blocked = "blocked"
+		case uri = "uri"
+	}
+}
+
+
+public typealias AppBskyFeedDefsClickthroughAuthor = String
+
+
+public typealias AppBskyFeedDefsClickthroughEmbed = String
+
+
+public typealias AppBskyFeedDefsClickthroughItem = String
+
+
+public typealias AppBskyFeedDefsClickthroughReposter = String
+
+
+public typealias AppBskyFeedDefsContentModeUnspecified = String
+
+
+public typealias AppBskyFeedDefsContentModeVideo = String
+
+
+public struct AppBskyFeedDefsFeedViewPost: Codable, Sendable, Equatable {
+	public let feedContext: String?
+	public let post: AppBskyFeedDefsPostView
+	public let reason: AppBskyFeedDefsFeedViewPostReason?
+	public let reply: AppBskyFeedDefsReplyRef?
+	public let reqId: String?
+
+	public init(
+		feedContext: String? = nil,
+		post: AppBskyFeedDefsPostView,
+		reason: AppBskyFeedDefsFeedViewPostReason? = nil,
+		reply: AppBskyFeedDefsReplyRef? = nil,
+		reqId: String? = nil
+	) {
+		self.feedContext = feedContext
+		self.post = post
+		self.reason = reason
+		self.reply = reply
+		self.reqId = reqId
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		feedContext = try container.decodeIfPresent(String.self, forKey: .feedContext)
+		post = try container.decode(AppBskyFeedDefsPostView.self, forKey: .post)
+		reason = try container.decodeIfPresent(AppBskyFeedDefsFeedViewPostReason.self, forKey: .reason)
+		reply = try container.decodeIfPresent(AppBskyFeedDefsReplyRef.self, forKey: .reply)
+		reqId = try container.decodeIfPresent(String.self, forKey: .reqId)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(feedContext, forKey: .feedContext)
+		try container.encode(post, forKey: .post)
+		try container.encodeIfPresent(reason, forKey: .reason)
+		try container.encodeIfPresent(reply, forKey: .reply)
+		try container.encodeIfPresent(reqId, forKey: .reqId)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case feedContext = "feedContext"
+		case post = "post"
+		case reason = "reason"
+		case reply = "reply"
+		case reqId = "reqId"
+	}
+}
+
+
+public indirect enum AppBskyFeedDefsFeedViewPostReason: Codable, Sendable, Equatable {
+	case reasonRepost(AppBskyFeedDefsReasonRepost)
+	case reasonPin(AppBskyFeedDefsReasonPin)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "app.bsky.feed.defs#reasonRepost": self = .reasonRepost(try AppBskyFeedDefsReasonRepost(from: decoder))
+		case "app.bsky.feed.defs#reasonPin": self = .reasonPin(try AppBskyFeedDefsReasonPin(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .reasonRepost(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.feed.defs#reasonRepost", to: encoder)
+		case .reasonPin(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.feed.defs#reasonPin", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
+public struct AppBskyFeedDefsGeneratorView: Codable, Sendable, Equatable {
+	public let acceptsInteractions: Bool?
+	public let avatar: String?
+	public let cid: CID
+	public let contentMode: AppBskyFeedDefsGeneratorViewContentMode?
+	public let creator: AppBskyActorDefsProfileView
+	public let description: String?
+	public let descriptionFacets: [AppBskyRichtextFacet]?
+	public let did: DID
+	public let displayName: String
+	public let indexedAt: ATProtocolDate
+	public let labels: [ComAtprotoLabelDefsLabel]?
+	public let likeCount: Int?
+	public let uri: ATURI
+	public let viewer: AppBskyFeedDefsGeneratorViewerState?
+
+	public init(
+		acceptsInteractions: Bool? = nil,
+		avatar: String? = nil,
+		cid: CID,
+		contentMode: AppBskyFeedDefsGeneratorViewContentMode? = nil,
+		creator: AppBskyActorDefsProfileView,
+		description: String? = nil,
+		descriptionFacets: [AppBskyRichtextFacet]? = nil,
+		did: DID,
+		displayName: String,
+		indexedAt: ATProtocolDate,
+		labels: [ComAtprotoLabelDefsLabel]? = nil,
+		likeCount: Int? = nil,
+		uri: ATURI,
+		viewer: AppBskyFeedDefsGeneratorViewerState? = nil
+	) {
+		self.acceptsInteractions = acceptsInteractions
+		self.avatar = avatar
+		self.cid = cid
+		self.contentMode = contentMode
+		self.creator = creator
+		self.description = description
+		self.descriptionFacets = descriptionFacets
+		self.did = did
+		self.displayName = displayName
+		self.indexedAt = indexedAt
+		self.labels = labels
+		self.likeCount = likeCount
+		self.uri = uri
+		self.viewer = viewer
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		acceptsInteractions = try container.decodeIfPresent(Bool.self, forKey: .acceptsInteractions)
+		avatar = try container.decodeIfPresent(String.self, forKey: .avatar)
+		cid = try container.decode(CID.self, forKey: .cid)
+		contentMode = try container.decodeIfPresent(AppBskyFeedDefsGeneratorViewContentMode.self, forKey: .contentMode)
+		creator = try container.decode(AppBskyActorDefsProfileView.self, forKey: .creator)
+		description = try container.decodeIfPresent(String.self, forKey: .description)
+		descriptionFacets = try container.decodeIfPresent([AppBskyRichtextFacet].self, forKey: .descriptionFacets)
+		did = try container.decode(DID.self, forKey: .did)
+		displayName = try container.decode(String.self, forKey: .displayName)
+		indexedAt = try container.decode(ATProtocolDate.self, forKey: .indexedAt)
+		labels = try container.decodeIfPresent([ComAtprotoLabelDefsLabel].self, forKey: .labels)
+		likeCount = try container.decodeIfPresent(Int.self, forKey: .likeCount)
+		uri = try container.decode(ATURI.self, forKey: .uri)
+		viewer = try container.decodeIfPresent(AppBskyFeedDefsGeneratorViewerState.self, forKey: .viewer)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(acceptsInteractions, forKey: .acceptsInteractions)
+		try container.encodeIfPresent(avatar, forKey: .avatar)
+		try container.encode(cid, forKey: .cid)
+		try container.encodeIfPresent(contentMode, forKey: .contentMode)
+		try container.encode(creator, forKey: .creator)
+		try container.encodeIfPresent(description, forKey: .description)
+		try container.encodeIfPresent(descriptionFacets, forKey: .descriptionFacets)
+		try container.encode(did, forKey: .did)
+		try container.encode(displayName, forKey: .displayName)
+		try container.encode(indexedAt, forKey: .indexedAt)
+		try container.encodeIfPresent(labels, forKey: .labels)
+		try container.encodeIfPresent(likeCount, forKey: .likeCount)
+		try container.encode(uri, forKey: .uri)
+		try container.encodeIfPresent(viewer, forKey: .viewer)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case acceptsInteractions = "acceptsInteractions"
+		case avatar = "avatar"
+		case cid = "cid"
+		case contentMode = "contentMode"
+		case creator = "creator"
+		case description = "description"
+		case descriptionFacets = "descriptionFacets"
+		case did = "did"
+		case displayName = "displayName"
+		case indexedAt = "indexedAt"
+		case labels = "labels"
+		case likeCount = "likeCount"
+		case uri = "uri"
+		case viewer = "viewer"
+	}
+}
+
+
+public enum AppBskyFeedDefsGeneratorViewContentMode: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case appBskyFeedDefsContentModeUnspecified = "app.bsky.feed.defs#contentModeUnspecified"
+	case appBskyFeedDefsContentModeVideo = "app.bsky.feed.defs#contentModeVideo"
+}
+
+
+public struct AppBskyFeedDefsGeneratorViewerState: Codable, Sendable, Equatable {
+	public let like: ATURI?
+
+	public init(
+		like: ATURI? = nil
+	) {
+		self.like = like
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		like = try container.decodeIfPresent(ATURI.self, forKey: .like)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(like, forKey: .like)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case like = "like"
+	}
+}
+
+
+public struct AppBskyFeedDefsInteraction: Codable, Sendable, Equatable {
+	public let event: AppBskyFeedDefsInteractionEvent?
+	public let feedContext: String?
+	public let item: ATURI?
+	public let reqId: String?
+
+	public init(
+		event: AppBskyFeedDefsInteractionEvent? = nil,
+		feedContext: String? = nil,
+		item: ATURI? = nil,
+		reqId: String? = nil
+	) {
+		self.event = event
+		self.feedContext = feedContext
+		self.item = item
+		self.reqId = reqId
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		event = try container.decodeIfPresent(AppBskyFeedDefsInteractionEvent.self, forKey: .event)
+		feedContext = try container.decodeIfPresent(String.self, forKey: .feedContext)
+		item = try container.decodeIfPresent(ATURI.self, forKey: .item)
+		reqId = try container.decodeIfPresent(String.self, forKey: .reqId)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(event, forKey: .event)
+		try container.encodeIfPresent(feedContext, forKey: .feedContext)
+		try container.encodeIfPresent(item, forKey: .item)
+		try container.encodeIfPresent(reqId, forKey: .reqId)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case event = "event"
+		case feedContext = "feedContext"
+		case item = "item"
+		case reqId = "reqId"
+	}
+}
+
+
+public enum AppBskyFeedDefsInteractionEvent: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case appBskyFeedDefsRequestLess = "app.bsky.feed.defs#requestLess"
+	case appBskyFeedDefsRequestMore = "app.bsky.feed.defs#requestMore"
+	case appBskyFeedDefsClickthroughItem = "app.bsky.feed.defs#clickthroughItem"
+	case appBskyFeedDefsClickthroughAuthor = "app.bsky.feed.defs#clickthroughAuthor"
+	case appBskyFeedDefsClickthroughReposter = "app.bsky.feed.defs#clickthroughReposter"
+	case appBskyFeedDefsClickthroughEmbed = "app.bsky.feed.defs#clickthroughEmbed"
+	case appBskyFeedDefsInteractionSeen = "app.bsky.feed.defs#interactionSeen"
+	case appBskyFeedDefsInteractionLike = "app.bsky.feed.defs#interactionLike"
+	case appBskyFeedDefsInteractionRepost = "app.bsky.feed.defs#interactionRepost"
+	case appBskyFeedDefsInteractionReply = "app.bsky.feed.defs#interactionReply"
+	case appBskyFeedDefsInteractionQuote = "app.bsky.feed.defs#interactionQuote"
+	case appBskyFeedDefsInteractionShare = "app.bsky.feed.defs#interactionShare"
+}
+
+
+public typealias AppBskyFeedDefsInteractionLike = String
+
+
+public typealias AppBskyFeedDefsInteractionQuote = String
+
+
+public typealias AppBskyFeedDefsInteractionReply = String
+
+
+public typealias AppBskyFeedDefsInteractionRepost = String
+
+
+public typealias AppBskyFeedDefsInteractionSeen = String
+
+
+public typealias AppBskyFeedDefsInteractionShare = String
+
+
+public struct AppBskyFeedDefsNotFoundPost: Codable, Sendable, Equatable {
+	public let notFound: Bool
+	public let uri: ATURI
+
+	public init(
+		notFound: Bool,
+		uri: ATURI
+	) {
+		self.notFound = notFound
+		self.uri = uri
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		notFound = try container.decode(Bool.self, forKey: .notFound)
+		uri = try container.decode(ATURI.self, forKey: .uri)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(notFound, forKey: .notFound)
+		try container.encode(uri, forKey: .uri)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case notFound = "notFound"
+		case uri = "uri"
+	}
+}
+
+
+public struct AppBskyFeedDefsPostView: Codable, Sendable, Equatable {
+	public let author: AppBskyActorDefsProfileViewBasic
+	public let bookmarkCount: Int?
+	public let cid: CID
+	public let debug: ATProtocolValueContainer?
+	public let embed: AppBskyFeedDefsPostViewEmbed?
+	public let indexedAt: ATProtocolDate
+	public let labels: [ComAtprotoLabelDefsLabel]?
+	public let likeCount: Int?
+	public let quoteCount: Int?
+	public let record: ATProtocolValueContainer
+	public let replyCount: Int?
+	public let repostCount: Int?
+	public let threadgate: AppBskyFeedDefsThreadgateView?
+	public let uri: ATURI
+	public let viewer: AppBskyFeedDefsViewerState?
+
+	public init(
+		author: AppBskyActorDefsProfileViewBasic,
+		bookmarkCount: Int? = nil,
+		cid: CID,
+		debug: ATProtocolValueContainer? = nil,
+		embed: AppBskyFeedDefsPostViewEmbed? = nil,
+		indexedAt: ATProtocolDate,
+		labels: [ComAtprotoLabelDefsLabel]? = nil,
+		likeCount: Int? = nil,
+		quoteCount: Int? = nil,
+		record: ATProtocolValueContainer,
+		replyCount: Int? = nil,
+		repostCount: Int? = nil,
+		threadgate: AppBskyFeedDefsThreadgateView? = nil,
+		uri: ATURI,
+		viewer: AppBskyFeedDefsViewerState? = nil
+	) {
+		self.author = author
+		self.bookmarkCount = bookmarkCount
+		self.cid = cid
+		self.debug = debug
+		self.embed = embed
+		self.indexedAt = indexedAt
+		self.labels = labels
+		self.likeCount = likeCount
+		self.quoteCount = quoteCount
+		self.record = record
+		self.replyCount = replyCount
+		self.repostCount = repostCount
+		self.threadgate = threadgate
+		self.uri = uri
+		self.viewer = viewer
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		author = try container.decode(AppBskyActorDefsProfileViewBasic.self, forKey: .author)
+		bookmarkCount = try container.decodeIfPresent(Int.self, forKey: .bookmarkCount)
+		cid = try container.decode(CID.self, forKey: .cid)
+		debug = try container.decodeIfPresent(ATProtocolValueContainer.self, forKey: .debug)
+		embed = try container.decodeIfPresent(AppBskyFeedDefsPostViewEmbed.self, forKey: .embed)
+		indexedAt = try container.decode(ATProtocolDate.self, forKey: .indexedAt)
+		labels = try container.decodeIfPresent([ComAtprotoLabelDefsLabel].self, forKey: .labels)
+		likeCount = try container.decodeIfPresent(Int.self, forKey: .likeCount)
+		quoteCount = try container.decodeIfPresent(Int.self, forKey: .quoteCount)
+		record = try container.decode(ATProtocolValueContainer.self, forKey: .record)
+		replyCount = try container.decodeIfPresent(Int.self, forKey: .replyCount)
+		repostCount = try container.decodeIfPresent(Int.self, forKey: .repostCount)
+		threadgate = try container.decodeIfPresent(AppBskyFeedDefsThreadgateView.self, forKey: .threadgate)
+		uri = try container.decode(ATURI.self, forKey: .uri)
+		viewer = try container.decodeIfPresent(AppBskyFeedDefsViewerState.self, forKey: .viewer)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(author, forKey: .author)
+		try container.encodeIfPresent(bookmarkCount, forKey: .bookmarkCount)
+		try container.encode(cid, forKey: .cid)
+		try container.encodeIfPresent(debug, forKey: .debug)
+		try container.encodeIfPresent(embed, forKey: .embed)
+		try container.encode(indexedAt, forKey: .indexedAt)
+		try container.encodeIfPresent(labels, forKey: .labels)
+		try container.encodeIfPresent(likeCount, forKey: .likeCount)
+		try container.encodeIfPresent(quoteCount, forKey: .quoteCount)
+		try container.encode(record, forKey: .record)
+		try container.encodeIfPresent(replyCount, forKey: .replyCount)
+		try container.encodeIfPresent(repostCount, forKey: .repostCount)
+		try container.encodeIfPresent(threadgate, forKey: .threadgate)
+		try container.encode(uri, forKey: .uri)
+		try container.encodeIfPresent(viewer, forKey: .viewer)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case author = "author"
+		case bookmarkCount = "bookmarkCount"
+		case cid = "cid"
+		case debug = "debug"
+		case embed = "embed"
+		case indexedAt = "indexedAt"
+		case labels = "labels"
+		case likeCount = "likeCount"
+		case quoteCount = "quoteCount"
+		case record = "record"
+		case replyCount = "replyCount"
+		case repostCount = "repostCount"
+		case threadgate = "threadgate"
+		case uri = "uri"
+		case viewer = "viewer"
+	}
+}
+
+
+public indirect enum AppBskyFeedDefsPostViewEmbed: Codable, Sendable, Equatable {
+	case view(AppBskyEmbedImagesView)
+	case view2(AppBskyEmbedVideoView)
+	case view3(AppBskyEmbedExternalView)
+	case view4(AppBskyEmbedRecordView)
+	case view5(AppBskyEmbedRecordWithMediaView)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "app.bsky.embed.images#view": self = .view(try AppBskyEmbedImagesView(from: decoder))
+		case "app.bsky.embed.video#view": self = .view2(try AppBskyEmbedVideoView(from: decoder))
+		case "app.bsky.embed.external#view": self = .view3(try AppBskyEmbedExternalView(from: decoder))
+		case "app.bsky.embed.record#view": self = .view4(try AppBskyEmbedRecordView(from: decoder))
+		case "app.bsky.embed.recordWithMedia#view": self = .view5(try AppBskyEmbedRecordWithMediaView(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .view(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.embed.images#view", to: encoder)
+		case .view2(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.embed.video#view", to: encoder)
+		case .view3(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.embed.external#view", to: encoder)
+		case .view4(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.embed.record#view", to: encoder)
+		case .view5(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.embed.recordWithMedia#view", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
+public struct AppBskyFeedDefsReasonPin: Codable, Sendable, Equatable {
+
+	public init() {}
+
+	public init(from decoder: Decoder) throws {
+		_ = try decoder.container(keyedBy: CodingKeys.self)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		_ = encoder.container(keyedBy: CodingKeys.self)
+	}
+
+	private struct CodingKeys: CodingKey {
+		let stringValue = ""
+		init?(stringValue: String) {
+			return nil
+		}
+
+		let intValue: Int? = nil
+		init?(intValue: Int) {
+			return nil
+		}
+	}
+}
+
+
+public struct AppBskyFeedDefsReasonRepost: Codable, Sendable, Equatable {
+	public let by: AppBskyActorDefsProfileViewBasic
+	public let cid: CID?
+	public let indexedAt: ATProtocolDate
+	public let uri: ATURI?
+
+	public init(
+		by: AppBskyActorDefsProfileViewBasic,
+		cid: CID? = nil,
+		indexedAt: ATProtocolDate,
+		uri: ATURI? = nil
+	) {
+		self.by = by
+		self.cid = cid
+		self.indexedAt = indexedAt
+		self.uri = uri
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		by = try container.decode(AppBskyActorDefsProfileViewBasic.self, forKey: .by)
+		cid = try container.decodeIfPresent(CID.self, forKey: .cid)
+		indexedAt = try container.decode(ATProtocolDate.self, forKey: .indexedAt)
+		uri = try container.decodeIfPresent(ATURI.self, forKey: .uri)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(by, forKey: .by)
+		try container.encodeIfPresent(cid, forKey: .cid)
+		try container.encode(indexedAt, forKey: .indexedAt)
+		try container.encodeIfPresent(uri, forKey: .uri)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case by = "by"
+		case cid = "cid"
+		case indexedAt = "indexedAt"
+		case uri = "uri"
+	}
+}
+
+
+public struct AppBskyFeedDefsReplyRef: Codable, Sendable, Equatable {
+	public let grandparentAuthor: AppBskyActorDefsProfileViewBasic?
+	public let parent: AppBskyFeedDefsReplyRefParent
+	public let root: AppBskyFeedDefsReplyRefParent
+
+	public init(
+		grandparentAuthor: AppBskyActorDefsProfileViewBasic? = nil,
+		parent: AppBskyFeedDefsReplyRefParent,
+		root: AppBskyFeedDefsReplyRefParent
+	) {
+		self.grandparentAuthor = grandparentAuthor
+		self.parent = parent
+		self.root = root
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		grandparentAuthor = try container.decodeIfPresent(AppBskyActorDefsProfileViewBasic.self, forKey: .grandparentAuthor)
+		parent = try container.decode(AppBskyFeedDefsReplyRefParent.self, forKey: .parent)
+		root = try container.decode(AppBskyFeedDefsReplyRefParent.self, forKey: .root)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(grandparentAuthor, forKey: .grandparentAuthor)
+		try container.encode(parent, forKey: .parent)
+		try container.encode(root, forKey: .root)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case grandparentAuthor = "grandparentAuthor"
+		case parent = "parent"
+		case root = "root"
+	}
+}
+
+
+public indirect enum AppBskyFeedDefsReplyRefParent: Codable, Sendable, Equatable {
+	case postView(AppBskyFeedDefsPostView)
+	case notFoundPost(AppBskyFeedDefsNotFoundPost)
+	case blockedPost(AppBskyFeedDefsBlockedPost)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "app.bsky.feed.defs#postView": self = .postView(try AppBskyFeedDefsPostView(from: decoder))
+		case "app.bsky.feed.defs#notFoundPost": self = .notFoundPost(try AppBskyFeedDefsNotFoundPost(from: decoder))
+		case "app.bsky.feed.defs#blockedPost": self = .blockedPost(try AppBskyFeedDefsBlockedPost(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .postView(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.feed.defs#postView", to: encoder)
+		case .notFoundPost(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.feed.defs#notFoundPost", to: encoder)
+		case .blockedPost(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.feed.defs#blockedPost", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
+public typealias AppBskyFeedDefsRequestLess = String
+
+
+public typealias AppBskyFeedDefsRequestMore = String
+
+
+public struct AppBskyFeedDefsSkeletonFeedPost: Codable, Sendable, Equatable {
+	public let feedContext: String?
+	public let post: ATURI
+	public let reason: AppBskyFeedDefsSkeletonFeedPostReason?
+
+	public init(
+		feedContext: String? = nil,
+		post: ATURI,
+		reason: AppBskyFeedDefsSkeletonFeedPostReason? = nil
+	) {
+		self.feedContext = feedContext
+		self.post = post
+		self.reason = reason
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		feedContext = try container.decodeIfPresent(String.self, forKey: .feedContext)
+		post = try container.decode(ATURI.self, forKey: .post)
+		reason = try container.decodeIfPresent(AppBskyFeedDefsSkeletonFeedPostReason.self, forKey: .reason)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(feedContext, forKey: .feedContext)
+		try container.encode(post, forKey: .post)
+		try container.encodeIfPresent(reason, forKey: .reason)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case feedContext = "feedContext"
+		case post = "post"
+		case reason = "reason"
+	}
+}
+
+
+public indirect enum AppBskyFeedDefsSkeletonFeedPostReason: Codable, Sendable, Equatable {
+	case skeletonReasonRepost(AppBskyFeedDefsSkeletonReasonRepost)
+	case skeletonReasonPin(AppBskyFeedDefsSkeletonReasonPin)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "app.bsky.feed.defs#skeletonReasonRepost": self = .skeletonReasonRepost(try AppBskyFeedDefsSkeletonReasonRepost(from: decoder))
+		case "app.bsky.feed.defs#skeletonReasonPin": self = .skeletonReasonPin(try AppBskyFeedDefsSkeletonReasonPin(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .skeletonReasonRepost(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.feed.defs#skeletonReasonRepost", to: encoder)
+		case .skeletonReasonPin(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.feed.defs#skeletonReasonPin", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
+public struct AppBskyFeedDefsSkeletonReasonPin: Codable, Sendable, Equatable {
+
+	public init() {}
+
+	public init(from decoder: Decoder) throws {
+		_ = try decoder.container(keyedBy: CodingKeys.self)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		_ = encoder.container(keyedBy: CodingKeys.self)
+	}
+
+	private struct CodingKeys: CodingKey {
+		let stringValue = ""
+		init?(stringValue: String) {
+			return nil
+		}
+
+		let intValue: Int? = nil
+		init?(intValue: Int) {
+			return nil
+		}
+	}
+}
+
+
+public struct AppBskyFeedDefsSkeletonReasonRepost: Codable, Sendable, Equatable {
+	public let repost: ATURI
+
+	public init(
+		repost: ATURI
+	) {
+		self.repost = repost
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		repost = try container.decode(ATURI.self, forKey: .repost)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(repost, forKey: .repost)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case repost = "repost"
+	}
+}
+
+
+public struct AppBskyFeedDefsThreadContext: Codable, Sendable, Equatable {
+	public let rootAuthorLike: ATURI?
+
+	public init(
+		rootAuthorLike: ATURI? = nil
+	) {
+		self.rootAuthorLike = rootAuthorLike
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		rootAuthorLike = try container.decodeIfPresent(ATURI.self, forKey: .rootAuthorLike)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(rootAuthorLike, forKey: .rootAuthorLike)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case rootAuthorLike = "rootAuthorLike"
+	}
+}
+
+
+public struct AppBskyFeedDefsThreadgateView: Codable, Sendable, Equatable {
+	public let cid: CID?
+	public let lists: [AppBskyGraphDefsListViewBasic]?
+	public let record: ATProtocolValueContainer?
+	public let uri: ATURI?
+
+	public init(
+		cid: CID? = nil,
+		lists: [AppBskyGraphDefsListViewBasic]? = nil,
+		record: ATProtocolValueContainer? = nil,
+		uri: ATURI? = nil
+	) {
+		self.cid = cid
+		self.lists = lists
+		self.record = record
+		self.uri = uri
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cid = try container.decodeIfPresent(CID.self, forKey: .cid)
+		lists = try container.decodeIfPresent([AppBskyGraphDefsListViewBasic].self, forKey: .lists)
+		record = try container.decodeIfPresent(ATProtocolValueContainer.self, forKey: .record)
+		uri = try container.decodeIfPresent(ATURI.self, forKey: .uri)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cid, forKey: .cid)
+		try container.encodeIfPresent(lists, forKey: .lists)
+		try container.encodeIfPresent(record, forKey: .record)
+		try container.encodeIfPresent(uri, forKey: .uri)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cid = "cid"
+		case lists = "lists"
+		case record = "record"
+		case uri = "uri"
+	}
+}
+
+
+public struct AppBskyFeedDefsThreadViewPost: Codable, Sendable, Equatable {
+	public let parent: AppBskyFeedDefsThreadViewPostParent?
+	public let post: AppBskyFeedDefsPostView
+	public let replies: [AppBskyFeedDefsThreadViewPostParent]?
+	public let threadContext: AppBskyFeedDefsThreadContext?
+
+	public init(
+		parent: AppBskyFeedDefsThreadViewPostParent? = nil,
+		post: AppBskyFeedDefsPostView,
+		replies: [AppBskyFeedDefsThreadViewPostParent]? = nil,
+		threadContext: AppBskyFeedDefsThreadContext? = nil
+	) {
+		self.parent = parent
+		self.post = post
+		self.replies = replies
+		self.threadContext = threadContext
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		parent = try container.decodeIfPresent(AppBskyFeedDefsThreadViewPostParent.self, forKey: .parent)
+		post = try container.decode(AppBskyFeedDefsPostView.self, forKey: .post)
+		replies = try container.decodeIfPresent([AppBskyFeedDefsThreadViewPostParent].self, forKey: .replies)
+		threadContext = try container.decodeIfPresent(AppBskyFeedDefsThreadContext.self, forKey: .threadContext)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(parent, forKey: .parent)
+		try container.encode(post, forKey: .post)
+		try container.encodeIfPresent(replies, forKey: .replies)
+		try container.encodeIfPresent(threadContext, forKey: .threadContext)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case parent = "parent"
+		case post = "post"
+		case replies = "replies"
+		case threadContext = "threadContext"
+	}
+}
+
+
+public indirect enum AppBskyFeedDefsThreadViewPostParent: Codable, Sendable, Equatable {
+	case threadViewPost(AppBskyFeedDefsThreadViewPost)
+	case notFoundPost(AppBskyFeedDefsNotFoundPost)
+	case blockedPost(AppBskyFeedDefsBlockedPost)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "app.bsky.feed.defs#threadViewPost": self = .threadViewPost(try AppBskyFeedDefsThreadViewPost(from: decoder))
+		case "app.bsky.feed.defs#notFoundPost": self = .notFoundPost(try AppBskyFeedDefsNotFoundPost(from: decoder))
+		case "app.bsky.feed.defs#blockedPost": self = .blockedPost(try AppBskyFeedDefsBlockedPost(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .threadViewPost(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.feed.defs#threadViewPost", to: encoder)
+		case .notFoundPost(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.feed.defs#notFoundPost", to: encoder)
+		case .blockedPost(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.feed.defs#blockedPost", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
+public struct AppBskyFeedDefsViewerState: Codable, Sendable, Equatable {
+	public let bookmarked: Bool?
+	public let embeddingDisabled: Bool?
+	public let like: ATURI?
+	public let pinned: Bool?
+	public let replyDisabled: Bool?
+	public let repost: ATURI?
+	public let threadMuted: Bool?
+
+	public init(
+		bookmarked: Bool? = nil,
+		embeddingDisabled: Bool? = nil,
+		like: ATURI? = nil,
+		pinned: Bool? = nil,
+		replyDisabled: Bool? = nil,
+		repost: ATURI? = nil,
+		threadMuted: Bool? = nil
+	) {
+		self.bookmarked = bookmarked
+		self.embeddingDisabled = embeddingDisabled
+		self.like = like
+		self.pinned = pinned
+		self.replyDisabled = replyDisabled
+		self.repost = repost
+		self.threadMuted = threadMuted
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		bookmarked = try container.decodeIfPresent(Bool.self, forKey: .bookmarked)
+		embeddingDisabled = try container.decodeIfPresent(Bool.self, forKey: .embeddingDisabled)
+		like = try container.decodeIfPresent(ATURI.self, forKey: .like)
+		pinned = try container.decodeIfPresent(Bool.self, forKey: .pinned)
+		replyDisabled = try container.decodeIfPresent(Bool.self, forKey: .replyDisabled)
+		repost = try container.decodeIfPresent(ATURI.self, forKey: .repost)
+		threadMuted = try container.decodeIfPresent(Bool.self, forKey: .threadMuted)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(bookmarked, forKey: .bookmarked)
+		try container.encodeIfPresent(embeddingDisabled, forKey: .embeddingDisabled)
+		try container.encodeIfPresent(like, forKey: .like)
+		try container.encodeIfPresent(pinned, forKey: .pinned)
+		try container.encodeIfPresent(replyDisabled, forKey: .replyDisabled)
+		try container.encodeIfPresent(repost, forKey: .repost)
+		try container.encodeIfPresent(threadMuted, forKey: .threadMuted)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case bookmarked = "bookmarked"
+		case embeddingDisabled = "embeddingDisabled"
+		case like = "like"
+		case pinned = "pinned"
+		case replyDisabled = "replyDisabled"
+		case repost = "repost"
+		case threadMuted = "threadMuted"
+	}
+}
+
+
+public struct AppBskyFeedDescribeFeedGeneratorFeed: Codable, Sendable, Equatable {
+	public let uri: ATURI
+
+	public init(
+		uri: ATURI
+	) {
+		self.uri = uri
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		uri = try container.decode(ATURI.self, forKey: .uri)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(uri, forKey: .uri)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case uri = "uri"
+	}
+}
+
+
+public struct AppBskyFeedDescribeFeedGeneratorLinks: Codable, Sendable, Equatable {
+	public let privacyPolicy: String?
+	public let termsOfService: String?
+
+	public init(
+		privacyPolicy: String? = nil,
+		termsOfService: String? = nil
+	) {
+		self.privacyPolicy = privacyPolicy
+		self.termsOfService = termsOfService
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		privacyPolicy = try container.decodeIfPresent(String.self, forKey: .privacyPolicy)
+		termsOfService = try container.decodeIfPresent(String.self, forKey: .termsOfService)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(privacyPolicy, forKey: .privacyPolicy)
+		try container.encodeIfPresent(termsOfService, forKey: .termsOfService)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case privacyPolicy = "privacyPolicy"
+		case termsOfService = "termsOfService"
+	}
+}
+
+
+public struct AppBskyFeedDescribeFeedGeneratorOutput: Codable, Sendable, Equatable {
+	public let did: DID
+	public let feeds: [AppBskyFeedDescribeFeedGeneratorFeed]
+	public let links: AppBskyFeedDescribeFeedGeneratorLinks?
+
+	public init(
+		did: DID,
+		feeds: [AppBskyFeedDescribeFeedGeneratorFeed],
+		links: AppBskyFeedDescribeFeedGeneratorLinks? = nil
+	) {
+		self.did = did
+		self.feeds = feeds
+		self.links = links
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		did = try container.decode(DID.self, forKey: .did)
+		feeds = try container.decode([AppBskyFeedDescribeFeedGeneratorFeed].self, forKey: .feeds)
+		links = try container.decodeIfPresent(AppBskyFeedDescribeFeedGeneratorLinks.self, forKey: .links)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(did, forKey: .did)
+		try container.encode(feeds, forKey: .feeds)
+		try container.encodeIfPresent(links, forKey: .links)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case did = "did"
+		case feeds = "feeds"
+		case links = "links"
+	}
+}
+
+
+public struct AppBskyFeedGenerator: Codable, Sendable, Equatable {
+	public static let typeIdentifier = "app.bsky.feed.generator"
+
+	public let acceptsInteractions: Bool?
+	public let avatar: Blob?
+	public let contentMode: AppBskyFeedDefsGeneratorViewContentMode?
+	public let createdAt: ATProtocolDate
+	public let description: String?
+	public let descriptionFacets: [AppBskyRichtextFacet]?
+	public let did: DID
+	public let displayName: String
+	public let labels: AppBskyFeedGeneratorLabels?
+
+	public init(
+		acceptsInteractions: Bool? = nil,
+		avatar: Blob? = nil,
+		contentMode: AppBskyFeedDefsGeneratorViewContentMode? = nil,
+		createdAt: ATProtocolDate,
+		description: String? = nil,
+		descriptionFacets: [AppBskyRichtextFacet]? = nil,
+		did: DID,
+		displayName: String,
+		labels: AppBskyFeedGeneratorLabels? = nil
+	) {
+		self.acceptsInteractions = acceptsInteractions
+		self.avatar = avatar
+		self.contentMode = contentMode
+		self.createdAt = createdAt
+		self.description = description
+		self.descriptionFacets = descriptionFacets
+		self.did = did
+		self.displayName = displayName
+		self.labels = labels
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		_ = try container.decodeIfPresent(String.self, forKey: .typeIdentifier)
+		acceptsInteractions = try container.decodeIfPresent(Bool.self, forKey: .acceptsInteractions)
+		avatar = try container.decodeIfPresent(Blob.self, forKey: .avatar)
+		contentMode = try container.decodeIfPresent(AppBskyFeedDefsGeneratorViewContentMode.self, forKey: .contentMode)
+		createdAt = try container.decode(ATProtocolDate.self, forKey: .createdAt)
+		description = try container.decodeIfPresent(String.self, forKey: .description)
+		descriptionFacets = try container.decodeIfPresent([AppBskyRichtextFacet].self, forKey: .descriptionFacets)
+		did = try container.decode(DID.self, forKey: .did)
+		displayName = try container.decode(String.self, forKey: .displayName)
+		labels = try container.decodeIfPresent(AppBskyFeedGeneratorLabels.self, forKey: .labels)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(Self.typeIdentifier, forKey: .typeIdentifier)
+		try container.encodeIfPresent(acceptsInteractions, forKey: .acceptsInteractions)
+		try container.encodeIfPresent(avatar, forKey: .avatar)
+		try container.encodeIfPresent(contentMode, forKey: .contentMode)
+		try container.encode(createdAt, forKey: .createdAt)
+		try container.encodeIfPresent(description, forKey: .description)
+		try container.encodeIfPresent(descriptionFacets, forKey: .descriptionFacets)
+		try container.encode(did, forKey: .did)
+		try container.encode(displayName, forKey: .displayName)
+		try container.encodeIfPresent(labels, forKey: .labels)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case typeIdentifier = "$type"
+		case acceptsInteractions = "acceptsInteractions"
+		case avatar = "avatar"
+		case contentMode = "contentMode"
+		case createdAt = "createdAt"
+		case description = "description"
+		case descriptionFacets = "descriptionFacets"
+		case did = "did"
+		case displayName = "displayName"
+		case labels = "labels"
+	}
+}
+
+
+public indirect enum AppBskyFeedGeneratorLabels: Codable, Sendable, Equatable {
+	case selfLabels(ComAtprotoLabelDefsSelfLabels)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "com.atproto.label.defs#selfLabels": self = .selfLabels(try ComAtprotoLabelDefsSelfLabels(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .selfLabels(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "com.atproto.label.defs#selfLabels", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
+public struct AppBskyFeedGetActorFeedsOutput: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let feeds: [AppBskyFeedDefsGeneratorView]
+
+	public init(
+		cursor: String? = nil,
+		feeds: [AppBskyFeedDefsGeneratorView]
+	) {
+		self.cursor = cursor
+		self.feeds = feeds
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		feeds = try container.decode([AppBskyFeedDefsGeneratorView].self, forKey: .feeds)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encode(feeds, forKey: .feeds)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case feeds = "feeds"
+	}
+}
+
+
+public struct AppBskyFeedGetActorFeedsParameters: Codable, Sendable, Equatable {
+	public let actor: ATIdentifier
+	public let cursor: String?
+	public let limit: Int?
+
+	public init(
+		actor: ATIdentifier,
+		cursor: String? = nil,
+		limit: Int? = nil
+	) {
+		self.actor = actor
+		self.cursor = cursor
+		self.limit = limit
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		actor = try container.decode(ATIdentifier.self, forKey: .actor)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		limit = try container.decodeIfPresent(Int.self, forKey: .limit)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(actor, forKey: .actor)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encodeIfPresent(limit, forKey: .limit)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		actor.appendQueryItems(named: "actor", to: &items)
+		if let value = cursor {
+			value.appendQueryItems(named: "cursor", to: &items)
+		}
+		if let value = limit {
+			value.appendQueryItems(named: "limit", to: &items)
+		}
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case actor = "actor"
+		case cursor = "cursor"
+		case limit = "limit"
+	}
+}
+
+
+public enum AppBskyFeedGetActorLikesError: String, Swift.Error, CaseIterable, Sendable {
+	case blockedActor = "BlockedActor"
+	case blockedByActor = "BlockedByActor"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct AppBskyFeedGetActorLikesOutput: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let feed: [AppBskyFeedDefsFeedViewPost]
+
+	public init(
+		cursor: String? = nil,
+		feed: [AppBskyFeedDefsFeedViewPost]
+	) {
+		self.cursor = cursor
+		self.feed = feed
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		feed = try container.decode([AppBskyFeedDefsFeedViewPost].self, forKey: .feed)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encode(feed, forKey: .feed)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case feed = "feed"
+	}
+}
+
+
+public struct AppBskyFeedGetActorLikesParameters: Codable, Sendable, Equatable {
+	public let actor: ATIdentifier
+	public let cursor: String?
+	public let limit: Int?
+
+	public init(
+		actor: ATIdentifier,
+		cursor: String? = nil,
+		limit: Int? = nil
+	) {
+		self.actor = actor
+		self.cursor = cursor
+		self.limit = limit
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		actor = try container.decode(ATIdentifier.self, forKey: .actor)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		limit = try container.decodeIfPresent(Int.self, forKey: .limit)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(actor, forKey: .actor)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encodeIfPresent(limit, forKey: .limit)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		actor.appendQueryItems(named: "actor", to: &items)
+		if let value = cursor {
+			value.appendQueryItems(named: "cursor", to: &items)
+		}
+		if let value = limit {
+			value.appendQueryItems(named: "limit", to: &items)
+		}
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case actor = "actor"
+		case cursor = "cursor"
+		case limit = "limit"
+	}
+}
+
+
+public enum AppBskyFeedGetAuthorFeedError: String, Swift.Error, CaseIterable, Sendable {
+	case blockedActor = "BlockedActor"
+	case blockedByActor = "BlockedByActor"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct AppBskyFeedGetAuthorFeedOutput: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let feed: [AppBskyFeedDefsFeedViewPost]
+
+	public init(
+		cursor: String? = nil,
+		feed: [AppBskyFeedDefsFeedViewPost]
+	) {
+		self.cursor = cursor
+		self.feed = feed
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		feed = try container.decode([AppBskyFeedDefsFeedViewPost].self, forKey: .feed)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encode(feed, forKey: .feed)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case feed = "feed"
+	}
+}
+
+
+public struct AppBskyFeedGetAuthorFeedParameters: Codable, Sendable, Equatable {
+	public let actor: ATIdentifier
+	public let cursor: String?
+	public let filter: AppBskyFeedGetAuthorFeedParametersFilter?
+	public let includePins: Bool?
+	public let limit: Int?
+
+	public init(
+		actor: ATIdentifier,
+		cursor: String? = nil,
+		filter: AppBskyFeedGetAuthorFeedParametersFilter? = nil,
+		includePins: Bool? = nil,
+		limit: Int? = nil
+	) {
+		self.actor = actor
+		self.cursor = cursor
+		self.filter = filter
+		self.includePins = includePins
+		self.limit = limit
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		actor = try container.decode(ATIdentifier.self, forKey: .actor)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		filter = try container.decodeIfPresent(AppBskyFeedGetAuthorFeedParametersFilter.self, forKey: .filter)
+		includePins = try container.decodeIfPresent(Bool.self, forKey: .includePins)
+		limit = try container.decodeIfPresent(Int.self, forKey: .limit)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(actor, forKey: .actor)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encodeIfPresent(filter, forKey: .filter)
+		try container.encodeIfPresent(includePins, forKey: .includePins)
+		try container.encodeIfPresent(limit, forKey: .limit)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		actor.appendQueryItems(named: "actor", to: &items)
+		if let value = cursor {
+			value.appendQueryItems(named: "cursor", to: &items)
+		}
+		if let value = filter {
+			value.appendQueryItems(named: "filter", to: &items)
+		}
+		if let value = includePins {
+			value.appendQueryItems(named: "includePins", to: &items)
+		}
+		if let value = limit {
+			value.appendQueryItems(named: "limit", to: &items)
+		}
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case actor = "actor"
+		case cursor = "cursor"
+		case filter = "filter"
+		case includePins = "includePins"
+		case limit = "limit"
+	}
+}
+
+
+public enum AppBskyFeedGetAuthorFeedParametersFilter: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case postsWithReplies = "posts_with_replies"
+	case postsNoReplies = "posts_no_replies"
+	case postsWithMedia = "posts_with_media"
+	case postsAndAuthorThreads = "posts_and_author_threads"
+	case postsWithVideo = "posts_with_video"
+}
+
+
+public enum AppBskyFeedGetFeedError: String, Swift.Error, CaseIterable, Sendable {
+	case unknownFeed = "UnknownFeed"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct AppBskyFeedGetFeedGeneratorOutput: Codable, Sendable, Equatable {
+	public let isOnline: Bool
+	public let isValid: Bool
+	public let view: AppBskyFeedDefsGeneratorView
+
+	public init(
+		isOnline: Bool,
+		isValid: Bool,
+		view: AppBskyFeedDefsGeneratorView
+	) {
+		self.isOnline = isOnline
+		self.isValid = isValid
+		self.view = view
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		isOnline = try container.decode(Bool.self, forKey: .isOnline)
+		isValid = try container.decode(Bool.self, forKey: .isValid)
+		view = try container.decode(AppBskyFeedDefsGeneratorView.self, forKey: .view)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(isOnline, forKey: .isOnline)
+		try container.encode(isValid, forKey: .isValid)
+		try container.encode(view, forKey: .view)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case isOnline = "isOnline"
+		case isValid = "isValid"
+		case view = "view"
+	}
+}
+
+
+public struct AppBskyFeedGetFeedGeneratorParameters: Codable, Sendable, Equatable {
+	public let feed: ATURI
+
+	public init(
+		feed: ATURI
+	) {
+		self.feed = feed
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		feed = try container.decode(ATURI.self, forKey: .feed)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(feed, forKey: .feed)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		feed.appendQueryItems(named: "feed", to: &items)
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case feed = "feed"
+	}
+}
+
+
+public struct AppBskyFeedGetFeedGeneratorsOutput: Codable, Sendable, Equatable {
+	public let feeds: [AppBskyFeedDefsGeneratorView]
+
+	public init(
+		feeds: [AppBskyFeedDefsGeneratorView]
+	) {
+		self.feeds = feeds
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		feeds = try container.decode([AppBskyFeedDefsGeneratorView].self, forKey: .feeds)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(feeds, forKey: .feeds)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case feeds = "feeds"
+	}
+}
+
+
+public struct AppBskyFeedGetFeedGeneratorsParameters: Codable, Sendable, Equatable {
+	public let feeds: [ATURI]
+
+	public init(
+		feeds: [ATURI]
+	) {
+		self.feeds = feeds
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		feeds = try container.decode([ATURI].self, forKey: .feeds)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(feeds, forKey: .feeds)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		feeds.appendQueryItems(named: "feeds", to: &items)
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case feeds = "feeds"
+	}
+}
+
+
+public struct AppBskyFeedGetFeedOutput: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let feed: [AppBskyFeedDefsFeedViewPost]
+
+	public init(
+		cursor: String? = nil,
+		feed: [AppBskyFeedDefsFeedViewPost]
+	) {
+		self.cursor = cursor
+		self.feed = feed
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		feed = try container.decode([AppBskyFeedDefsFeedViewPost].self, forKey: .feed)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encode(feed, forKey: .feed)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case feed = "feed"
+	}
+}
+
+
+public struct AppBskyFeedGetFeedParameters: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let feed: ATURI
+	public let limit: Int?
+
+	public init(
+		cursor: String? = nil,
+		feed: ATURI,
+		limit: Int? = nil
+	) {
+		self.cursor = cursor
+		self.feed = feed
+		self.limit = limit
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		feed = try container.decode(ATURI.self, forKey: .feed)
+		limit = try container.decodeIfPresent(Int.self, forKey: .limit)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encode(feed, forKey: .feed)
+		try container.encodeIfPresent(limit, forKey: .limit)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		if let value = cursor {
+			value.appendQueryItems(named: "cursor", to: &items)
+		}
+		feed.appendQueryItems(named: "feed", to: &items)
+		if let value = limit {
+			value.appendQueryItems(named: "limit", to: &items)
+		}
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case feed = "feed"
+		case limit = "limit"
+	}
+}
+
+
+public enum AppBskyFeedGetFeedSkeletonError: String, Swift.Error, CaseIterable, Sendable {
+	case unknownFeed = "UnknownFeed"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct AppBskyFeedGetFeedSkeletonOutput: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let feed: [AppBskyFeedDefsSkeletonFeedPost]
+	public let reqId: String?
+
+	public init(
+		cursor: String? = nil,
+		feed: [AppBskyFeedDefsSkeletonFeedPost],
+		reqId: String? = nil
+	) {
+		self.cursor = cursor
+		self.feed = feed
+		self.reqId = reqId
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		feed = try container.decode([AppBskyFeedDefsSkeletonFeedPost].self, forKey: .feed)
+		reqId = try container.decodeIfPresent(String.self, forKey: .reqId)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encode(feed, forKey: .feed)
+		try container.encodeIfPresent(reqId, forKey: .reqId)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case feed = "feed"
+		case reqId = "reqId"
+	}
+}
+
+
+public struct AppBskyFeedGetFeedSkeletonParameters: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let feed: ATURI
+	public let limit: Int?
+
+	public init(
+		cursor: String? = nil,
+		feed: ATURI,
+		limit: Int? = nil
+	) {
+		self.cursor = cursor
+		self.feed = feed
+		self.limit = limit
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		feed = try container.decode(ATURI.self, forKey: .feed)
+		limit = try container.decodeIfPresent(Int.self, forKey: .limit)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encode(feed, forKey: .feed)
+		try container.encodeIfPresent(limit, forKey: .limit)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		if let value = cursor {
+			value.appendQueryItems(named: "cursor", to: &items)
+		}
+		feed.appendQueryItems(named: "feed", to: &items)
+		if let value = limit {
+			value.appendQueryItems(named: "limit", to: &items)
+		}
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case feed = "feed"
+		case limit = "limit"
+	}
+}
+
+
+public struct AppBskyFeedGetLikesLike: Codable, Sendable, Equatable {
+	public let actor: AppBskyActorDefsProfileView
+	public let createdAt: ATProtocolDate
+	public let indexedAt: ATProtocolDate
+
+	public init(
+		actor: AppBskyActorDefsProfileView,
+		createdAt: ATProtocolDate,
+		indexedAt: ATProtocolDate
+	) {
+		self.actor = actor
+		self.createdAt = createdAt
+		self.indexedAt = indexedAt
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		actor = try container.decode(AppBskyActorDefsProfileView.self, forKey: .actor)
+		createdAt = try container.decode(ATProtocolDate.self, forKey: .createdAt)
+		indexedAt = try container.decode(ATProtocolDate.self, forKey: .indexedAt)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(actor, forKey: .actor)
+		try container.encode(createdAt, forKey: .createdAt)
+		try container.encode(indexedAt, forKey: .indexedAt)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case actor = "actor"
+		case createdAt = "createdAt"
+		case indexedAt = "indexedAt"
+	}
+}
+
+
+public struct AppBskyFeedGetLikesOutput: Codable, Sendable, Equatable {
+	public let cid: CID?
+	public let cursor: String?
+	public let likes: [AppBskyFeedGetLikesLike]
+	public let uri: ATURI
+
+	public init(
+		cid: CID? = nil,
+		cursor: String? = nil,
+		likes: [AppBskyFeedGetLikesLike],
+		uri: ATURI
+	) {
+		self.cid = cid
+		self.cursor = cursor
+		self.likes = likes
+		self.uri = uri
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cid = try container.decodeIfPresent(CID.self, forKey: .cid)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		likes = try container.decode([AppBskyFeedGetLikesLike].self, forKey: .likes)
+		uri = try container.decode(ATURI.self, forKey: .uri)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cid, forKey: .cid)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encode(likes, forKey: .likes)
+		try container.encode(uri, forKey: .uri)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cid = "cid"
+		case cursor = "cursor"
+		case likes = "likes"
+		case uri = "uri"
+	}
+}
+
+
+public struct AppBskyFeedGetLikesParameters: Codable, Sendable, Equatable {
+	public let cid: CID?
+	public let cursor: String?
+	public let limit: Int?
+	public let uri: ATURI
+
+	public init(
+		cid: CID? = nil,
+		cursor: String? = nil,
+		limit: Int? = nil,
+		uri: ATURI
+	) {
+		self.cid = cid
+		self.cursor = cursor
+		self.limit = limit
+		self.uri = uri
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cid = try container.decodeIfPresent(CID.self, forKey: .cid)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		limit = try container.decodeIfPresent(Int.self, forKey: .limit)
+		uri = try container.decode(ATURI.self, forKey: .uri)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cid, forKey: .cid)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encodeIfPresent(limit, forKey: .limit)
+		try container.encode(uri, forKey: .uri)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		if let value = cid {
+			value.appendQueryItems(named: "cid", to: &items)
+		}
+		if let value = cursor {
+			value.appendQueryItems(named: "cursor", to: &items)
+		}
+		if let value = limit {
+			value.appendQueryItems(named: "limit", to: &items)
+		}
+		uri.appendQueryItems(named: "uri", to: &items)
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cid = "cid"
+		case cursor = "cursor"
+		case limit = "limit"
+		case uri = "uri"
+	}
+}
+
+
+public enum AppBskyFeedGetListFeedError: String, Swift.Error, CaseIterable, Sendable {
+	case unknownList = "UnknownList"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct AppBskyFeedGetListFeedOutput: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let feed: [AppBskyFeedDefsFeedViewPost]
+
+	public init(
+		cursor: String? = nil,
+		feed: [AppBskyFeedDefsFeedViewPost]
+	) {
+		self.cursor = cursor
+		self.feed = feed
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		feed = try container.decode([AppBskyFeedDefsFeedViewPost].self, forKey: .feed)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encode(feed, forKey: .feed)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case feed = "feed"
+	}
+}
+
+
+public struct AppBskyFeedGetListFeedParameters: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let limit: Int?
+	public let list: ATURI
+
+	public init(
+		cursor: String? = nil,
+		limit: Int? = nil,
+		list: ATURI
+	) {
+		self.cursor = cursor
+		self.limit = limit
+		self.list = list
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		limit = try container.decodeIfPresent(Int.self, forKey: .limit)
+		list = try container.decode(ATURI.self, forKey: .list)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encodeIfPresent(limit, forKey: .limit)
+		try container.encode(list, forKey: .list)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		if let value = cursor {
+			value.appendQueryItems(named: "cursor", to: &items)
+		}
+		if let value = limit {
+			value.appendQueryItems(named: "limit", to: &items)
+		}
+		list.appendQueryItems(named: "list", to: &items)
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case limit = "limit"
+		case list = "list"
+	}
+}
+
+
+public struct AppBskyFeedGetPostsOutput: Codable, Sendable, Equatable {
+	public let posts: [AppBskyFeedDefsPostView]
+
+	public init(
+		posts: [AppBskyFeedDefsPostView]
+	) {
+		self.posts = posts
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		posts = try container.decode([AppBskyFeedDefsPostView].self, forKey: .posts)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(posts, forKey: .posts)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case posts = "posts"
+	}
+}
+
+
+public struct AppBskyFeedGetPostsParameters: Codable, Sendable, Equatable {
+	public let uris: [ATURI]
+
+	public init(
+		uris: [ATURI]
+	) {
+		self.uris = uris
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		uris = try container.decode([ATURI].self, forKey: .uris)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(uris, forKey: .uris)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		uris.appendQueryItems(named: "uris", to: &items)
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case uris = "uris"
+	}
+}
+
+
+public enum AppBskyFeedGetPostThreadError: String, Swift.Error, CaseIterable, Sendable {
+	case notFound = "NotFound"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct AppBskyFeedGetPostThreadOutput: Codable, Sendable, Equatable {
+	public let thread: AppBskyFeedDefsThreadViewPostParent
+	public let threadgate: AppBskyFeedDefsThreadgateView?
+
+	public init(
+		thread: AppBskyFeedDefsThreadViewPostParent,
+		threadgate: AppBskyFeedDefsThreadgateView? = nil
+	) {
+		self.thread = thread
+		self.threadgate = threadgate
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		thread = try container.decode(AppBskyFeedDefsThreadViewPostParent.self, forKey: .thread)
+		threadgate = try container.decodeIfPresent(AppBskyFeedDefsThreadgateView.self, forKey: .threadgate)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(thread, forKey: .thread)
+		try container.encodeIfPresent(threadgate, forKey: .threadgate)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case thread = "thread"
+		case threadgate = "threadgate"
+	}
+}
+
+
+public struct AppBskyFeedGetPostThreadParameters: Codable, Sendable, Equatable {
+	public let depth: Int?
+	public let parentHeight: Int?
+	public let uri: ATURI
+
+	public init(
+		depth: Int? = nil,
+		parentHeight: Int? = nil,
+		uri: ATURI
+	) {
+		self.depth = depth
+		self.parentHeight = parentHeight
+		self.uri = uri
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		depth = try container.decodeIfPresent(Int.self, forKey: .depth)
+		parentHeight = try container.decodeIfPresent(Int.self, forKey: .parentHeight)
+		uri = try container.decode(ATURI.self, forKey: .uri)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(depth, forKey: .depth)
+		try container.encodeIfPresent(parentHeight, forKey: .parentHeight)
+		try container.encode(uri, forKey: .uri)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		if let value = depth {
+			value.appendQueryItems(named: "depth", to: &items)
+		}
+		if let value = parentHeight {
+			value.appendQueryItems(named: "parentHeight", to: &items)
+		}
+		uri.appendQueryItems(named: "uri", to: &items)
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case depth = "depth"
+		case parentHeight = "parentHeight"
+		case uri = "uri"
+	}
+}
+
+
+public struct AppBskyFeedGetQuotesOutput: Codable, Sendable, Equatable {
+	public let cid: CID?
+	public let cursor: String?
+	public let posts: [AppBskyFeedDefsPostView]
+	public let uri: ATURI
+
+	public init(
+		cid: CID? = nil,
+		cursor: String? = nil,
+		posts: [AppBskyFeedDefsPostView],
+		uri: ATURI
+	) {
+		self.cid = cid
+		self.cursor = cursor
+		self.posts = posts
+		self.uri = uri
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cid = try container.decodeIfPresent(CID.self, forKey: .cid)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		posts = try container.decode([AppBskyFeedDefsPostView].self, forKey: .posts)
+		uri = try container.decode(ATURI.self, forKey: .uri)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cid, forKey: .cid)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encode(posts, forKey: .posts)
+		try container.encode(uri, forKey: .uri)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cid = "cid"
+		case cursor = "cursor"
+		case posts = "posts"
+		case uri = "uri"
+	}
+}
+
+
+public struct AppBskyFeedGetQuotesParameters: Codable, Sendable, Equatable {
+	public let cid: CID?
+	public let cursor: String?
+	public let limit: Int?
+	public let uri: ATURI
+
+	public init(
+		cid: CID? = nil,
+		cursor: String? = nil,
+		limit: Int? = nil,
+		uri: ATURI
+	) {
+		self.cid = cid
+		self.cursor = cursor
+		self.limit = limit
+		self.uri = uri
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cid = try container.decodeIfPresent(CID.self, forKey: .cid)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		limit = try container.decodeIfPresent(Int.self, forKey: .limit)
+		uri = try container.decode(ATURI.self, forKey: .uri)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cid, forKey: .cid)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encodeIfPresent(limit, forKey: .limit)
+		try container.encode(uri, forKey: .uri)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		if let value = cid {
+			value.appendQueryItems(named: "cid", to: &items)
+		}
+		if let value = cursor {
+			value.appendQueryItems(named: "cursor", to: &items)
+		}
+		if let value = limit {
+			value.appendQueryItems(named: "limit", to: &items)
+		}
+		uri.appendQueryItems(named: "uri", to: &items)
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cid = "cid"
+		case cursor = "cursor"
+		case limit = "limit"
+		case uri = "uri"
+	}
+}
+
+
+public struct AppBskyFeedGetRepostedByOutput: Codable, Sendable, Equatable {
+	public let cid: CID?
+	public let cursor: String?
+	public let repostedBy: [AppBskyActorDefsProfileView]
+	public let uri: ATURI
+
+	public init(
+		cid: CID? = nil,
+		cursor: String? = nil,
+		repostedBy: [AppBskyActorDefsProfileView],
+		uri: ATURI
+	) {
+		self.cid = cid
+		self.cursor = cursor
+		self.repostedBy = repostedBy
+		self.uri = uri
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cid = try container.decodeIfPresent(CID.self, forKey: .cid)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		repostedBy = try container.decode([AppBskyActorDefsProfileView].self, forKey: .repostedBy)
+		uri = try container.decode(ATURI.self, forKey: .uri)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cid, forKey: .cid)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encode(repostedBy, forKey: .repostedBy)
+		try container.encode(uri, forKey: .uri)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cid = "cid"
+		case cursor = "cursor"
+		case repostedBy = "repostedBy"
+		case uri = "uri"
+	}
+}
+
+
+public struct AppBskyFeedGetRepostedByParameters: Codable, Sendable, Equatable {
+	public let cid: CID?
+	public let cursor: String?
+	public let limit: Int?
+	public let uri: ATURI
+
+	public init(
+		cid: CID? = nil,
+		cursor: String? = nil,
+		limit: Int? = nil,
+		uri: ATURI
+	) {
+		self.cid = cid
+		self.cursor = cursor
+		self.limit = limit
+		self.uri = uri
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cid = try container.decodeIfPresent(CID.self, forKey: .cid)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		limit = try container.decodeIfPresent(Int.self, forKey: .limit)
+		uri = try container.decode(ATURI.self, forKey: .uri)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cid, forKey: .cid)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encodeIfPresent(limit, forKey: .limit)
+		try container.encode(uri, forKey: .uri)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		if let value = cid {
+			value.appendQueryItems(named: "cid", to: &items)
+		}
+		if let value = cursor {
+			value.appendQueryItems(named: "cursor", to: &items)
+		}
+		if let value = limit {
+			value.appendQueryItems(named: "limit", to: &items)
+		}
+		uri.appendQueryItems(named: "uri", to: &items)
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cid = "cid"
+		case cursor = "cursor"
+		case limit = "limit"
+		case uri = "uri"
+	}
+}
+
+
+public struct AppBskyFeedGetSuggestedFeedsOutput: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let feeds: [AppBskyFeedDefsGeneratorView]
+
+	public init(
+		cursor: String? = nil,
+		feeds: [AppBskyFeedDefsGeneratorView]
+	) {
+		self.cursor = cursor
+		self.feeds = feeds
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		feeds = try container.decode([AppBskyFeedDefsGeneratorView].self, forKey: .feeds)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encode(feeds, forKey: .feeds)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case feeds = "feeds"
+	}
+}
+
+
+public struct AppBskyFeedGetSuggestedFeedsParameters: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let limit: Int?
+
+	public init(
+		cursor: String? = nil,
+		limit: Int? = nil
+	) {
+		self.cursor = cursor
+		self.limit = limit
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		limit = try container.decodeIfPresent(Int.self, forKey: .limit)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encodeIfPresent(limit, forKey: .limit)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		if let value = cursor {
+			value.appendQueryItems(named: "cursor", to: &items)
+		}
+		if let value = limit {
+			value.appendQueryItems(named: "limit", to: &items)
+		}
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case limit = "limit"
+	}
+}
+
+
+public struct AppBskyFeedGetTimelineOutput: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let feed: [AppBskyFeedDefsFeedViewPost]
+
+	public init(
+		cursor: String? = nil,
+		feed: [AppBskyFeedDefsFeedViewPost]
+	) {
+		self.cursor = cursor
+		self.feed = feed
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		feed = try container.decode([AppBskyFeedDefsFeedViewPost].self, forKey: .feed)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encode(feed, forKey: .feed)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case feed = "feed"
+	}
+}
+
+
+public struct AppBskyFeedGetTimelineParameters: Codable, Sendable, Equatable {
+	public let algorithm: String?
+	public let cursor: String?
+	public let limit: Int?
+
+	public init(
+		algorithm: String? = nil,
+		cursor: String? = nil,
+		limit: Int? = nil
+	) {
+		self.algorithm = algorithm
+		self.cursor = cursor
+		self.limit = limit
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		algorithm = try container.decodeIfPresent(String.self, forKey: .algorithm)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		limit = try container.decodeIfPresent(Int.self, forKey: .limit)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(algorithm, forKey: .algorithm)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encodeIfPresent(limit, forKey: .limit)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		if let value = algorithm {
+			value.appendQueryItems(named: "algorithm", to: &items)
+		}
+		if let value = cursor {
+			value.appendQueryItems(named: "cursor", to: &items)
+		}
+		if let value = limit {
+			value.appendQueryItems(named: "limit", to: &items)
+		}
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case algorithm = "algorithm"
+		case cursor = "cursor"
+		case limit = "limit"
+	}
+}
+
+
+public struct AppBskyFeedLike: Codable, Sendable, Equatable {
+	public static let typeIdentifier = "app.bsky.feed.like"
+
+	public let createdAt: ATProtocolDate
+	public let subject: ComAtprotoRepoStrongRef
+	public let via: ComAtprotoRepoStrongRef?
+
+	public init(
+		createdAt: ATProtocolDate,
+		subject: ComAtprotoRepoStrongRef,
+		via: ComAtprotoRepoStrongRef? = nil
+	) {
+		self.createdAt = createdAt
+		self.subject = subject
+		self.via = via
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		_ = try container.decodeIfPresent(String.self, forKey: .typeIdentifier)
+		createdAt = try container.decode(ATProtocolDate.self, forKey: .createdAt)
+		subject = try container.decode(ComAtprotoRepoStrongRef.self, forKey: .subject)
+		via = try container.decodeIfPresent(ComAtprotoRepoStrongRef.self, forKey: .via)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(Self.typeIdentifier, forKey: .typeIdentifier)
+		try container.encode(createdAt, forKey: .createdAt)
+		try container.encode(subject, forKey: .subject)
+		try container.encodeIfPresent(via, forKey: .via)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case typeIdentifier = "$type"
+		case createdAt = "createdAt"
+		case subject = "subject"
+		case via = "via"
+	}
+}
+
+
+public struct AppBskyFeedPost: Codable, Sendable, Equatable {
+	public static let typeIdentifier = "app.bsky.feed.post"
+
+	public let createdAt: ATProtocolDate
+	public let embed: AppBskyFeedPostEmbed?
+	public let entities: [AppBskyFeedPostEntity]?
+	public let facets: [AppBskyRichtextFacet]?
+	public let labels: AppBskyFeedGeneratorLabels?
+	public let langs: [String]?
+	public let reply: AppBskyFeedPostReplyRef?
+	public let tags: [String]?
+	public let text: String
+
+	public init(
+		createdAt: ATProtocolDate,
+		embed: AppBskyFeedPostEmbed? = nil,
+		entities: [AppBskyFeedPostEntity]? = nil,
+		facets: [AppBskyRichtextFacet]? = nil,
+		labels: AppBskyFeedGeneratorLabels? = nil,
+		langs: [String]? = nil,
+		reply: AppBskyFeedPostReplyRef? = nil,
+		tags: [String]? = nil,
+		text: String
+	) {
+		self.createdAt = createdAt
+		self.embed = embed
+		self.entities = entities
+		self.facets = facets
+		self.labels = labels
+		self.langs = langs
+		self.reply = reply
+		self.tags = tags
+		self.text = text
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		_ = try container.decodeIfPresent(String.self, forKey: .typeIdentifier)
+		createdAt = try container.decode(ATProtocolDate.self, forKey: .createdAt)
+		embed = try container.decodeIfPresent(AppBskyFeedPostEmbed.self, forKey: .embed)
+		entities = try container.decodeIfPresent([AppBskyFeedPostEntity].self, forKey: .entities)
+		facets = try container.decodeIfPresent([AppBskyRichtextFacet].self, forKey: .facets)
+		labels = try container.decodeIfPresent(AppBskyFeedGeneratorLabels.self, forKey: .labels)
+		langs = try container.decodeIfPresent([String].self, forKey: .langs)
+		reply = try container.decodeIfPresent(AppBskyFeedPostReplyRef.self, forKey: .reply)
+		tags = try container.decodeIfPresent([String].self, forKey: .tags)
+		text = try container.decode(String.self, forKey: .text)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(Self.typeIdentifier, forKey: .typeIdentifier)
+		try container.encode(createdAt, forKey: .createdAt)
+		try container.encodeIfPresent(embed, forKey: .embed)
+		try container.encodeIfPresent(entities, forKey: .entities)
+		try container.encodeIfPresent(facets, forKey: .facets)
+		try container.encodeIfPresent(labels, forKey: .labels)
+		try container.encodeIfPresent(langs, forKey: .langs)
+		try container.encodeIfPresent(reply, forKey: .reply)
+		try container.encodeIfPresent(tags, forKey: .tags)
+		try container.encode(text, forKey: .text)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case typeIdentifier = "$type"
+		case createdAt = "createdAt"
+		case embed = "embed"
+		case entities = "entities"
+		case facets = "facets"
+		case labels = "labels"
+		case langs = "langs"
+		case reply = "reply"
+		case tags = "tags"
+		case text = "text"
+	}
+}
+
+
+public indirect enum AppBskyFeedPostEmbed: Codable, Sendable, Equatable {
+	case images(AppBskyEmbedImages)
+	case video(AppBskyEmbedVideo)
+	case external(AppBskyEmbedExternal)
+	case record(AppBskyEmbedRecord)
+	case recordWithMedia(AppBskyEmbedRecordWithMedia)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "app.bsky.embed.images": self = .images(try AppBskyEmbedImages(from: decoder))
+		case "app.bsky.embed.video": self = .video(try AppBskyEmbedVideo(from: decoder))
+		case "app.bsky.embed.external": self = .external(try AppBskyEmbedExternal(from: decoder))
+		case "app.bsky.embed.record": self = .record(try AppBskyEmbedRecord(from: decoder))
+		case "app.bsky.embed.recordWithMedia": self = .recordWithMedia(try AppBskyEmbedRecordWithMedia(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .images(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.embed.images", to: encoder)
+		case .video(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.embed.video", to: encoder)
+		case .external(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.embed.external", to: encoder)
+		case .record(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.embed.record", to: encoder)
+		case .recordWithMedia(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.embed.recordWithMedia", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
+public struct AppBskyFeedPostEntity: Codable, Sendable, Equatable {
+	public let index: AppBskyFeedPostTextSlice
+	public let type: String
+	public let value: String
+
+	public init(
+		index: AppBskyFeedPostTextSlice,
+		type: String,
+		value: String
+	) {
+		self.index = index
+		self.type = type
+		self.value = value
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		index = try container.decode(AppBskyFeedPostTextSlice.self, forKey: .index)
+		type = try container.decode(String.self, forKey: .type)
+		value = try container.decode(String.self, forKey: .value)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(index, forKey: .index)
+		try container.encode(type, forKey: .type)
+		try container.encode(value, forKey: .value)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case index = "index"
+		case type = "type"
+		case value = "value"
+	}
+}
+
+
+public struct AppBskyFeedPostgate: Codable, Sendable, Equatable {
+	public static let typeIdentifier = "app.bsky.feed.postgate"
+
+	public let createdAt: ATProtocolDate
+	public let detachedEmbeddingUris: [ATURI]?
+	public let embeddingRules: [AppBskyFeedPostgateEmbeddingRulesItem]?
+	public let post: ATURI
+
+	public init(
+		createdAt: ATProtocolDate,
+		detachedEmbeddingUris: [ATURI]? = nil,
+		embeddingRules: [AppBskyFeedPostgateEmbeddingRulesItem]? = nil,
+		post: ATURI
+	) {
+		self.createdAt = createdAt
+		self.detachedEmbeddingUris = detachedEmbeddingUris
+		self.embeddingRules = embeddingRules
+		self.post = post
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		_ = try container.decodeIfPresent(String.self, forKey: .typeIdentifier)
+		createdAt = try container.decode(ATProtocolDate.self, forKey: .createdAt)
+		detachedEmbeddingUris = try container.decodeIfPresent([ATURI].self, forKey: .detachedEmbeddingUris)
+		embeddingRules = try container.decodeIfPresent([AppBskyFeedPostgateEmbeddingRulesItem].self, forKey: .embeddingRules)
+		post = try container.decode(ATURI.self, forKey: .post)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(Self.typeIdentifier, forKey: .typeIdentifier)
+		try container.encode(createdAt, forKey: .createdAt)
+		try container.encodeIfPresent(detachedEmbeddingUris, forKey: .detachedEmbeddingUris)
+		try container.encodeIfPresent(embeddingRules, forKey: .embeddingRules)
+		try container.encode(post, forKey: .post)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case typeIdentifier = "$type"
+		case createdAt = "createdAt"
+		case detachedEmbeddingUris = "detachedEmbeddingUris"
+		case embeddingRules = "embeddingRules"
+		case post = "post"
+	}
+}
+
+
+public struct AppBskyFeedPostgateDisableRule: Codable, Sendable, Equatable {
+
+	public init() {}
+
+	public init(from decoder: Decoder) throws {
+		_ = try decoder.container(keyedBy: CodingKeys.self)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		_ = encoder.container(keyedBy: CodingKeys.self)
+	}
+
+	private struct CodingKeys: CodingKey {
+		let stringValue = ""
+		init?(stringValue: String) {
+			return nil
+		}
+
+		let intValue: Int? = nil
+		init?(intValue: Int) {
+			return nil
+		}
+	}
+}
+
+
+public indirect enum AppBskyFeedPostgateEmbeddingRulesItem: Codable, Sendable, Equatable {
+	case disableRule(AppBskyFeedPostgateDisableRule)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "app.bsky.feed.postgate#disableRule": self = .disableRule(try AppBskyFeedPostgateDisableRule(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .disableRule(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.feed.postgate#disableRule", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
+public struct AppBskyFeedPostReplyRef: Codable, Sendable, Equatable {
+	public let parent: ComAtprotoRepoStrongRef
+	public let root: ComAtprotoRepoStrongRef
+
+	public init(
+		parent: ComAtprotoRepoStrongRef,
+		root: ComAtprotoRepoStrongRef
+	) {
+		self.parent = parent
+		self.root = root
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		parent = try container.decode(ComAtprotoRepoStrongRef.self, forKey: .parent)
+		root = try container.decode(ComAtprotoRepoStrongRef.self, forKey: .root)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(parent, forKey: .parent)
+		try container.encode(root, forKey: .root)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case parent = "parent"
+		case root = "root"
+	}
+}
+
+
+public struct AppBskyFeedPostTextSlice: Codable, Sendable, Equatable {
+	public let end: Int
+	public let start: Int
+
+	public init(
+		end: Int,
+		start: Int
+	) {
+		self.end = end
+		self.start = start
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		end = try container.decode(Int.self, forKey: .end)
+		start = try container.decode(Int.self, forKey: .start)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(end, forKey: .end)
+		try container.encode(start, forKey: .start)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case end = "end"
+		case start = "start"
+	}
+}
+
+
+public struct AppBskyFeedRepost: Codable, Sendable, Equatable {
+	public static let typeIdentifier = "app.bsky.feed.repost"
+
+	public let createdAt: ATProtocolDate
+	public let subject: ComAtprotoRepoStrongRef
+	public let via: ComAtprotoRepoStrongRef?
+
+	public init(
+		createdAt: ATProtocolDate,
+		subject: ComAtprotoRepoStrongRef,
+		via: ComAtprotoRepoStrongRef? = nil
+	) {
+		self.createdAt = createdAt
+		self.subject = subject
+		self.via = via
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		_ = try container.decodeIfPresent(String.self, forKey: .typeIdentifier)
+		createdAt = try container.decode(ATProtocolDate.self, forKey: .createdAt)
+		subject = try container.decode(ComAtprotoRepoStrongRef.self, forKey: .subject)
+		via = try container.decodeIfPresent(ComAtprotoRepoStrongRef.self, forKey: .via)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(Self.typeIdentifier, forKey: .typeIdentifier)
+		try container.encode(createdAt, forKey: .createdAt)
+		try container.encode(subject, forKey: .subject)
+		try container.encodeIfPresent(via, forKey: .via)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case typeIdentifier = "$type"
+		case createdAt = "createdAt"
+		case subject = "subject"
+		case via = "via"
+	}
+}
+
+
+public enum AppBskyFeedSearchPostsError: String, Swift.Error, CaseIterable, Sendable {
+	case badQueryString = "BadQueryString"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct AppBskyFeedSearchPostsOutput: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let hitsTotal: Int?
+	public let posts: [AppBskyFeedDefsPostView]
+
+	public init(
+		cursor: String? = nil,
+		hitsTotal: Int? = nil,
+		posts: [AppBskyFeedDefsPostView]
+	) {
+		self.cursor = cursor
+		self.hitsTotal = hitsTotal
+		self.posts = posts
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		hitsTotal = try container.decodeIfPresent(Int.self, forKey: .hitsTotal)
+		posts = try container.decode([AppBskyFeedDefsPostView].self, forKey: .posts)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encodeIfPresent(hitsTotal, forKey: .hitsTotal)
+		try container.encode(posts, forKey: .posts)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case hitsTotal = "hitsTotal"
+		case posts = "posts"
+	}
+}
+
+
+public struct AppBskyFeedSearchPostsParameters: Codable, Sendable, Equatable {
+	public let author: ATIdentifier?
+	public let cursor: String?
+	public let domain: String?
+	public let lang: String?
+	public let limit: Int?
+	public let mentions: ATIdentifier?
+	public let q: String
+	public let since: String?
+	public let sort: AppBskyFeedSearchPostsParametersSort?
+	public let tag: [String]?
+	public let until: String?
+	public let url: String?
+
+	public init(
+		author: ATIdentifier? = nil,
+		cursor: String? = nil,
+		domain: String? = nil,
+		lang: String? = nil,
+		limit: Int? = nil,
+		mentions: ATIdentifier? = nil,
+		q: String,
+		since: String? = nil,
+		sort: AppBskyFeedSearchPostsParametersSort? = nil,
+		tag: [String]? = nil,
+		until: String? = nil,
+		url: String? = nil
+	) {
+		self.author = author
+		self.cursor = cursor
+		self.domain = domain
+		self.lang = lang
+		self.limit = limit
+		self.mentions = mentions
+		self.q = q
+		self.since = since
+		self.sort = sort
+		self.tag = tag
+		self.until = until
+		self.url = url
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		author = try container.decodeIfPresent(ATIdentifier.self, forKey: .author)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		domain = try container.decodeIfPresent(String.self, forKey: .domain)
+		lang = try container.decodeIfPresent(String.self, forKey: .lang)
+		limit = try container.decodeIfPresent(Int.self, forKey: .limit)
+		mentions = try container.decodeIfPresent(ATIdentifier.self, forKey: .mentions)
+		q = try container.decode(String.self, forKey: .q)
+		since = try container.decodeIfPresent(String.self, forKey: .since)
+		sort = try container.decodeIfPresent(AppBskyFeedSearchPostsParametersSort.self, forKey: .sort)
+		tag = try container.decodeIfPresent([String].self, forKey: .tag)
+		until = try container.decodeIfPresent(String.self, forKey: .until)
+		url = try container.decodeIfPresent(String.self, forKey: .url)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(author, forKey: .author)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encodeIfPresent(domain, forKey: .domain)
+		try container.encodeIfPresent(lang, forKey: .lang)
+		try container.encodeIfPresent(limit, forKey: .limit)
+		try container.encodeIfPresent(mentions, forKey: .mentions)
+		try container.encode(q, forKey: .q)
+		try container.encodeIfPresent(since, forKey: .since)
+		try container.encodeIfPresent(sort, forKey: .sort)
+		try container.encodeIfPresent(tag, forKey: .tag)
+		try container.encodeIfPresent(until, forKey: .until)
+		try container.encodeIfPresent(url, forKey: .url)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		if let value = author {
+			value.appendQueryItems(named: "author", to: &items)
+		}
+		if let value = cursor {
+			value.appendQueryItems(named: "cursor", to: &items)
+		}
+		if let value = domain {
+			value.appendQueryItems(named: "domain", to: &items)
+		}
+		if let value = lang {
+			value.appendQueryItems(named: "lang", to: &items)
+		}
+		if let value = limit {
+			value.appendQueryItems(named: "limit", to: &items)
+		}
+		if let value = mentions {
+			value.appendQueryItems(named: "mentions", to: &items)
+		}
+		q.appendQueryItems(named: "q", to: &items)
+		if let value = since {
+			value.appendQueryItems(named: "since", to: &items)
+		}
+		if let value = sort {
+			value.appendQueryItems(named: "sort", to: &items)
+		}
+		if let value = tag {
+			value.appendQueryItems(named: "tag", to: &items)
+		}
+		if let value = until {
+			value.appendQueryItems(named: "until", to: &items)
+		}
+		if let value = url {
+			value.appendQueryItems(named: "url", to: &items)
+		}
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case author = "author"
+		case cursor = "cursor"
+		case domain = "domain"
+		case lang = "lang"
+		case limit = "limit"
+		case mentions = "mentions"
+		case q = "q"
+		case since = "since"
+		case sort = "sort"
+		case tag = "tag"
+		case until = "until"
+		case url = "url"
+	}
+}
+
+
+public enum AppBskyFeedSearchPostsParametersSort: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case top = "top"
+	case latest = "latest"
+}
+
+
+public struct AppBskyFeedSendInteractionsInput: Codable, Sendable, Equatable {
+	public let feed: ATURI?
+	public let interactions: [AppBskyFeedDefsInteraction]
+
+	public init(
+		feed: ATURI? = nil,
+		interactions: [AppBskyFeedDefsInteraction]
+	) {
+		self.feed = feed
+		self.interactions = interactions
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		feed = try container.decodeIfPresent(ATURI.self, forKey: .feed)
+		interactions = try container.decode([AppBskyFeedDefsInteraction].self, forKey: .interactions)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(feed, forKey: .feed)
+		try container.encode(interactions, forKey: .interactions)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case feed = "feed"
+		case interactions = "interactions"
+	}
+}
+
+
+public struct AppBskyFeedSendInteractionsOutput: Codable, Sendable, Equatable {
+
+	public init() {}
+
+	public init(from decoder: Decoder) throws {
+		_ = try decoder.container(keyedBy: CodingKeys.self)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		_ = encoder.container(keyedBy: CodingKeys.self)
+	}
+
+	private struct CodingKeys: CodingKey {
+		let stringValue = ""
+		init?(stringValue: String) {
+			return nil
+		}
+
+		let intValue: Int? = nil
+		init?(intValue: Int) {
+			return nil
+		}
+	}
+}
+
+
+public struct AppBskyFeedThreadgate: Codable, Sendable, Equatable {
+	public static let typeIdentifier = "app.bsky.feed.threadgate"
+
+	public let allow: [AppBskyFeedThreadgateAllowItem]?
+	public let createdAt: ATProtocolDate
+	public let hiddenReplies: [ATURI]?
+	public let post: ATURI
+
+	public init(
+		allow: [AppBskyFeedThreadgateAllowItem]? = nil,
+		createdAt: ATProtocolDate,
+		hiddenReplies: [ATURI]? = nil,
+		post: ATURI
+	) {
+		self.allow = allow
+		self.createdAt = createdAt
+		self.hiddenReplies = hiddenReplies
+		self.post = post
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		_ = try container.decodeIfPresent(String.self, forKey: .typeIdentifier)
+		allow = try container.decodeIfPresent([AppBskyFeedThreadgateAllowItem].self, forKey: .allow)
+		createdAt = try container.decode(ATProtocolDate.self, forKey: .createdAt)
+		hiddenReplies = try container.decodeIfPresent([ATURI].self, forKey: .hiddenReplies)
+		post = try container.decode(ATURI.self, forKey: .post)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(Self.typeIdentifier, forKey: .typeIdentifier)
+		try container.encodeIfPresent(allow, forKey: .allow)
+		try container.encode(createdAt, forKey: .createdAt)
+		try container.encodeIfPresent(hiddenReplies, forKey: .hiddenReplies)
+		try container.encode(post, forKey: .post)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case typeIdentifier = "$type"
+		case allow = "allow"
+		case createdAt = "createdAt"
+		case hiddenReplies = "hiddenReplies"
+		case post = "post"
+	}
+}
+
+
+public indirect enum AppBskyFeedThreadgateAllowItem: Codable, Sendable, Equatable {
+	case mentionRule(AppBskyFeedThreadgateMentionRule)
+	case followerRule(AppBskyFeedThreadgateFollowerRule)
+	case followingRule(AppBskyFeedThreadgateFollowingRule)
+	case listRule(AppBskyFeedThreadgateListRule)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "app.bsky.feed.threadgate#mentionRule": self = .mentionRule(try AppBskyFeedThreadgateMentionRule(from: decoder))
+		case "app.bsky.feed.threadgate#followerRule": self = .followerRule(try AppBskyFeedThreadgateFollowerRule(from: decoder))
+		case "app.bsky.feed.threadgate#followingRule": self = .followingRule(try AppBskyFeedThreadgateFollowingRule(from: decoder))
+		case "app.bsky.feed.threadgate#listRule": self = .listRule(try AppBskyFeedThreadgateListRule(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .mentionRule(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.feed.threadgate#mentionRule", to: encoder)
+		case .followerRule(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.feed.threadgate#followerRule", to: encoder)
+		case .followingRule(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.feed.threadgate#followingRule", to: encoder)
+		case .listRule(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.feed.threadgate#listRule", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
+public struct AppBskyFeedThreadgateFollowerRule: Codable, Sendable, Equatable {
+
+	public init() {}
+
+	public init(from decoder: Decoder) throws {
+		_ = try decoder.container(keyedBy: CodingKeys.self)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		_ = encoder.container(keyedBy: CodingKeys.self)
+	}
+
+	private struct CodingKeys: CodingKey {
+		let stringValue = ""
+		init?(stringValue: String) {
+			return nil
+		}
+
+		let intValue: Int? = nil
+		init?(intValue: Int) {
+			return nil
+		}
+	}
+}
+
+
+public struct AppBskyFeedThreadgateFollowingRule: Codable, Sendable, Equatable {
+
+	public init() {}
+
+	public init(from decoder: Decoder) throws {
+		_ = try decoder.container(keyedBy: CodingKeys.self)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		_ = encoder.container(keyedBy: CodingKeys.self)
+	}
+
+	private struct CodingKeys: CodingKey {
+		let stringValue = ""
+		init?(stringValue: String) {
+			return nil
+		}
+
+		let intValue: Int? = nil
+		init?(intValue: Int) {
+			return nil
+		}
+	}
+}
+
+
+public struct AppBskyFeedThreadgateListRule: Codable, Sendable, Equatable {
+	public let list: ATURI
+
+	public init(
+		list: ATURI
+	) {
+		self.list = list
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		list = try container.decode(ATURI.self, forKey: .list)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(list, forKey: .list)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case list = "list"
+	}
+}
+
+
+public struct AppBskyFeedThreadgateMentionRule: Codable, Sendable, Equatable {
+
+	public init() {}
+
+	public init(from decoder: Decoder) throws {
+		_ = try decoder.container(keyedBy: CodingKeys.self)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		_ = encoder.container(keyedBy: CodingKeys.self)
+	}
+
+	private struct CodingKeys: CodingKey {
+		let stringValue = ""
+		init?(stringValue: String) {
+			return nil
+		}
+
+		let intValue: Int? = nil
+		init?(intValue: Int) {
+			return nil
+		}
+	}
+}
+
+

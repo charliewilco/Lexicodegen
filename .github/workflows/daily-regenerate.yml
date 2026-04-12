@@ -17,24 +17,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
 
-      - name: Setup Just
-        uses: extractions/setup-just@v4
+      - name: Setup Swift
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: "6.2"
 
-      - name: Install yq
-        run: |
-          sudo wget -qO /usr/local/bin/yq \
-            https://github.com/mikefarah/yq/releases/download/v4.44.5/yq_linux_amd64
-          sudo chmod +x /usr/local/bin/yq
-          yq --version
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
+      - name: Refresh lexicons
+        run: sh ./scripts/get-lexicons.sh
 
       - name: Run full regeneration
-        run: just all
+        run: |
+          go run ./cmd/lexicodegen ./lexicons --output ./output/swift
+          bash ./scripts/check-swift-compile.sh ./output/swift
 
       - name: Create pull request when changes exist
         uses: peter-evans/create-pull-request@v8

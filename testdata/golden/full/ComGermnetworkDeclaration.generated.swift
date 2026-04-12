@@ -1,0 +1,95 @@
+import Foundation
+
+
+public struct ComGermnetworkDeclaration: Codable, Sendable, Equatable {
+	public static let typeIdentifier = "com.germnetwork.declaration"
+
+	public let continuityProofs: [Bytes]?
+	public let currentKey: Bytes
+	public let keyPackage: Bytes?
+	public let messageMe: ComGermnetworkDeclarationMessageMe?
+	public let version: String
+
+	public init(
+		continuityProofs: [Bytes]? = nil,
+		currentKey: Bytes,
+		keyPackage: Bytes? = nil,
+		messageMe: ComGermnetworkDeclarationMessageMe? = nil,
+		version: String
+	) {
+		self.continuityProofs = continuityProofs
+		self.currentKey = currentKey
+		self.keyPackage = keyPackage
+		self.messageMe = messageMe
+		self.version = version
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		_ = try container.decodeIfPresent(String.self, forKey: .typeIdentifier)
+		continuityProofs = try container.decodeIfPresent([Bytes].self, forKey: .continuityProofs)
+		currentKey = try container.decode(Bytes.self, forKey: .currentKey)
+		keyPackage = try container.decodeIfPresent(Bytes.self, forKey: .keyPackage)
+		messageMe = try container.decodeIfPresent(ComGermnetworkDeclarationMessageMe.self, forKey: .messageMe)
+		version = try container.decode(String.self, forKey: .version)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(Self.typeIdentifier, forKey: .typeIdentifier)
+		try container.encodeIfPresent(continuityProofs, forKey: .continuityProofs)
+		try container.encode(currentKey, forKey: .currentKey)
+		try container.encodeIfPresent(keyPackage, forKey: .keyPackage)
+		try container.encodeIfPresent(messageMe, forKey: .messageMe)
+		try container.encode(version, forKey: .version)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case typeIdentifier = "$type"
+		case continuityProofs = "continuityProofs"
+		case currentKey = "currentKey"
+		case keyPackage = "keyPackage"
+		case messageMe = "messageMe"
+		case version = "version"
+	}
+}
+
+
+public struct ComGermnetworkDeclarationMessageMe: Codable, Sendable, Equatable {
+	public let messageMeUrl: String
+	public let showButtonTo: ComGermnetworkDeclarationMessageMeShowButtonTo
+
+	public init(
+		messageMeUrl: String,
+		showButtonTo: ComGermnetworkDeclarationMessageMeShowButtonTo
+	) {
+		self.messageMeUrl = messageMeUrl
+		self.showButtonTo = showButtonTo
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		messageMeUrl = try container.decode(String.self, forKey: .messageMeUrl)
+		showButtonTo = try container.decode(ComGermnetworkDeclarationMessageMeShowButtonTo.self, forKey: .showButtonTo)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(messageMeUrl, forKey: .messageMeUrl)
+		try container.encode(showButtonTo, forKey: .showButtonTo)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case messageMeUrl = "messageMeUrl"
+		case showButtonTo = "showButtonTo"
+	}
+}
+
+
+public enum ComGermnetworkDeclarationMessageMeShowButtonTo: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case none = "none"
+	case usersIfollow = "usersIFollow"
+	case everyone = "everyone"
+}
+
+

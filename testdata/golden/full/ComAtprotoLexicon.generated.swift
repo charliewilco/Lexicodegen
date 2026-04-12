@@ -1,0 +1,113 @@
+import Foundation
+
+
+public enum ComAtprotoLexiconResolveLexiconError: String, Swift.Error, CaseIterable, Sendable {
+	case lexiconNotFound = "LexiconNotFound"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ComAtprotoLexiconResolveLexiconOutput: Codable, Sendable, Equatable {
+	public let cid: CID
+	public let schema: ATProtocolValueContainer
+	public let uri: ATURI
+
+	public init(
+		cid: CID,
+		schema: ATProtocolValueContainer,
+		uri: ATURI
+	) {
+		self.cid = cid
+		self.schema = schema
+		self.uri = uri
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cid = try container.decode(CID.self, forKey: .cid)
+		schema = try container.decode(ATProtocolValueContainer.self, forKey: .schema)
+		uri = try container.decode(ATURI.self, forKey: .uri)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(cid, forKey: .cid)
+		try container.encode(schema, forKey: .schema)
+		try container.encode(uri, forKey: .uri)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cid = "cid"
+		case schema = "schema"
+		case uri = "uri"
+	}
+}
+
+
+public struct ComAtprotoLexiconResolveLexiconParameters: Codable, Sendable, Equatable {
+	public let nsid: NSID
+
+	public init(
+		nsid: NSID
+	) {
+		self.nsid = nsid
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		nsid = try container.decode(NSID.self, forKey: .nsid)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(nsid, forKey: .nsid)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		nsid.appendQueryItems(named: "nsid", to: &items)
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case nsid = "nsid"
+	}
+}
+
+
+public struct ComAtprotoLexiconSchema: Codable, Sendable, Equatable {
+	public static let typeIdentifier = "com.atproto.lexicon.schema"
+
+	public let lexicon: Int
+
+	public init(
+		lexicon: Int
+	) {
+		self.lexicon = lexicon
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		_ = try container.decodeIfPresent(String.self, forKey: .typeIdentifier)
+		lexicon = try container.decode(Int.self, forKey: .lexicon)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(Self.typeIdentifier, forKey: .typeIdentifier)
+		try container.encode(lexicon, forKey: .lexicon)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case typeIdentifier = "$type"
+		case lexicon = "lexicon"
+	}
+}
+
+

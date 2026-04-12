@@ -1,0 +1,474 @@
+import Foundation
+
+
+public struct ComAtprotoTempAddReservedHandleInput: Codable, Sendable, Equatable {
+	public let handle: String
+
+	public init(
+		handle: String
+	) {
+		self.handle = handle
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		handle = try container.decode(String.self, forKey: .handle)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(handle, forKey: .handle)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case handle = "handle"
+	}
+}
+
+
+public struct ComAtprotoTempAddReservedHandleOutput: Codable, Sendable, Equatable {
+
+	public init() {}
+
+	public init(from decoder: Decoder) throws {
+		_ = try decoder.container(keyedBy: CodingKeys.self)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		_ = encoder.container(keyedBy: CodingKeys.self)
+	}
+
+	private struct CodingKeys: CodingKey {
+		let stringValue = ""
+		init?(stringValue: String) {
+			return nil
+		}
+
+		let intValue: Int? = nil
+		init?(intValue: Int) {
+			return nil
+		}
+	}
+}
+
+
+public enum ComAtprotoTempCheckHandleAvailabilityError: String, Swift.Error, CaseIterable, Sendable {
+	case invalidEmail = "InvalidEmail"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ComAtprotoTempCheckHandleAvailabilityOutput: Codable, Sendable, Equatable {
+	public let handle: Handle
+	public let result: ComAtprotoTempCheckHandleAvailabilityOutputResult
+
+	public init(
+		handle: Handle,
+		result: ComAtprotoTempCheckHandleAvailabilityOutputResult
+	) {
+		self.handle = handle
+		self.result = result
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		handle = try container.decode(Handle.self, forKey: .handle)
+		result = try container.decode(ComAtprotoTempCheckHandleAvailabilityOutputResult.self, forKey: .result)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(handle, forKey: .handle)
+		try container.encode(result, forKey: .result)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case handle = "handle"
+		case result = "result"
+	}
+}
+
+
+public indirect enum ComAtprotoTempCheckHandleAvailabilityOutputResult: Codable, Sendable, Equatable {
+	case resultAvailable(ComAtprotoTempCheckHandleAvailabilityResultAvailable)
+	case resultUnavailable(ComAtprotoTempCheckHandleAvailabilityResultUnavailable)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "com.atproto.temp.checkHandleAvailability#resultAvailable": self = .resultAvailable(try ComAtprotoTempCheckHandleAvailabilityResultAvailable(from: decoder))
+		case "com.atproto.temp.checkHandleAvailability#resultUnavailable": self = .resultUnavailable(try ComAtprotoTempCheckHandleAvailabilityResultUnavailable(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .resultAvailable(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "com.atproto.temp.checkHandleAvailability#resultAvailable", to: encoder)
+		case .resultUnavailable(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "com.atproto.temp.checkHandleAvailability#resultUnavailable", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
+public struct ComAtprotoTempCheckHandleAvailabilityParameters: Codable, Sendable, Equatable {
+	public let birthDate: ATProtocolDate?
+	public let email: String?
+	public let handle: Handle
+
+	public init(
+		birthDate: ATProtocolDate? = nil,
+		email: String? = nil,
+		handle: Handle
+	) {
+		self.birthDate = birthDate
+		self.email = email
+		self.handle = handle
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		birthDate = try container.decodeIfPresent(ATProtocolDate.self, forKey: .birthDate)
+		email = try container.decodeIfPresent(String.self, forKey: .email)
+		handle = try container.decode(Handle.self, forKey: .handle)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(birthDate, forKey: .birthDate)
+		try container.encodeIfPresent(email, forKey: .email)
+		try container.encode(handle, forKey: .handle)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		if let value = birthDate {
+			value.appendQueryItems(named: "birthDate", to: &items)
+		}
+		if let value = email {
+			value.appendQueryItems(named: "email", to: &items)
+		}
+		handle.appendQueryItems(named: "handle", to: &items)
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case birthDate = "birthDate"
+		case email = "email"
+		case handle = "handle"
+	}
+}
+
+
+public struct ComAtprotoTempCheckHandleAvailabilityResultAvailable: Codable, Sendable, Equatable {
+
+	public init() {}
+
+	public init(from decoder: Decoder) throws {
+		_ = try decoder.container(keyedBy: CodingKeys.self)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		_ = encoder.container(keyedBy: CodingKeys.self)
+	}
+
+	private struct CodingKeys: CodingKey {
+		let stringValue = ""
+		init?(stringValue: String) {
+			return nil
+		}
+
+		let intValue: Int? = nil
+		init?(intValue: Int) {
+			return nil
+		}
+	}
+}
+
+
+public struct ComAtprotoTempCheckHandleAvailabilityResultUnavailable: Codable, Sendable, Equatable {
+	public let suggestions: [ComAtprotoTempCheckHandleAvailabilitySuggestion]
+
+	public init(
+		suggestions: [ComAtprotoTempCheckHandleAvailabilitySuggestion]
+	) {
+		self.suggestions = suggestions
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		suggestions = try container.decode([ComAtprotoTempCheckHandleAvailabilitySuggestion].self, forKey: .suggestions)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(suggestions, forKey: .suggestions)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case suggestions = "suggestions"
+	}
+}
+
+
+public struct ComAtprotoTempCheckHandleAvailabilitySuggestion: Codable, Sendable, Equatable {
+	public let handle: Handle
+	public let method: String
+
+	public init(
+		handle: Handle,
+		method: String
+	) {
+		self.handle = handle
+		self.method = method
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		handle = try container.decode(Handle.self, forKey: .handle)
+		method = try container.decode(String.self, forKey: .method)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(handle, forKey: .handle)
+		try container.encode(method, forKey: .method)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case handle = "handle"
+		case method = "method"
+	}
+}
+
+
+public struct ComAtprotoTempCheckSignupQueueOutput: Codable, Sendable, Equatable {
+	public let activated: Bool
+	public let estimatedTimeMs: Int?
+	public let placeInQueue: Int?
+
+	public init(
+		activated: Bool,
+		estimatedTimeMs: Int? = nil,
+		placeInQueue: Int? = nil
+	) {
+		self.activated = activated
+		self.estimatedTimeMs = estimatedTimeMs
+		self.placeInQueue = placeInQueue
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		activated = try container.decode(Bool.self, forKey: .activated)
+		estimatedTimeMs = try container.decodeIfPresent(Int.self, forKey: .estimatedTimeMs)
+		placeInQueue = try container.decodeIfPresent(Int.self, forKey: .placeInQueue)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(activated, forKey: .activated)
+		try container.encodeIfPresent(estimatedTimeMs, forKey: .estimatedTimeMs)
+		try container.encodeIfPresent(placeInQueue, forKey: .placeInQueue)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case activated = "activated"
+		case estimatedTimeMs = "estimatedTimeMs"
+		case placeInQueue = "placeInQueue"
+	}
+}
+
+
+public enum ComAtprotoTempDereferenceScopeError: String, Swift.Error, CaseIterable, Sendable {
+	case invalidScopeReference = "InvalidScopeReference"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ComAtprotoTempDereferenceScopeOutput: Codable, Sendable, Equatable {
+	public let scope: String
+
+	public init(
+		scope: String
+	) {
+		self.scope = scope
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		scope = try container.decode(String.self, forKey: .scope)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(scope, forKey: .scope)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case scope = "scope"
+	}
+}
+
+
+public struct ComAtprotoTempDereferenceScopeParameters: Codable, Sendable, Equatable {
+	public let scope: String
+
+	public init(
+		scope: String
+	) {
+		self.scope = scope
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		scope = try container.decode(String.self, forKey: .scope)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(scope, forKey: .scope)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		scope.appendQueryItems(named: "scope", to: &items)
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case scope = "scope"
+	}
+}
+
+
+public struct ComAtprotoTempFetchLabelsOutput: Codable, Sendable, Equatable {
+	public let labels: [ComAtprotoLabelDefsLabel]
+
+	public init(
+		labels: [ComAtprotoLabelDefsLabel]
+	) {
+		self.labels = labels
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		labels = try container.decode([ComAtprotoLabelDefsLabel].self, forKey: .labels)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(labels, forKey: .labels)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case labels = "labels"
+	}
+}
+
+
+public struct ComAtprotoTempFetchLabelsParameters: Codable, Sendable, Equatable {
+	public let limit: Int?
+	public let since: Int?
+
+	public init(
+		limit: Int? = nil,
+		since: Int? = nil
+	) {
+		self.limit = limit
+		self.since = since
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		limit = try container.decodeIfPresent(Int.self, forKey: .limit)
+		since = try container.decodeIfPresent(Int.self, forKey: .since)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(limit, forKey: .limit)
+		try container.encodeIfPresent(since, forKey: .since)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		if let value = limit {
+			value.appendQueryItems(named: "limit", to: &items)
+		}
+		if let value = since {
+			value.appendQueryItems(named: "since", to: &items)
+		}
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case limit = "limit"
+		case since = "since"
+	}
+}
+
+
+public struct ComAtprotoTempRequestPhoneVerificationInput: Codable, Sendable, Equatable {
+	public let phoneNumber: String
+
+	public init(
+		phoneNumber: String
+	) {
+		self.phoneNumber = phoneNumber
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		phoneNumber = try container.decode(String.self, forKey: .phoneNumber)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(phoneNumber, forKey: .phoneNumber)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case phoneNumber = "phoneNumber"
+	}
+}
+
+
+public struct ComAtprotoTempRevokeAccountCredentialsInput: Codable, Sendable, Equatable {
+	public let account: ATIdentifier
+
+	public init(
+		account: ATIdentifier
+	) {
+		self.account = account
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		account = try container.decode(ATIdentifier.self, forKey: .account)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(account, forKey: .account)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case account = "account"
+	}
+}
+
+

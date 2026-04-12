@@ -1,0 +1,328 @@
+import Foundation
+
+
+public enum ToolsOzoneTeamAddMemberError: String, Swift.Error, CaseIterable, Sendable {
+	case memberAlreadyExists = "MemberAlreadyExists"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ToolsOzoneTeamAddMemberInput: Codable, Sendable, Equatable {
+	public let did: DID
+	public let role: ToolsOzoneTeamAddMemberInputRole
+
+	public init(
+		did: DID,
+		role: ToolsOzoneTeamAddMemberInputRole
+	) {
+		self.did = did
+		self.role = role
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		did = try container.decode(DID.self, forKey: .did)
+		role = try container.decode(ToolsOzoneTeamAddMemberInputRole.self, forKey: .role)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(did, forKey: .did)
+		try container.encode(role, forKey: .role)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case did = "did"
+		case role = "role"
+	}
+}
+
+
+public enum ToolsOzoneTeamAddMemberInputRole: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case toolsOzoneTeamDefsRoleAdmin = "tools.ozone.team.defs#roleAdmin"
+	case toolsOzoneTeamDefsRoleModerator = "tools.ozone.team.defs#roleModerator"
+	case toolsOzoneTeamDefsRoleVerifier = "tools.ozone.team.defs#roleVerifier"
+	case toolsOzoneTeamDefsRoleTriage = "tools.ozone.team.defs#roleTriage"
+}
+
+
+public typealias ToolsOzoneTeamAddMemberOutput = ToolsOzoneTeamDefsMember
+
+
+public struct ToolsOzoneTeamDefsMember: Codable, Sendable, Equatable {
+	public let createdAt: ATProtocolDate?
+	public let did: DID
+	public let disabled: Bool?
+	public let lastUpdatedBy: String?
+	public let profile: AppBskyActorDefsProfileViewDetailed?
+	public let role: ToolsOzoneTeamDefsMemberRole
+	public let updatedAt: ATProtocolDate?
+
+	public init(
+		createdAt: ATProtocolDate? = nil,
+		did: DID,
+		disabled: Bool? = nil,
+		lastUpdatedBy: String? = nil,
+		profile: AppBskyActorDefsProfileViewDetailed? = nil,
+		role: ToolsOzoneTeamDefsMemberRole,
+		updatedAt: ATProtocolDate? = nil
+	) {
+		self.createdAt = createdAt
+		self.did = did
+		self.disabled = disabled
+		self.lastUpdatedBy = lastUpdatedBy
+		self.profile = profile
+		self.role = role
+		self.updatedAt = updatedAt
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		createdAt = try container.decodeIfPresent(ATProtocolDate.self, forKey: .createdAt)
+		did = try container.decode(DID.self, forKey: .did)
+		disabled = try container.decodeIfPresent(Bool.self, forKey: .disabled)
+		lastUpdatedBy = try container.decodeIfPresent(String.self, forKey: .lastUpdatedBy)
+		profile = try container.decodeIfPresent(AppBskyActorDefsProfileViewDetailed.self, forKey: .profile)
+		role = try container.decode(ToolsOzoneTeamDefsMemberRole.self, forKey: .role)
+		updatedAt = try container.decodeIfPresent(ATProtocolDate.self, forKey: .updatedAt)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(createdAt, forKey: .createdAt)
+		try container.encode(did, forKey: .did)
+		try container.encodeIfPresent(disabled, forKey: .disabled)
+		try container.encodeIfPresent(lastUpdatedBy, forKey: .lastUpdatedBy)
+		try container.encodeIfPresent(profile, forKey: .profile)
+		try container.encode(role, forKey: .role)
+		try container.encodeIfPresent(updatedAt, forKey: .updatedAt)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case createdAt = "createdAt"
+		case did = "did"
+		case disabled = "disabled"
+		case lastUpdatedBy = "lastUpdatedBy"
+		case profile = "profile"
+		case role = "role"
+		case updatedAt = "updatedAt"
+	}
+}
+
+
+public enum ToolsOzoneTeamDefsMemberRole: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case toolsOzoneTeamDefsRoleAdmin = "tools.ozone.team.defs#roleAdmin"
+	case toolsOzoneTeamDefsRoleModerator = "tools.ozone.team.defs#roleModerator"
+	case toolsOzoneTeamDefsRoleTriage = "tools.ozone.team.defs#roleTriage"
+	case toolsOzoneTeamDefsRoleVerifier = "tools.ozone.team.defs#roleVerifier"
+}
+
+
+public typealias ToolsOzoneTeamDefsRoleAdmin = String
+
+
+public typealias ToolsOzoneTeamDefsRoleModerator = String
+
+
+public typealias ToolsOzoneTeamDefsRoleTriage = String
+
+
+public typealias ToolsOzoneTeamDefsRoleVerifier = String
+
+
+public enum ToolsOzoneTeamDeleteMemberError: String, Swift.Error, CaseIterable, Sendable {
+	case cannotDeleteSelf = "CannotDeleteSelf"
+	case memberNotFound = "MemberNotFound"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ToolsOzoneTeamDeleteMemberInput: Codable, Sendable, Equatable {
+	public let did: DID
+
+	public init(
+		did: DID
+	) {
+		self.did = did
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		did = try container.decode(DID.self, forKey: .did)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(did, forKey: .did)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case did = "did"
+	}
+}
+
+
+public struct ToolsOzoneTeamListMembersOutput: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let members: [ToolsOzoneTeamDefsMember]
+
+	public init(
+		cursor: String? = nil,
+		members: [ToolsOzoneTeamDefsMember]
+	) {
+		self.cursor = cursor
+		self.members = members
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		members = try container.decode([ToolsOzoneTeamDefsMember].self, forKey: .members)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encode(members, forKey: .members)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case members = "members"
+	}
+}
+
+
+public struct ToolsOzoneTeamListMembersParameters: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let disabled: Bool?
+	public let limit: Int?
+	public let q: String?
+	public let roles: [String]?
+
+	public init(
+		cursor: String? = nil,
+		disabled: Bool? = nil,
+		limit: Int? = nil,
+		q: String? = nil,
+		roles: [String]? = nil
+	) {
+		self.cursor = cursor
+		self.disabled = disabled
+		self.limit = limit
+		self.q = q
+		self.roles = roles
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		disabled = try container.decodeIfPresent(Bool.self, forKey: .disabled)
+		limit = try container.decodeIfPresent(Int.self, forKey: .limit)
+		q = try container.decodeIfPresent(String.self, forKey: .q)
+		roles = try container.decodeIfPresent([String].self, forKey: .roles)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encodeIfPresent(disabled, forKey: .disabled)
+		try container.encodeIfPresent(limit, forKey: .limit)
+		try container.encodeIfPresent(q, forKey: .q)
+		try container.encodeIfPresent(roles, forKey: .roles)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		if let value = cursor {
+			value.appendQueryItems(named: "cursor", to: &items)
+		}
+		if let value = disabled {
+			value.appendQueryItems(named: "disabled", to: &items)
+		}
+		if let value = limit {
+			value.appendQueryItems(named: "limit", to: &items)
+		}
+		if let value = q {
+			value.appendQueryItems(named: "q", to: &items)
+		}
+		if let value = roles {
+			value.appendQueryItems(named: "roles", to: &items)
+		}
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case disabled = "disabled"
+		case limit = "limit"
+		case q = "q"
+		case roles = "roles"
+	}
+}
+
+
+public enum ToolsOzoneTeamUpdateMemberError: String, Swift.Error, CaseIterable, Sendable {
+	case memberNotFound = "MemberNotFound"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ToolsOzoneTeamUpdateMemberInput: Codable, Sendable, Equatable {
+	public let did: DID
+	public let disabled: Bool?
+	public let role: ToolsOzoneTeamAddMemberInputRole?
+
+	public init(
+		did: DID,
+		disabled: Bool? = nil,
+		role: ToolsOzoneTeamAddMemberInputRole? = nil
+	) {
+		self.did = did
+		self.disabled = disabled
+		self.role = role
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		did = try container.decode(DID.self, forKey: .did)
+		disabled = try container.decodeIfPresent(Bool.self, forKey: .disabled)
+		role = try container.decodeIfPresent(ToolsOzoneTeamAddMemberInputRole.self, forKey: .role)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(did, forKey: .did)
+		try container.encodeIfPresent(disabled, forKey: .disabled)
+		try container.encodeIfPresent(role, forKey: .role)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case did = "did"
+		case disabled = "disabled"
+		case role = "role"
+	}
+}
+
+
+public typealias ToolsOzoneTeamUpdateMemberOutput = ToolsOzoneTeamDefsMember
+
+

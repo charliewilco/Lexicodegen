@@ -1,0 +1,236 @@
+package swiftgen
+
+import (
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/charliewilco/lexicon-openapi-generator/internal/ir"
+	"github.com/charliewilco/lexicon-openapi-generator/internal/schema"
+)
+
+func TestEmitSwiftFromIRTargetedSurface(t *testing.T) {
+	t.Parallel()
+
+	namedTypes := []ir.NamedType{
+		{
+			ID:       "app.bsky.feed.defs",
+			Name:     "postView",
+			FullName: "app.bsky.feed.defs.postView",
+			Definition: schema.Schema{
+				Type:     "object",
+				Required: []string{"uri", "cid", "createdAt"},
+				Properties: map[string]schema.Schema{
+					"uri":       {Type: "string", Format: "at-uri"},
+					"cid":       {Type: "string", Format: "cid"},
+					"createdAt": {Type: "string", Format: "datetime"},
+				},
+			},
+			Source: "app.bsky.feed.defs",
+			Tag:    "app.bsky.feed",
+			Type:   "object",
+		},
+	}
+
+	data := ir.LexiconIR{
+		NamedTypes: namedTypes,
+		Endpoints: []ir.Endpoint{
+			{
+				ID:       "app.bsky.feed.getTimeline",
+				Name:     "main",
+				FullName: "app.bsky.feed.getTimeline",
+				Definition: schema.Schema{
+					Type: "query",
+				},
+				Method: "query",
+				Source: "app.bsky.feed",
+				Tag:    "app.bsky.feed",
+				Path:   "/xrpc/app.bsky.feed.getTimeline",
+				ParametersSchema: &schema.Schema{
+					Type:     "params",
+					Required: []string{"actor"},
+					Properties: map[string]schema.Schema{
+						"actor": {Type: "string", Format: "at-identifier"},
+						"limit": {Type: "integer"},
+					},
+				},
+				OutputSchema:   &schema.Schema{Type: "ref", Ref: "app.bsky.feed.defs#postView"},
+				OutputEncoding: "application/json",
+				Errors:         []ir.EndpointError{{Name: "NotFound"}},
+			},
+			{
+				ID:       "app.bsky.feed.createPost",
+				Name:     "main",
+				FullName: "app.bsky.feed.createPost",
+				Definition: schema.Schema{
+					Type: "procedure",
+				},
+				Method: "procedure",
+				Source: "app.bsky.feed",
+				Tag:    "app.bsky.feed",
+				Path:   "/xrpc/app.bsky.feed.createPost",
+				InputSchema: &schema.Schema{
+					Type:     "object",
+					Required: []string{"text"},
+					Properties: map[string]schema.Schema{
+						"text": {Type: "string"},
+					},
+				},
+				InputEncoding:  "application/json",
+				OutputSchema:   &schema.Schema{Type: "ref", Ref: "app.bsky.feed.defs#postView"},
+				OutputEncoding: "application/json",
+			},
+		},
+		DefinitionIndex: map[string]ir.NamedType{
+			"app.bsky.feed.defs.postView": namedTypes[0],
+		},
+	}
+
+	outputDir := t.TempDir()
+	if err := EmitSwiftFromIR(data, outputDir); err != nil {
+		t.Fatal(err)
+	}
+
+	runtime := readFile(t, filepath.Join(outputDir, "Models.swift"))
+	grouped := readFile(t, filepath.Join(outputDir, "AppBskyFeed.generated.swift"))
+	endpoints := readFile(t, filepath.Join(outputDir, "Endpoints.swift"))
+
+	for _, snippet := range []string{
+		"public protocol QueryParameterValue",
+		"public struct CID: RawRepresentable",
+		"public struct ATProtocolDate: RawRepresentable",
+		"public struct XRPCResponse",
+		"public struct EmptyResponse",
+		"public enum XRPCSubscriptionEvent",
+		"public func requestJSON<T: Decodable>(",
+		"public func requestData(",
+		"public final class ATProtoClient",
+	} {
+		if !strings.Contains(runtime, snippet) {
+			t.Fatalf("runtime missing %q", snippet)
+		}
+	}
+
+	for _, snippet := range []string{
+		"public struct AppBskyFeedDefsPostView",
+		"public struct AppBskyFeedGetTimelineParameters",
+		"public enum AppBskyFeedGetTimelineError",
+		"public struct AppBskyFeedCreatePostInput",
+	} {
+		if !strings.Contains(grouped, snippet) {
+			t.Fatalf("grouped models missing %q", snippet)
+		}
+	}
+	if strings.Contains(grouped, `public static let typeIdentifier = "app.bsky.feed.defs#postView"`) {
+		t.Fatalf("object type unexpectedly tagged")
+	}
+
+	for _, snippet := range []string{
+		"\tvar app: AppNamespace {",
+		"\tpublic var bsky: AppBskyNamespace {",
+		"\tpublic var feed: AppBskyFeedNamespace {",
+		"public func getTimeline(input: AppBskyFeedGetTimelineParameters) async throws -> AppBskyFeedGetTimelineOutput",
+		"queryItems: input.asQueryItems()",
+		`client.requestJSON(method: "GET"`,
+		`headers: ["Content-Type": "application/json"]`,
+	} {
+		if !strings.Contains(endpoints, snippet) {
+			t.Fatalf("endpoints missing %q", snippet)
+		}
+	}
+}
+
+func TestEmitSwiftFromIREmptyParamsAndRelativeRefs(t *testing.T) {
+	t.Parallel()
+
+	namedTypes := []ir.NamedType{
+		{
+			ID:       "tools.ozone.safelink.defs",
+			Name:     "event",
+			FullName: "tools.ozone.safelink.defs.event",
+			Definition: schema.Schema{
+				Type:     "object",
+				Required: []string{"action"},
+				Properties: map[string]schema.Schema{
+					"action": {Type: "ref", Ref: "#actionType"},
+				},
+			},
+			Source: "tools.ozone.safelink.defs",
+			Tag:    "tools.ozone.safelink",
+			Type:   "object",
+		},
+		{
+			ID:       "tools.ozone.safelink.defs",
+			Name:     "actionType",
+			FullName: "tools.ozone.safelink.defs.actionType",
+			Definition: schema.Schema{
+				Type:        "string",
+				KnownValues: []string{"block", "warn"},
+			},
+			Source: "tools.ozone.safelink.defs",
+			Tag:    "tools.ozone.safelink",
+			Type:   "string",
+		},
+	}
+
+	data := ir.LexiconIR{
+		NamedTypes: namedTypes,
+		Endpoints: []ir.Endpoint{
+			{
+				ID:       "app.bsky.actor.getPreferences",
+				Name:     "main",
+				FullName: "app.bsky.actor.getPreferences",
+				Method:   "query",
+				Source:   "app.bsky.actor",
+				Tag:      "app.bsky.actor",
+				Path:     "/xrpc/app.bsky.actor.getPreferences",
+				ParametersSchema: &schema.Schema{
+					Type:       "params",
+					Properties: map[string]schema.Schema{},
+				},
+			},
+		},
+		DefinitionIndex: map[string]ir.NamedType{
+			namedTypes[0].FullName: namedTypes[0],
+			namedTypes[1].FullName: namedTypes[1],
+		},
+	}
+
+	outputDir := t.TempDir()
+	if err := EmitSwiftFromIR(data, outputDir); err != nil {
+		t.Fatal(err)
+	}
+
+	actor := readFile(t, filepath.Join(outputDir, "AppBskyActor.generated.swift"))
+	if !strings.Contains(actor, "public struct AppBskyActorGetPreferencesParameters") {
+		t.Fatalf("missing empty params struct")
+	}
+	for _, snippet := range []string{
+		"private struct CodingKeys: CodingKey {",
+		"\t\t_ = try decoder.container(keyedBy: CodingKeys.self)",
+		"\t\t_ = encoder.container(keyedBy: CodingKeys.self)",
+		"\t\t[]",
+	} {
+		if !strings.Contains(actor, snippet) {
+			t.Fatalf("empty params output missing %q", snippet)
+		}
+	}
+
+	safelink := readFile(t, filepath.Join(outputDir, "ToolsOzoneSafelink.generated.swift"))
+	if !strings.Contains(safelink, "public let action: ToolsOzoneSafelinkDefsActionType") {
+		t.Fatalf("relative ref did not resolve to typed enum")
+	}
+	if strings.Contains(safelink, "public let action: ATProtocolValueContainer") {
+		t.Fatalf("relative ref widened unexpectedly")
+	}
+}
+
+func readFile(t *testing.T, path string) string {
+	t.Helper()
+	content, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(content)
+}

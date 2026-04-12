@@ -1,0 +1,266 @@
+import Foundation
+
+
+public enum ToolsOzoneCommunicationCreateTemplateError: String, Swift.Error, CaseIterable, Sendable {
+	case duplicateTemplateName = "DuplicateTemplateName"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ToolsOzoneCommunicationCreateTemplateInput: Codable, Sendable, Equatable {
+	public let contentMarkdown: String
+	public let createdBy: DID?
+	public let lang: String?
+	public let name: String
+	public let subject: String
+
+	public init(
+		contentMarkdown: String,
+		createdBy: DID? = nil,
+		lang: String? = nil,
+		name: String,
+		subject: String
+	) {
+		self.contentMarkdown = contentMarkdown
+		self.createdBy = createdBy
+		self.lang = lang
+		self.name = name
+		self.subject = subject
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		contentMarkdown = try container.decode(String.self, forKey: .contentMarkdown)
+		createdBy = try container.decodeIfPresent(DID.self, forKey: .createdBy)
+		lang = try container.decodeIfPresent(String.self, forKey: .lang)
+		name = try container.decode(String.self, forKey: .name)
+		subject = try container.decode(String.self, forKey: .subject)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(contentMarkdown, forKey: .contentMarkdown)
+		try container.encodeIfPresent(createdBy, forKey: .createdBy)
+		try container.encodeIfPresent(lang, forKey: .lang)
+		try container.encode(name, forKey: .name)
+		try container.encode(subject, forKey: .subject)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case contentMarkdown = "contentMarkdown"
+		case createdBy = "createdBy"
+		case lang = "lang"
+		case name = "name"
+		case subject = "subject"
+	}
+}
+
+
+public typealias ToolsOzoneCommunicationCreateTemplateOutput = ToolsOzoneCommunicationDefsTemplateView
+
+
+public struct ToolsOzoneCommunicationDefsTemplateView: Codable, Sendable, Equatable {
+	public let contentMarkdown: String
+	public let createdAt: ATProtocolDate
+	public let disabled: Bool
+	public let id: String
+	public let lang: String?
+	public let lastUpdatedBy: DID
+	public let name: String
+	public let subject: String?
+	public let updatedAt: ATProtocolDate
+
+	public init(
+		contentMarkdown: String,
+		createdAt: ATProtocolDate,
+		disabled: Bool,
+		id: String,
+		lang: String? = nil,
+		lastUpdatedBy: DID,
+		name: String,
+		subject: String? = nil,
+		updatedAt: ATProtocolDate
+	) {
+		self.contentMarkdown = contentMarkdown
+		self.createdAt = createdAt
+		self.disabled = disabled
+		self.id = id
+		self.lang = lang
+		self.lastUpdatedBy = lastUpdatedBy
+		self.name = name
+		self.subject = subject
+		self.updatedAt = updatedAt
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		contentMarkdown = try container.decode(String.self, forKey: .contentMarkdown)
+		createdAt = try container.decode(ATProtocolDate.self, forKey: .createdAt)
+		disabled = try container.decode(Bool.self, forKey: .disabled)
+		id = try container.decode(String.self, forKey: .id)
+		lang = try container.decodeIfPresent(String.self, forKey: .lang)
+		lastUpdatedBy = try container.decode(DID.self, forKey: .lastUpdatedBy)
+		name = try container.decode(String.self, forKey: .name)
+		subject = try container.decodeIfPresent(String.self, forKey: .subject)
+		updatedAt = try container.decode(ATProtocolDate.self, forKey: .updatedAt)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(contentMarkdown, forKey: .contentMarkdown)
+		try container.encode(createdAt, forKey: .createdAt)
+		try container.encode(disabled, forKey: .disabled)
+		try container.encode(id, forKey: .id)
+		try container.encodeIfPresent(lang, forKey: .lang)
+		try container.encode(lastUpdatedBy, forKey: .lastUpdatedBy)
+		try container.encode(name, forKey: .name)
+		try container.encodeIfPresent(subject, forKey: .subject)
+		try container.encode(updatedAt, forKey: .updatedAt)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case contentMarkdown = "contentMarkdown"
+		case createdAt = "createdAt"
+		case disabled = "disabled"
+		case id = "id"
+		case lang = "lang"
+		case lastUpdatedBy = "lastUpdatedBy"
+		case name = "name"
+		case subject = "subject"
+		case updatedAt = "updatedAt"
+	}
+}
+
+
+public struct ToolsOzoneCommunicationDeleteTemplateInput: Codable, Sendable, Equatable {
+	public let id: String
+
+	public init(
+		id: String
+	) {
+		self.id = id
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		id = try container.decode(String.self, forKey: .id)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(id, forKey: .id)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case id = "id"
+	}
+}
+
+
+public struct ToolsOzoneCommunicationListTemplatesOutput: Codable, Sendable, Equatable {
+	public let communicationTemplates: [ToolsOzoneCommunicationDefsTemplateView]
+
+	public init(
+		communicationTemplates: [ToolsOzoneCommunicationDefsTemplateView]
+	) {
+		self.communicationTemplates = communicationTemplates
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		communicationTemplates = try container.decode([ToolsOzoneCommunicationDefsTemplateView].self, forKey: .communicationTemplates)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(communicationTemplates, forKey: .communicationTemplates)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case communicationTemplates = "communicationTemplates"
+	}
+}
+
+
+public enum ToolsOzoneCommunicationUpdateTemplateError: String, Swift.Error, CaseIterable, Sendable {
+	case duplicateTemplateName = "DuplicateTemplateName"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ToolsOzoneCommunicationUpdateTemplateInput: Codable, Sendable, Equatable {
+	public let contentMarkdown: String?
+	public let disabled: Bool?
+	public let id: String
+	public let lang: String?
+	public let name: String?
+	public let subject: String?
+	public let updatedBy: DID?
+
+	public init(
+		contentMarkdown: String? = nil,
+		disabled: Bool? = nil,
+		id: String,
+		lang: String? = nil,
+		name: String? = nil,
+		subject: String? = nil,
+		updatedBy: DID? = nil
+	) {
+		self.contentMarkdown = contentMarkdown
+		self.disabled = disabled
+		self.id = id
+		self.lang = lang
+		self.name = name
+		self.subject = subject
+		self.updatedBy = updatedBy
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		contentMarkdown = try container.decodeIfPresent(String.self, forKey: .contentMarkdown)
+		disabled = try container.decodeIfPresent(Bool.self, forKey: .disabled)
+		id = try container.decode(String.self, forKey: .id)
+		lang = try container.decodeIfPresent(String.self, forKey: .lang)
+		name = try container.decodeIfPresent(String.self, forKey: .name)
+		subject = try container.decodeIfPresent(String.self, forKey: .subject)
+		updatedBy = try container.decodeIfPresent(DID.self, forKey: .updatedBy)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(contentMarkdown, forKey: .contentMarkdown)
+		try container.encodeIfPresent(disabled, forKey: .disabled)
+		try container.encode(id, forKey: .id)
+		try container.encodeIfPresent(lang, forKey: .lang)
+		try container.encodeIfPresent(name, forKey: .name)
+		try container.encodeIfPresent(subject, forKey: .subject)
+		try container.encodeIfPresent(updatedBy, forKey: .updatedBy)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case contentMarkdown = "contentMarkdown"
+		case disabled = "disabled"
+		case id = "id"
+		case lang = "lang"
+		case name = "name"
+		case subject = "subject"
+		case updatedBy = "updatedBy"
+	}
+}
+
+
+public typealias ToolsOzoneCommunicationUpdateTemplateOutput = ToolsOzoneCommunicationDefsTemplateView
+
+

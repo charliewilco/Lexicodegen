@@ -1,0 +1,1185 @@
+package swiftgen
+
+import (
+	"bytes"
+	"embed"
+	"os"
+	"path/filepath"
+	"sort"
+	"strconv"
+	"strings"
+	"text/template"
+	"unicode"
+
+	"github.com/charliewilco/lexicon-openapi-generator/internal/ir"
+	"github.com/charliewilco/lexicon-openapi-generator/internal/schema"
+)
+
+//go:embed templates/*.tmpl
+var templateFS embed.FS
+
+type TargetEmitter interface {
+	Emit(ir.LexiconIR, string) error
+}
+
+type Emitter struct{}
+
+func (Emitter) Emit(data ir.LexiconIR, outputDir string) error {
+	return EmitSwiftFromIR(data, outputDir)
+}
+
+type swiftModel struct {
+	Name  string
+	Body  string
+	Group string
+}
+
+type generatedContext struct {
+	Definitions     map[string]ir.NamedType
+	Models          map[string]swiftModel
+	KnownValueEnums map[string]string
+	InlineUnions    map[string]string
+}
+
+type endpointSurface struct {
+	ID                string
+	NamespaceSegments []string
+	FunctionName      string
+	Method            string
+	Path              string
+	Kind              string
+	InputType         string
+	OutputType        string
+	ErrorType         string
+	InputEncoding     string
+	OutputEncoding    string
+	OutputKind        string
+	BinaryInput       bool
+}
+
+type namespaceTreeNode struct {
+	Segment   string
+	Prefix    []string
+	Children  map[string]*namespaceTreeNode
+	Endpoints []endpointSurface
+}
+
+type objectDeclarationOptions struct {
+	TypeIdentifier string
+	QueryEncodable bool
+	Protocols      []string
+}
+
+type mapSchemaOptions struct {
+	TypeIdentifier string
+	QueryEncodable bool
+}
+
+type objectProperty struct {
+	Key       string
+	SwiftName string
+	Type      string
+	Optional  bool
+}
+
+var swiftReservedWords = map[string]struct{}{
+	"associatedtype": {}, "class": {}, "deinit": {}, "enum": {}, "extension": {}, "func": {}, "import": {}, "init": {},
+	"let": {}, "protocol": {}, "struct": {}, "subscript": {}, "typealias": {}, "var": {}, "break": {}, "case": {},
+	"catch": {}, "continue": {}, "default": {}, "defer": {}, "do": {}, "else": {}, "fallthrough": {}, "for": {},
+	"if": {}, "in": {}, "repeat": {}, "return": {}, "throw": {}, "where": {}, "while": {},
+}
+
+func EmitSwiftFromIR(data ir.LexiconIR, outputDir string) error {
+	outDir, err := filepath.Abs(outputDir)
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(outDir, 0o755); err != nil {
+		return err
+	}
+
+	context := generatedContext{
+		Definitions:     data.DefinitionIndex,
+		Models:          map[string]swiftModel{},
+		KnownValueEnums: map[string]string{},
+		InlineUnions:    map[string]string{},
+	}
+
+	for _, named := range data.NamedTypes {
+		buildNamedType(named, &context)
+	}
+
+	endpointSurfaces := make([]endpointSurface, 0, len(data.Endpoints))
+	for _, endpoint := range data.Endpoints {
+		endpointSurfaces = append(endpointSurfaces, buildEndpointModels(endpoint, &context))
+	}
+
+	groupedModels := map[string][]swiftModel{}
+	for _, model := range context.Models {
+		groupedModels[model.Group] = append(groupedModels[model.Group], model)
+	}
+
+	groupNames := make([]string, 0, len(groupedModels))
+	for group := range groupedModels {
+		groupNames = append(groupNames, group)
+		sort.Slice(groupedModels[group], func(i, j int) bool {
+			return lexicalLess(groupedModels[group][i].Name, groupedModels[group][j].Name)
+		})
+	}
+	sort.Strings(groupNames)
+
+	entries, err := os.ReadDir(outDir)
+	if err != nil {
+		return err
+	}
+	for _, entry := range entries {
+		if strings.HasSuffix(entry.Name(), ".swift") {
+			if err := os.Remove(filepath.Join(outDir, entry.Name())); err != nil {
+				return err
+			}
+		}
+	}
+
+	modelsTemplate, err := template.ParseFS(templateFS, "templates/models.swift.tmpl")
+	if err != nil {
+		return err
+	}
+	runtimeTemplate, err := template.ParseFS(templateFS, "templates/runtime.swift.tmpl")
+	if err != nil {
+		return err
+	}
+
+	var runtime bytes.Buffer
+	if err := runtimeTemplate.Execute(&runtime, map[string]any{}); err != nil {
+		return err
+	}
+	if err := os.WriteFile(filepath.Join(outDir, "Models.swift"), runtime.Bytes(), 0o644); err != nil {
+		return err
+	}
+
+	for _, group := range groupNames {
+		var rendered bytes.Buffer
+		payload := struct {
+			Models []swiftModel
+		}{Models: groupedModels[group]}
+		if err := modelsTemplate.Execute(&rendered, payload); err != nil {
+			return err
+		}
+		if err := os.WriteFile(filepath.Join(outDir, modelFileName(group)), rendered.Bytes(), 0o644); err != nil {
+			return err
+		}
+	}
+
+	return os.WriteFile(filepath.Join(outDir, "Endpoints.swift"), []byte(renderEndpointNamespaces(endpointSurfaces)), 0o644)
+}
+
+func toSwiftSafeIdentifier(input string) string {
+	var builder strings.Builder
+	for _, r := range input {
+		switch {
+		case unicode.IsLetter(r), unicode.IsDigit(r), r == '_':
+			builder.WriteRune(r)
+		default:
+			builder.WriteRune('_')
+		}
+	}
+	replaced := builder.String()
+	if replaced == "" {
+		replaced = "_"
+	}
+	if first := rune(replaced[0]); unicode.IsDigit(first) {
+		replaced = "_" + replaced
+	}
+	if _, ok := swiftReservedWords[replaced]; ok {
+		return "`" + replaced + "`"
+	}
+	return replaced
+}
+
+func splitWords(input string) []string {
+	if input == "" {
+		return nil
+	}
+	var normalized strings.Builder
+	var prev rune
+	for index, current := range input {
+		if index > 0 && unicode.IsUpper(current) && (unicode.IsLower(prev) || unicode.IsDigit(prev)) {
+			normalized.WriteRune(' ')
+		}
+		normalized.WriteRune(current)
+		prev = current
+	}
+
+	return strings.FieldsFunc(normalized.String(), func(r rune) bool {
+		return !unicode.IsLetter(r) && !unicode.IsDigit(r)
+	})
+}
+
+func toPascalCase(input string) string {
+	parts := splitWords(input)
+	if len(parts) == 0 {
+		return "Item"
+	}
+
+	var builder strings.Builder
+	for _, part := range parts {
+		builder.WriteString(strings.ToUpper(part[:1]))
+		if len(part) > 1 {
+			builder.WriteString(part[1:])
+		}
+	}
+	return builder.String()
+}
+
+func toCamelCase(input string) string {
+	parts := splitWords(input)
+	if len(parts) == 0 {
+		return "item"
+	}
+
+	for index, part := range parts {
+		parts[index] = strings.ToLower(part)
+	}
+
+	var builder strings.Builder
+	builder.WriteString(parts[0])
+	for _, part := range parts[1:] {
+		builder.WriteString(strings.ToUpper(part[:1]))
+		if len(part) > 1 {
+			builder.WriteString(part[1:])
+		}
+	}
+	return toSwiftSafeIdentifier(builder.String())
+}
+
+func modelName(fullName string) string {
+	parts := strings.Split(fullName, ".")
+	for index, part := range parts {
+		parts[index] = toPascalCase(part)
+	}
+	return strings.Join(parts, "")
+}
+
+func hasDefinitionModelNameCollision(name string, fullName string, context *generatedContext) bool {
+	for _, definition := range context.Definitions {
+		if definition.FullName != fullName && modelName(definition.FullName) == name {
+			return true
+		}
+	}
+	return false
+}
+
+func uniqueInlineUnionName(fullName string, context *generatedContext) string {
+	baseName := modelName(fullName)
+	candidate := baseName
+	index := 1
+	for hasDefinitionModelNameCollision(candidate, fullName, context) {
+		suffix := ""
+		if index > 1 {
+			suffix = strconv.Itoa(index)
+		}
+		candidate = baseName + "Union" + suffix
+		index++
+	}
+	return candidate
+}
+
+func typealiasBody(name string, target string) string {
+	return "public typealias " + name + " = " + target
+}
+
+func modelGroupFromID(id string) string {
+	parts := strings.Split(id, ".")
+	limit := 3
+	if len(parts) < limit {
+		limit = len(parts)
+	}
+	return strings.Join(parts[:limit], ".")
+}
+
+func modelFileName(group string) string {
+	return toPascalCase(group) + ".generated.swift"
+}
+
+func ensureModel(models map[string]swiftModel, name string, body string, group string) string {
+	if _, ok := models[name]; !ok {
+		models[name] = swiftModel{Name: name, Body: body, Group: group}
+	}
+	return name
+}
+
+func propertySwiftName(key string) string {
+	if key == "$type" {
+		return "typeIdentifier"
+	}
+	return toCamelCase(key)
+}
+
+func isRequired(schemaData schema.Schema, key string) bool {
+	for _, value := range schemaData.Required {
+		if value == key {
+			return true
+		}
+	}
+	return false
+}
+
+func isNullable(schemaData schema.Schema, key string) bool {
+	for _, value := range schemaData.Nullable {
+		if value == key {
+			return true
+		}
+	}
+	return false
+}
+
+func primitiveSwiftType(schemaData schema.Schema) string {
+	format := strings.ToLower(schemaData.Format)
+	if schemaData.Type == "string" {
+		switch format {
+		case "cid":
+			return "CID"
+		case "datetime":
+			return "ATProtocolDate"
+		case "did":
+			return "DID"
+		case "handle":
+			return "Handle"
+		case "tid":
+			return "TID"
+		case "at-identifier":
+			return "ATIdentifier"
+		case "at-uri":
+			return "ATURI"
+		case "nsid":
+			return "NSID"
+		case "record-key":
+			return "RecordKey"
+		default:
+			return "String"
+		}
+	}
+
+	switch schemaData.Type {
+	case "integer":
+		return "Int"
+	case "boolean":
+		return "Bool"
+	case "number":
+		return "Double"
+	case "blob":
+		return "Blob"
+	case "bytes":
+		return "Bytes"
+	case "cid-link":
+		return "CID"
+	case "token":
+		return "String"
+	case "unknown":
+		return "ATProtocolValueContainer"
+	default:
+		return "ATProtocolValueContainer"
+	}
+}
+
+func classifyOutputKind(encoding string) string {
+	switch strings.ToLower(encoding) {
+	case "", "application/json":
+		return "json"
+	case "application/jsonl":
+		return "jsonl"
+	case "application/vnd.ipld.car":
+		return "car"
+	default:
+		return "binary"
+	}
+}
+
+func isBinaryInputEncoding(encoding string) bool {
+	normalized := strings.ToLower(encoding)
+	return normalized != "" && normalized != "application/json"
+}
+
+func defaultBinaryContentType(encoding string) string {
+	if encoding == "" {
+		return "application/octet-stream"
+	}
+	return encoding
+}
+
+func typeIdentifierForNamedType(named ir.NamedType) string {
+	if named.Name == "main" {
+		return named.ID
+	}
+	return named.ID + "#" + named.Name
+}
+
+func knownValueEnumKey(group string, values []string) string {
+	return group + "\x00" + strings.Join(uniqueStrings(values), "\x01")
+}
+
+func inlineUnionKey(group string, refs []string) string {
+	return group + "\x00" + strings.Join(refs, "\x01")
+}
+
+func quotedSwiftString(value string) string {
+	if value == "" {
+		return "nil"
+	}
+	return strconv.Quote(value)
+}
+
+func permissionMethodName(value string) string {
+	return toSwiftSafeIdentifier(toCamelCase(value))
+}
+
+func uniqueCaseName(existing map[string]struct{}, input string) string {
+	candidate := toCamelCase(input)
+	if _, ok := existing[candidate]; !ok {
+		existing[candidate] = struct{}{}
+		return candidate
+	}
+	index := 2
+	for {
+		next := candidate + strconv.Itoa(index)
+		if _, ok := existing[next]; !ok {
+			existing[next] = struct{}{}
+			return next
+		}
+		index++
+	}
+}
+
+func mapSchemaToSwiftType(schemaData *schema.Schema, fullName string, referenceBase string, group string, context *generatedContext, options mapSchemaOptions) string {
+	if schemaData == nil {
+		return "ATProtocolValueContainer"
+	}
+
+	if schemaData.Type == "ref" && schemaData.Ref != "" {
+		target := schema.NormalizeRef(schemaData.Ref, referenceBase)
+		if _, ok := context.Definitions[target]; ok {
+			return modelName(target)
+		}
+		return "ATProtocolValueContainer"
+	}
+
+	if schemaData.Type == "array" && schemaData.Items != nil {
+		return "[" + mapSchemaToSwiftType(schemaData.Items, fullName+".item", referenceBase, group, context, mapSchemaOptions{}) + "]"
+	}
+
+	if schemaData.Type == "union" {
+		normalizedRefs := make([]string, 0, len(schemaData.Refs))
+		for _, ref := range schemaData.Refs {
+			normalizedRefs = append(normalizedRefs, schema.NormalizeRef(ref, referenceBase))
+		}
+		return buildUnionDeclaration(fullName, referenceBase, schemaData.Refs, group, context, inlineUnionKey(group, normalizedRefs))
+	}
+
+	if schemaData.Type == "object" || schemaData.Type == "params" {
+		return buildObjectDeclaration(fullName, referenceBase, *schemaData, group, context, objectDeclarationOptions{
+			TypeIdentifier: options.TypeIdentifier,
+			QueryEncodable: options.QueryEncodable || schemaData.Type == "params",
+		})
+	}
+
+	if schemaData.Type == "record" && schemaData.Record != nil {
+		return buildObjectDeclaration(fullName, referenceBase, *schemaData.Record, group, context, objectDeclarationOptions{
+			TypeIdentifier: options.TypeIdentifier,
+		})
+	}
+
+	if schemaData.Type == "string" && len(schemaData.KnownValues) > 0 {
+		return buildKnownValueEnum(fullName, schemaData.KnownValues, group, context, knownValueEnumKey(group, schemaData.KnownValues))
+	}
+
+	return primitiveSwiftType(*schemaData)
+}
+
+func buildKnownValueEnum(fullName string, values []string, group string, context *generatedContext, canonicalKey string) string {
+	if canonicalKey != "" {
+		if existing, ok := context.KnownValueEnums[canonicalKey]; ok {
+			return existing
+		}
+	}
+
+	name := modelName(fullName)
+	uniqueValues := uniqueStrings(values)
+	lines := []string{"public enum " + name + ": String, Codable, CaseIterable, QueryParameterValue, Sendable {"}
+	for _, entry := range uniqueValues {
+		lines = append(lines, "\tcase "+toSwiftSafeIdentifier(toCamelCase(entry))+" = "+strconv.Quote(entry))
+	}
+	lines = append(lines, "}")
+
+	resolvedName := ensureModel(context.Models, name, strings.Join(lines, "\n"), group)
+	if canonicalKey != "" {
+		context.KnownValueEnums[canonicalKey] = resolvedName
+	}
+	return resolvedName
+}
+
+func buildObjectDeclaration(fullName string, referenceBase string, schemaData schema.Schema, group string, context *generatedContext, options objectDeclarationOptions) string {
+	name := modelName(fullName)
+	if _, ok := context.Models[name]; ok {
+		return name
+	}
+	context.Models[name] = swiftModel{Name: name, Body: "", Group: group}
+
+	keys := make([]string, 0, len(schemaData.Properties))
+	for key := range schemaData.Properties {
+		if key != "$type" {
+			keys = append(keys, key)
+		}
+	}
+	sort.Strings(keys)
+
+	protocols := options.Protocols
+	if len(protocols) == 0 {
+		protocols = []string{"Codable", "Sendable", "Equatable"}
+	}
+
+	properties := make([]objectProperty, 0, len(keys))
+	for _, key := range keys {
+		property := schemaData.Properties[key]
+		properties = append(properties, objectProperty{
+			Key:       key,
+			SwiftName: propertySwiftName(key),
+			Type:      mapSchemaToSwiftType(&property, fullName+"."+key, referenceBase, group, context, mapSchemaOptions{}),
+			Optional:  !isRequired(schemaData, key) || isNullable(schemaData, key),
+		})
+	}
+
+	typeIdentifierKey := ""
+	if options.TypeIdentifier != "" {
+		typeIdentifierKey = "\t\tcase typeIdentifier = \"$type\""
+	}
+
+	propertyDecls := make([]string, 0, len(properties))
+	initializerParams := make([]string, 0, len(properties))
+	initializerBody := make([]string, 0, len(properties))
+	decodeLines := make([]string, 0, len(properties))
+	encodeLines := make([]string, 0, len(properties))
+
+	for _, property := range properties {
+		suffix := ""
+		if property.Optional {
+			suffix = "?"
+		}
+		propertyDecls = append(propertyDecls, "\tpublic let "+property.SwiftName+": "+property.Type+suffix)
+		paramDefault := ""
+		if property.Optional {
+			paramDefault = " = nil"
+		}
+		initializerParams = append(initializerParams, "\t\t"+property.SwiftName+": "+property.Type+suffix+paramDefault)
+		initializerBody = append(initializerBody, "\t\tself."+property.SwiftName+" = "+property.SwiftName)
+
+		decoderCall := "decode"
+		encoderCall := "encode"
+		if property.Optional {
+			decoderCall = "decodeIfPresent"
+			encoderCall = "encodeIfPresent"
+		}
+		decodeLines = append(decodeLines, "\t\t"+property.SwiftName+" = try container."+decoderCall+"("+property.Type+".self, forKey: ."+property.SwiftName+")")
+		encodeLines = append(encodeLines, "\t\ttry container."+encoderCall+"("+property.SwiftName+", forKey: ."+property.SwiftName+")")
+	}
+
+	hasNamedCodingKeys := typeIdentifierKey != "" || len(properties) > 0
+	codingKeys := []string{}
+	if hasNamedCodingKeys {
+		codingKeys = append(codingKeys, "\tprivate enum CodingKeys: String, CodingKey {")
+		if typeIdentifierKey != "" {
+			codingKeys = append(codingKeys, typeIdentifierKey)
+		}
+		for _, property := range properties {
+			codingKeys = append(codingKeys, "\t\tcase "+property.SwiftName+" = "+strconv.Quote(property.Key))
+		}
+		codingKeys = append(codingKeys, "\t}")
+	} else {
+		codingKeys = []string{
+			"\tprivate struct CodingKeys: CodingKey {",
+			"\t\tlet stringValue = \"\"",
+			"\t\tinit?(stringValue: String) {",
+			"\t\t\treturn nil",
+			"\t\t}",
+			"",
+			"\t\tlet intValue: Int? = nil",
+			"\t\tinit?(intValue: Int) {",
+			"\t\t\treturn nil",
+			"\t\t}",
+			"\t}",
+		}
+	}
+
+	queryItemsMethod := []string{}
+	if options.QueryEncodable {
+		if len(properties) == 0 {
+			queryItemsMethod = []string{"", "\tpublic func asQueryItems() -> [URLQueryItem] {", "\t\t[]", "\t}"}
+		} else {
+			queryItemsMethod = []string{"", "\tpublic func asQueryItems() -> [URLQueryItem] {", "\t\tvar items: [URLQueryItem] = []"}
+			for _, property := range properties {
+				if property.Optional {
+					queryItemsMethod = append(queryItemsMethod,
+						"\t\tif let value = "+property.SwiftName+" {",
+						"\t\t\tvalue.appendQueryItems(named: "+strconv.Quote(property.Key)+", to: &items)",
+						"\t\t}",
+					)
+				} else {
+					queryItemsMethod = append(queryItemsMethod, "\t\t"+property.SwiftName+".appendQueryItems(named: "+strconv.Quote(property.Key)+", to: &items)")
+				}
+			}
+			queryItemsMethod = append(queryItemsMethod, "\t\treturn items", "\t}")
+		}
+	}
+
+	initializer := []string{}
+	if len(properties) == 0 {
+		initializer = []string{"\tpublic init() {}", ""}
+	} else {
+		initializer = []string{"\tpublic init(", strings.Join(initializerParams, ",\n"), "\t) {"}
+		initializer = append(initializer, initializerBody...)
+		initializer = append(initializer, "\t}", "")
+	}
+
+	lines := []string{"public struct " + name + ": " + strings.Join(protocols, ", ") + " {"}
+	if options.TypeIdentifier != "" {
+		lines = append(lines, "\tpublic static let typeIdentifier = "+strconv.Quote(options.TypeIdentifier), "")
+	}
+	lines = append(lines, propertyDecls...)
+	lines = append(lines, "")
+	lines = append(lines, initializer...)
+	lines = append(lines, "\tpublic init(from decoder: Decoder) throws {")
+	if hasNamedCodingKeys {
+		lines = append(lines, "\t\tlet container = try decoder.container(keyedBy: CodingKeys.self)")
+	} else {
+		lines = append(lines, "\t\t_ = try decoder.container(keyedBy: CodingKeys.self)")
+	}
+	if options.TypeIdentifier != "" {
+		lines = append(lines, "\t\t_ = try container.decodeIfPresent(String.self, forKey: .typeIdentifier)")
+	}
+	lines = append(lines, decodeLines...)
+	lines = append(lines, "\t}", "", "\tpublic func encode(to encoder: Encoder) throws {")
+	if hasNamedCodingKeys {
+		lines = append(lines, "\t\tvar container = encoder.container(keyedBy: CodingKeys.self)")
+	} else {
+		lines = append(lines, "\t\t_ = encoder.container(keyedBy: CodingKeys.self)")
+	}
+	if options.TypeIdentifier != "" {
+		lines = append(lines, "\t\ttry container.encode(Self.typeIdentifier, forKey: .typeIdentifier)")
+	}
+	lines = append(lines, encodeLines...)
+	lines = append(lines, "\t}")
+	lines = append(lines, queryItemsMethod...)
+	lines = append(lines, "")
+	lines = append(lines, codingKeys...)
+	lines = append(lines, "}")
+
+	context.Models[name] = swiftModel{Name: name, Body: strings.Join(lines, "\n"), Group: group}
+	return name
+}
+
+func buildUnionDeclaration(fullName string, referenceBase string, refs []string, group string, context *generatedContext, canonicalKey string) string {
+	if canonicalKey != "" {
+		if existing, ok := context.InlineUnions[canonicalKey]; ok {
+			return existing
+		}
+	}
+
+	name := uniqueInlineUnionName(fullName, context)
+	if _, ok := context.Models[name]; ok {
+		return name
+	}
+	context.Models[name] = swiftModel{Name: name, Body: "", Group: group}
+
+	if len(refs) == 0 {
+		context.Models[name] = swiftModel{Name: name, Body: typealiasBody(name, "ATProtocolValueContainer"), Group: group}
+		return name
+	}
+
+	type unionCase struct {
+		CaseName               string
+		CaseType               string
+		TypeIdentifier         string
+		RequiresTaggedEncoding bool
+		IsRecord               bool
+	}
+
+	usedCaseNames := map[string]struct{}{}
+	cases := make([]unionCase, 0, len(refs))
+	for _, ref := range refs {
+		target := schema.NormalizeRef(ref, referenceBase)
+		definition, ok := context.Definitions[target]
+		if !ok {
+			continue
+		}
+
+		caseInput := definition.Name
+		if definition.Name == "main" {
+			parts := strings.Split(definition.ID, ".")
+			caseInput = parts[len(parts)-1]
+		}
+		caseName := uniqueCaseName(usedCaseNames, caseInput)
+		caseType := modelName(target)
+		typeIdentifier := typeIdentifierForNamedType(definition)
+		if definition.Type == "record" && definition.Definition.Record != nil {
+			buildObjectDeclaration(target, definition.ID, *definition.Definition.Record, group, context, objectDeclarationOptions{
+				TypeIdentifier: typeIdentifier,
+			})
+		}
+
+		cases = append(cases, unionCase{
+			CaseName:               caseName,
+			CaseType:               caseType,
+			TypeIdentifier:         typeIdentifier,
+			RequiresTaggedEncoding: definition.Type == "object" || definition.Type == "record",
+			IsRecord:               definition.Type == "record",
+		})
+	}
+
+	lines := []string{"public indirect enum " + name + ": Codable, Sendable, Equatable {"}
+	for _, entry := range cases {
+		lines = append(lines, "\tcase "+entry.CaseName+"("+entry.CaseType+")")
+	}
+	lines = append(lines, "\tcase unexpected(ATProtocolValueContainer)", "", "\tpublic init(from decoder: Decoder) throws {", "\t\tlet typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)", "\t\tswitch typeIdentifier {")
+	for _, entry := range cases {
+		lines = append(lines, "\t\tcase "+strconv.Quote(entry.TypeIdentifier)+": self = ."+entry.CaseName+"(try "+entry.CaseType+"(from: decoder))")
+	}
+	lines = append(lines, "\t\tdefault: self = .unexpected(try ATProtocolValueContainer(from: decoder))", "\t\t}", "\t}", "", "\tpublic func encode(to encoder: Encoder) throws {", "\t\tswitch self {")
+	for _, entry := range cases {
+		if entry.RequiresTaggedEncoding && !entry.IsRecord {
+			lines = append(lines, "\t\tcase ."+entry.CaseName+"(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "+strconv.Quote(entry.TypeIdentifier)+", to: encoder)")
+		} else {
+			lines = append(lines, "\t\tcase ."+entry.CaseName+"(let value): try value.encode(to: encoder)")
+		}
+	}
+	lines = append(lines, "\t\tcase .unexpected(let value): try value.encode(to: encoder)", "\t\t}", "\t}", "}")
+
+	context.Models[name] = swiftModel{Name: name, Body: strings.Join(lines, "\n"), Group: group}
+	if canonicalKey != "" {
+		context.InlineUnions[canonicalKey] = name
+	}
+	return name
+}
+
+func buildPermissionSetDeclaration(named ir.NamedType, context *generatedContext) string {
+	group := modelGroupFromID(named.Source)
+	name := modelName(named.FullName)
+	methodName := name + "Method"
+
+	knownMethods := []string{}
+	seenMethods := map[string]struct{}{}
+	for _, permission := range named.Definition.Permissions {
+		for _, value := range permission.LXM {
+			if _, ok := seenMethods[value]; ok {
+				continue
+			}
+			seenMethods[value] = struct{}{}
+			knownMethods = append(knownMethods, value)
+		}
+	}
+
+	methodLines := []string{"public struct " + methodName + ": RawRepresentable, Codable, Hashable, Sendable {", "\tpublic let rawValue: String", "", "\tpublic init(rawValue: String) {", "\t\tself.rawValue = rawValue", "\t}"}
+	if len(knownMethods) > 0 {
+		methodLines = append(methodLines, "")
+		for _, value := range knownMethods {
+			methodLines = append(methodLines, "\tpublic static let "+permissionMethodName(value)+" = Self(rawValue: "+strconv.Quote(value)+")")
+		}
+	}
+	methodLines = append(methodLines, "}")
+	ensureModel(context.Models, methodName, strings.Join(methodLines, "\n"), group)
+
+	methodRefs := make([]string, 0, len(knownMethods))
+	for _, value := range knownMethods {
+		methodRefs = append(methodRefs, "."+permissionMethodName(value))
+	}
+	lines := []string{
+		"public struct " + name + ": Codable, Sendable, Equatable {",
+		"\tpublic static let title: String? = " + quotedSwiftString(named.Definition.Title),
+		"\tpublic static let detail: String? = " + quotedSwiftString(named.Definition.Detail),
+		"\tpublic static let knownMethods: [" + methodName + "] = [" + strings.Join(methodRefs, ", ") + "]",
+		"",
+		"\tpublic let grantedMethods: [" + methodName + "]",
+		"",
+		"\tpublic init(grantedMethods: [" + methodName + "] = []) {",
+		"\t\tself.grantedMethods = grantedMethods",
+		"\t}",
+		"",
+		"\tpublic init(from decoder: Decoder) throws {",
+		"\t\tvar container = try decoder.unkeyedContainer()",
+		"\t\tvar grantedMethods: [" + methodName + "] = []",
+		"\t\twhile !container.isAtEnd {",
+		"\t\t\tgrantedMethods.append(" + methodName + "(rawValue: try container.decode(String.self)))",
+		"\t\t}",
+		"\t\tself.grantedMethods = grantedMethods",
+		"\t}",
+		"",
+		"\tpublic func encode(to encoder: Encoder) throws {",
+		"\t\tvar container = encoder.unkeyedContainer()",
+		"\t\tfor method in grantedMethods {",
+		"\t\t\ttry container.encode(method.rawValue)",
+		"\t\t}",
+		"\t}",
+		"}",
+	}
+	return ensureModel(context.Models, name, strings.Join(lines, "\n"), group)
+}
+
+func buildNamedType(named ir.NamedType, context *generatedContext) string {
+	group := modelGroupFromID(named.Source)
+	switch named.Type {
+	case "object":
+		return buildObjectDeclaration(named.FullName, named.ID, named.Definition, group, context, objectDeclarationOptions{})
+	case "params":
+		return buildObjectDeclaration(named.FullName, named.ID, named.Definition, group, context, objectDeclarationOptions{QueryEncodable: true})
+	case "record":
+		if named.Definition.Record != nil {
+			return buildObjectDeclaration(named.FullName, named.ID, *named.Definition.Record, group, context, objectDeclarationOptions{
+				TypeIdentifier: typeIdentifierForNamedType(named),
+			})
+		}
+		return ensureModel(context.Models, modelName(named.FullName), typealiasBody(modelName(named.FullName), "ATProtocolValueContainer"), group)
+	case "string":
+		if len(named.Definition.KnownValues) > 0 {
+			return buildKnownValueEnum(named.FullName, named.Definition.KnownValues, group, context, "")
+		}
+		return ensureModel(context.Models, modelName(named.FullName), typealiasBody(modelName(named.FullName), primitiveSwiftType(named.Definition)), group)
+	case "array":
+		itemType := "ATProtocolValueContainer"
+		if named.Definition.Items != nil {
+			itemType = mapSchemaToSwiftType(named.Definition.Items, named.FullName+".item", named.ID, group, context, mapSchemaOptions{})
+		}
+		return ensureModel(context.Models, modelName(named.FullName), typealiasBody(modelName(named.FullName), "["+itemType+"]"), group)
+	case "union":
+		return buildUnionDeclaration(named.FullName, named.ID, named.Definition.Refs, group, context, "")
+	case "permission-set":
+		return buildPermissionSetDeclaration(named, context)
+	default:
+		return ensureModel(context.Models, modelName(named.FullName), typealiasBody(modelName(named.FullName), primitiveSwiftType(named.Definition)), group)
+	}
+}
+
+func buildEndpointHelperType(endpoint ir.Endpoint, suffix string, schemaData *schema.Schema, context *generatedContext, queryEncodable bool, binaryInput bool, contentType string) string {
+	if suffix == "Input" && binaryInput {
+		fullName := endpoint.FullName + "." + suffix
+		name := modelName(fullName)
+		lines := []string{
+			"public struct " + name + ": Sendable, Equatable {",
+			"\tpublic let data: Data",
+			"\tpublic let contentType: String",
+			"",
+			"\tpublic init(data: Data, contentType: String = " + strconv.Quote(contentType) + ") {",
+			"\t\tself.data = data",
+			"\t\tself.contentType = contentType",
+			"\t}",
+			"}",
+		}
+		return ensureModel(context.Models, name, strings.Join(lines, "\n"), modelGroupFromID(endpoint.Source))
+	}
+
+	if schemaData == nil {
+		return ""
+	}
+
+	fullName := endpoint.FullName + "." + suffix
+	group := modelGroupFromID(endpoint.Source)
+	if schemaData.Type == "ref" && schemaData.Ref != "" {
+		target := schema.NormalizeRef(schemaData.Ref, endpoint.ID)
+		targetType := "ATProtocolValueContainer"
+		if _, ok := context.Definitions[target]; ok {
+			targetType = modelName(target)
+		}
+		return ensureModel(context.Models, modelName(fullName), typealiasBody(modelName(fullName), targetType), group)
+	}
+
+	return mapSchemaToSwiftType(schemaData, fullName, endpoint.ID, group, context, mapSchemaOptions{
+		QueryEncodable: queryEncodable,
+	})
+}
+
+func buildEndpointErrorType(endpoint ir.Endpoint, context *generatedContext) string {
+	if len(endpoint.Errors) == 0 {
+		return ""
+	}
+
+	fullName := endpoint.FullName + ".Error"
+	name := modelName(fullName)
+	group := modelGroupFromID(endpoint.Source)
+	lines := []string{"public enum " + name + ": String, Swift.Error, CaseIterable, Sendable {"}
+	for _, endpointError := range endpoint.Errors {
+		lines = append(lines, "\tcase "+toSwiftSafeIdentifier(toCamelCase(endpointError.Name))+" = "+strconv.Quote(endpointError.Name))
+	}
+	lines = append(lines, "", "\tpublic init?(transportError: XRPCTransportError) {", "\t\tguard let rawValue = transportError.payload?.error else {", "\t\t\treturn nil", "\t\t}", "\t\tself.init(rawValue: rawValue)", "\t}", "}")
+	return ensureModel(context.Models, name, strings.Join(lines, "\n"), group)
+}
+
+func buildEndpointModels(endpoint ir.Endpoint, context *generatedContext) endpointSurface {
+	binaryInput := endpoint.Method == "procedure" && isBinaryInputEncoding(endpoint.InputEncoding)
+	outputKind := classifyOutputKind(endpoint.OutputEncoding)
+
+	parametersType := ""
+	if endpoint.Method == "query" || endpoint.Method == "subscription" {
+		parametersType = buildEndpointHelperType(endpoint, "Parameters", endpoint.ParametersSchema, context, true, false, "")
+	}
+
+	inputType := parametersType
+	if endpoint.Method == "procedure" {
+		inputType = buildEndpointHelperType(endpoint, "Input", endpoint.InputSchema, context, false, binaryInput, defaultBinaryContentType(endpoint.InputEncoding))
+	}
+
+	outputType := ""
+	if endpoint.Method == "subscription" {
+		outputType = buildEndpointHelperType(endpoint, "Message", endpoint.MessageSchema, context, false, false, "")
+	} else if outputKind == "json" {
+		if endpoint.OutputSchema != nil {
+			outputType = buildEndpointHelperType(endpoint, "Output", endpoint.OutputSchema, context, false, false, "")
+		} else {
+			outputType = "EmptyResponse"
+		}
+	}
+
+	errorType := buildEndpointErrorType(endpoint, context)
+	segments := strings.Split(endpoint.ID, ".")
+	method := "POST"
+	if endpoint.Method == "query" {
+		method = "GET"
+	}
+
+	return endpointSurface{
+		ID:                endpoint.FullName,
+		NamespaceSegments: segments[:len(segments)-1],
+		FunctionName:      toCamelCase(segments[len(segments)-1]),
+		Method:            method,
+		Path:              endpoint.Path,
+		Kind:              endpoint.Method,
+		InputType:         inputType,
+		OutputType:        outputType,
+		ErrorType:         errorType,
+		InputEncoding:     endpoint.InputEncoding,
+		OutputEncoding:    endpoint.OutputEncoding,
+		OutputKind:        outputKind,
+		BinaryInput:       binaryInput,
+	}
+}
+
+func namespaceNode(segment string, prefix []string) *namespaceTreeNode {
+	return &namespaceTreeNode{
+		Segment:   segment,
+		Prefix:    prefix,
+		Children:  map[string]*namespaceTreeNode{},
+		Endpoints: []endpointSurface{},
+	}
+}
+
+func buildNamespaceTree(endpoints []endpointSurface) *namespaceTreeNode {
+	root := namespaceNode("", []string{})
+	for _, endpoint := range endpoints {
+		current := root
+		for _, segment := range endpoint.NamespaceSegments {
+			child, ok := current.Children[segment]
+			if !ok {
+				child = namespaceNode(segment, append(append([]string{}, current.Prefix...), segment))
+				current.Children[segment] = child
+			}
+			current = child
+		}
+		current.Endpoints = append(current.Endpoints, endpoint)
+	}
+	return root
+}
+
+func namespaceStructName(prefix []string) string {
+	parts := make([]string, 0, len(prefix))
+	for _, part := range prefix {
+		parts = append(parts, toPascalCase(part))
+	}
+	return strings.Join(parts, "") + "Namespace"
+}
+
+func endpointReturnType(endpoint endpointSurface) string {
+	if endpoint.Kind == "subscription" {
+		if endpoint.OutputType == "" {
+			return "ATProtocolValueContainer"
+		}
+		return endpoint.OutputType
+	}
+	if endpoint.OutputKind == "json" {
+		if endpoint.OutputType == "" {
+			return "ATProtocolValueContainer"
+		}
+		return endpoint.OutputType
+	}
+	return "Data"
+}
+
+func renderAsyncEndpointMethod(endpoint endpointSurface, requestExpression string) []string {
+	signature := ""
+	if endpoint.InputType != "" {
+		signature = "input: " + endpoint.InputType
+	}
+	lines := []string{"\tpublic func " + endpoint.FunctionName + "(" + signature + ") async throws -> " + endpointReturnType(endpoint) + " {"}
+	if endpoint.ErrorType != "" {
+		lines = append(lines,
+			"\t\tdo {",
+			"\t\t\treturn try await "+requestExpression,
+			"\t\t} catch let error as XRPCTransportError {",
+			"\t\t\tif let typedError = "+endpoint.ErrorType+"(transportError: error) {",
+			"\t\t\t\tthrow typedError",
+			"\t\t\t}",
+			"\t\t\tthrow error",
+			"\t\t}",
+		)
+	} else {
+		lines = append(lines, "\t\treturn try await "+requestExpression)
+	}
+	lines = append(lines, "\t}")
+	return lines
+}
+
+func renderEndpointMethod(endpoint endpointSurface) []string {
+	if endpoint.Kind == "subscription" {
+		args := ""
+		queryItems := "[]"
+		if endpoint.InputType != "" {
+			args = "input: " + endpoint.InputType
+			queryItems = "input.asQueryItems()"
+		}
+		outputType := endpoint.OutputType
+		if outputType == "" {
+			outputType = "ATProtocolValueContainer"
+		}
+		return []string{
+			"\tpublic func " + endpoint.FunctionName + "(" + args + ") -> AsyncThrowingStream<XRPCSubscriptionEvent<" + outputType + ">, Error> {",
+			"\t\tclient.subscribe(path: " + strconv.Quote(endpoint.Path) + ", queryItems: " + queryItems + ", responseType: " + outputType + ".self)",
+			"\t}",
+		}
+	}
+
+	if endpoint.Method == "GET" {
+		queryItems := "[]"
+		if endpoint.InputType != "" {
+			queryItems = "input.asQueryItems()"
+		}
+		if endpoint.OutputKind == "json" {
+			outputType := endpoint.OutputType
+			if outputType == "" {
+				outputType = "ATProtocolValueContainer"
+			}
+			return renderAsyncEndpointMethod(endpoint, "client.requestJSON(method: \"GET\", path: "+strconv.Quote(endpoint.Path)+", queryItems: "+queryItems+", responseType: "+outputType+".self)")
+		}
+		return renderAsyncEndpointMethod(endpoint, "client.requestData(method: \"GET\", path: "+strconv.Quote(endpoint.Path)+", queryItems: "+queryItems+", responseKind: ."+endpoint.OutputKind+")")
+	}
+
+	if endpoint.BinaryInput && endpoint.InputType != "" {
+		if endpoint.OutputKind == "json" {
+			outputType := endpoint.OutputType
+			if outputType == "" {
+				outputType = "ATProtocolValueContainer"
+			}
+			return renderAsyncEndpointMethod(endpoint, "client.requestJSON(method: \"POST\", path: "+strconv.Quote(endpoint.Path)+", body: input.data, queryItems: [], headers: [\"Content-Type\": input.contentType], responseType: "+outputType+".self)")
+		}
+		return renderAsyncEndpointMethod(endpoint, "client.requestData(method: \"POST\", path: "+strconv.Quote(endpoint.Path)+", body: input.data, queryItems: [], headers: [\"Content-Type\": input.contentType], responseKind: ."+endpoint.OutputKind+")")
+	}
+
+	body := "nil"
+	headers := "[:]"
+	if endpoint.InputType != "" {
+		body = "try client.encodedBody(input)"
+		headers = "[\"Content-Type\": \"application/json\"]"
+	}
+	if endpoint.OutputKind == "json" {
+		outputType := endpoint.OutputType
+		if outputType == "" {
+			outputType = "ATProtocolValueContainer"
+		}
+		return renderAsyncEndpointMethod(endpoint, "client.requestJSON(method: \"POST\", path: "+strconv.Quote(endpoint.Path)+", body: "+body+", queryItems: [], headers: "+headers+", responseType: "+outputType+".self)")
+	}
+	return renderAsyncEndpointMethod(endpoint, "client.requestData(method: \"POST\", path: "+strconv.Quote(endpoint.Path)+", body: "+body+", queryItems: [], headers: "+headers+", responseKind: ."+endpoint.OutputKind+")")
+}
+
+func renderNamespaceNode(node *namespaceTreeNode) []string {
+	output := []string{}
+	if len(node.Prefix) > 0 {
+		structName := namespaceStructName(node.Prefix)
+		output = append(output,
+			"public struct "+structName+" {",
+			"\tfileprivate let client: ATProtoClient",
+			"",
+			"\tfileprivate init(client: ATProtoClient) {",
+			"\t\tself.client = client",
+			"\t}",
+		)
+
+		children := sortedNamespaceChildren(node.Children)
+		for _, child := range children {
+			output = append(output,
+				"",
+				"\tpublic var "+toCamelCase(child.Segment)+": "+namespaceStructName(child.Prefix)+" {",
+				"\t\t"+namespaceStructName(child.Prefix)+"(client: client)",
+				"\t}",
+			)
+		}
+
+		endpoints := append([]endpointSurface(nil), node.Endpoints...)
+		sort.Slice(endpoints, func(i, j int) bool { return lexicalLess(endpoints[i].FunctionName, endpoints[j].FunctionName) })
+		for _, endpoint := range endpoints {
+			output = append(output, "")
+			output = append(output, renderEndpointMethod(endpoint)...)
+		}
+
+		output = append(output, "}", "")
+	}
+
+	for _, child := range sortedNamespaceChildren(node.Children) {
+		output = append(output, renderNamespaceNode(child)...)
+	}
+	return output
+}
+
+func renderEndpointNamespaces(endpoints []endpointSurface) string {
+	root := buildNamespaceTree(endpoints)
+	topLevel := sortedNamespaceChildren(root.Children)
+	lines := []string{"import Foundation", "", "public extension ATProtoClient {"}
+	for _, child := range topLevel {
+		lines = append(lines,
+			"\tvar "+toCamelCase(child.Segment)+": "+namespaceStructName(child.Prefix)+" {",
+			"\t\t"+namespaceStructName(child.Prefix)+"(client: self)",
+			"\t}",
+		)
+	}
+	lines = append(lines, "}", "")
+	lines = append(lines, renderNamespaceNode(root)...)
+	return strings.Join(lines, "\n")
+}
+
+func sortedNamespaceChildren(children map[string]*namespaceTreeNode) []*namespaceTreeNode {
+	keys := make([]string, 0, len(children))
+	for key := range children {
+		keys = append(keys, key)
+	}
+	sort.Slice(keys, func(i, j int) bool { return lexicalLess(keys[i], keys[j]) })
+	nodes := make([]*namespaceTreeNode, 0, len(keys))
+	for _, key := range keys {
+		nodes = append(nodes, children[key])
+	}
+	return nodes
+}
+
+func uniqueStrings(values []string) []string {
+	seen := map[string]struct{}{}
+	result := make([]string, 0, len(values))
+	for _, value := range values {
+		if _, ok := seen[value]; ok {
+			continue
+		}
+		seen[value] = struct{}{}
+		result = append(result, value)
+	}
+	return result
+}
+
+func lexicalLess(left string, right string) bool {
+	lowerLeft := strings.ToLower(left)
+	lowerRight := strings.ToLower(right)
+	if lowerLeft == lowerRight {
+		return left < right
+	}
+	return lowerLeft < lowerRight
+}

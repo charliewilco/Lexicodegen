@@ -1,0 +1,1552 @@
+import Foundation
+
+
+public struct ComAtprotoServerCheckAccountStatusOutput: Codable, Sendable, Equatable {
+	public let activated: Bool
+	public let expectedBlobs: Int
+	public let importedBlobs: Int
+	public let indexedRecords: Int
+	public let privateStateValues: Int
+	public let repoBlocks: Int
+	public let repoCommit: CID
+	public let repoRev: String
+	public let validDid: Bool
+
+	public init(
+		activated: Bool,
+		expectedBlobs: Int,
+		importedBlobs: Int,
+		indexedRecords: Int,
+		privateStateValues: Int,
+		repoBlocks: Int,
+		repoCommit: CID,
+		repoRev: String,
+		validDid: Bool
+	) {
+		self.activated = activated
+		self.expectedBlobs = expectedBlobs
+		self.importedBlobs = importedBlobs
+		self.indexedRecords = indexedRecords
+		self.privateStateValues = privateStateValues
+		self.repoBlocks = repoBlocks
+		self.repoCommit = repoCommit
+		self.repoRev = repoRev
+		self.validDid = validDid
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		activated = try container.decode(Bool.self, forKey: .activated)
+		expectedBlobs = try container.decode(Int.self, forKey: .expectedBlobs)
+		importedBlobs = try container.decode(Int.self, forKey: .importedBlobs)
+		indexedRecords = try container.decode(Int.self, forKey: .indexedRecords)
+		privateStateValues = try container.decode(Int.self, forKey: .privateStateValues)
+		repoBlocks = try container.decode(Int.self, forKey: .repoBlocks)
+		repoCommit = try container.decode(CID.self, forKey: .repoCommit)
+		repoRev = try container.decode(String.self, forKey: .repoRev)
+		validDid = try container.decode(Bool.self, forKey: .validDid)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(activated, forKey: .activated)
+		try container.encode(expectedBlobs, forKey: .expectedBlobs)
+		try container.encode(importedBlobs, forKey: .importedBlobs)
+		try container.encode(indexedRecords, forKey: .indexedRecords)
+		try container.encode(privateStateValues, forKey: .privateStateValues)
+		try container.encode(repoBlocks, forKey: .repoBlocks)
+		try container.encode(repoCommit, forKey: .repoCommit)
+		try container.encode(repoRev, forKey: .repoRev)
+		try container.encode(validDid, forKey: .validDid)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case activated = "activated"
+		case expectedBlobs = "expectedBlobs"
+		case importedBlobs = "importedBlobs"
+		case indexedRecords = "indexedRecords"
+		case privateStateValues = "privateStateValues"
+		case repoBlocks = "repoBlocks"
+		case repoCommit = "repoCommit"
+		case repoRev = "repoRev"
+		case validDid = "validDid"
+	}
+}
+
+
+public enum ComAtprotoServerConfirmEmailError: String, Swift.Error, CaseIterable, Sendable {
+	case accountNotFound = "AccountNotFound"
+	case expiredToken = "ExpiredToken"
+	case invalidEmail = "InvalidEmail"
+	case invalidToken = "InvalidToken"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ComAtprotoServerConfirmEmailInput: Codable, Sendable, Equatable {
+	public let email: String
+	public let token: String
+
+	public init(
+		email: String,
+		token: String
+	) {
+		self.email = email
+		self.token = token
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		email = try container.decode(String.self, forKey: .email)
+		token = try container.decode(String.self, forKey: .token)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(email, forKey: .email)
+		try container.encode(token, forKey: .token)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case email = "email"
+		case token = "token"
+	}
+}
+
+
+public enum ComAtprotoServerCreateAccountError: String, Swift.Error, CaseIterable, Sendable {
+	case handleNotAvailable = "HandleNotAvailable"
+	case incompatibleDidDoc = "IncompatibleDidDoc"
+	case invalidHandle = "InvalidHandle"
+	case invalidInviteCode = "InvalidInviteCode"
+	case invalidPassword = "InvalidPassword"
+	case unresolvableDid = "UnresolvableDid"
+	case unsupportedDomain = "UnsupportedDomain"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ComAtprotoServerCreateAccountInput: Codable, Sendable, Equatable {
+	public let did: DID?
+	public let email: String?
+	public let handle: Handle
+	public let inviteCode: String?
+	public let password: String?
+	public let plcOp: ATProtocolValueContainer?
+	public let recoveryKey: String?
+	public let verificationCode: String?
+	public let verificationPhone: String?
+
+	public init(
+		did: DID? = nil,
+		email: String? = nil,
+		handle: Handle,
+		inviteCode: String? = nil,
+		password: String? = nil,
+		plcOp: ATProtocolValueContainer? = nil,
+		recoveryKey: String? = nil,
+		verificationCode: String? = nil,
+		verificationPhone: String? = nil
+	) {
+		self.did = did
+		self.email = email
+		self.handle = handle
+		self.inviteCode = inviteCode
+		self.password = password
+		self.plcOp = plcOp
+		self.recoveryKey = recoveryKey
+		self.verificationCode = verificationCode
+		self.verificationPhone = verificationPhone
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		did = try container.decodeIfPresent(DID.self, forKey: .did)
+		email = try container.decodeIfPresent(String.self, forKey: .email)
+		handle = try container.decode(Handle.self, forKey: .handle)
+		inviteCode = try container.decodeIfPresent(String.self, forKey: .inviteCode)
+		password = try container.decodeIfPresent(String.self, forKey: .password)
+		plcOp = try container.decodeIfPresent(ATProtocolValueContainer.self, forKey: .plcOp)
+		recoveryKey = try container.decodeIfPresent(String.self, forKey: .recoveryKey)
+		verificationCode = try container.decodeIfPresent(String.self, forKey: .verificationCode)
+		verificationPhone = try container.decodeIfPresent(String.self, forKey: .verificationPhone)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(did, forKey: .did)
+		try container.encodeIfPresent(email, forKey: .email)
+		try container.encode(handle, forKey: .handle)
+		try container.encodeIfPresent(inviteCode, forKey: .inviteCode)
+		try container.encodeIfPresent(password, forKey: .password)
+		try container.encodeIfPresent(plcOp, forKey: .plcOp)
+		try container.encodeIfPresent(recoveryKey, forKey: .recoveryKey)
+		try container.encodeIfPresent(verificationCode, forKey: .verificationCode)
+		try container.encodeIfPresent(verificationPhone, forKey: .verificationPhone)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case did = "did"
+		case email = "email"
+		case handle = "handle"
+		case inviteCode = "inviteCode"
+		case password = "password"
+		case plcOp = "plcOp"
+		case recoveryKey = "recoveryKey"
+		case verificationCode = "verificationCode"
+		case verificationPhone = "verificationPhone"
+	}
+}
+
+
+public struct ComAtprotoServerCreateAccountOutput: Codable, Sendable, Equatable {
+	public let accessJwt: String
+	public let did: DID
+	public let didDoc: ATProtocolValueContainer?
+	public let handle: Handle
+	public let refreshJwt: String
+
+	public init(
+		accessJwt: String,
+		did: DID,
+		didDoc: ATProtocolValueContainer? = nil,
+		handle: Handle,
+		refreshJwt: String
+	) {
+		self.accessJwt = accessJwt
+		self.did = did
+		self.didDoc = didDoc
+		self.handle = handle
+		self.refreshJwt = refreshJwt
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		accessJwt = try container.decode(String.self, forKey: .accessJwt)
+		did = try container.decode(DID.self, forKey: .did)
+		didDoc = try container.decodeIfPresent(ATProtocolValueContainer.self, forKey: .didDoc)
+		handle = try container.decode(Handle.self, forKey: .handle)
+		refreshJwt = try container.decode(String.self, forKey: .refreshJwt)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(accessJwt, forKey: .accessJwt)
+		try container.encode(did, forKey: .did)
+		try container.encodeIfPresent(didDoc, forKey: .didDoc)
+		try container.encode(handle, forKey: .handle)
+		try container.encode(refreshJwt, forKey: .refreshJwt)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case accessJwt = "accessJwt"
+		case did = "did"
+		case didDoc = "didDoc"
+		case handle = "handle"
+		case refreshJwt = "refreshJwt"
+	}
+}
+
+
+public struct ComAtprotoServerCreateAppPasswordAppPassword: Codable, Sendable, Equatable {
+	public let createdAt: ATProtocolDate
+	public let name: String
+	public let password: String
+	public let privileged: Bool?
+
+	public init(
+		createdAt: ATProtocolDate,
+		name: String,
+		password: String,
+		privileged: Bool? = nil
+	) {
+		self.createdAt = createdAt
+		self.name = name
+		self.password = password
+		self.privileged = privileged
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		createdAt = try container.decode(ATProtocolDate.self, forKey: .createdAt)
+		name = try container.decode(String.self, forKey: .name)
+		password = try container.decode(String.self, forKey: .password)
+		privileged = try container.decodeIfPresent(Bool.self, forKey: .privileged)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(createdAt, forKey: .createdAt)
+		try container.encode(name, forKey: .name)
+		try container.encode(password, forKey: .password)
+		try container.encodeIfPresent(privileged, forKey: .privileged)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case createdAt = "createdAt"
+		case name = "name"
+		case password = "password"
+		case privileged = "privileged"
+	}
+}
+
+
+public enum ComAtprotoServerCreateAppPasswordError: String, Swift.Error, CaseIterable, Sendable {
+	case accountTakedown = "AccountTakedown"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ComAtprotoServerCreateAppPasswordInput: Codable, Sendable, Equatable {
+	public let name: String
+	public let privileged: Bool?
+
+	public init(
+		name: String,
+		privileged: Bool? = nil
+	) {
+		self.name = name
+		self.privileged = privileged
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		name = try container.decode(String.self, forKey: .name)
+		privileged = try container.decodeIfPresent(Bool.self, forKey: .privileged)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(name, forKey: .name)
+		try container.encodeIfPresent(privileged, forKey: .privileged)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case name = "name"
+		case privileged = "privileged"
+	}
+}
+
+
+public typealias ComAtprotoServerCreateAppPasswordOutput = ComAtprotoServerCreateAppPasswordAppPassword
+
+
+public struct ComAtprotoServerCreateInviteCodeInput: Codable, Sendable, Equatable {
+	public let forAccount: DID?
+	public let useCount: Int
+
+	public init(
+		forAccount: DID? = nil,
+		useCount: Int
+	) {
+		self.forAccount = forAccount
+		self.useCount = useCount
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		forAccount = try container.decodeIfPresent(DID.self, forKey: .forAccount)
+		useCount = try container.decode(Int.self, forKey: .useCount)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(forAccount, forKey: .forAccount)
+		try container.encode(useCount, forKey: .useCount)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case forAccount = "forAccount"
+		case useCount = "useCount"
+	}
+}
+
+
+public struct ComAtprotoServerCreateInviteCodeOutput: Codable, Sendable, Equatable {
+	public let code: String
+
+	public init(
+		code: String
+	) {
+		self.code = code
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		code = try container.decode(String.self, forKey: .code)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(code, forKey: .code)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case code = "code"
+	}
+}
+
+
+public struct ComAtprotoServerCreateInviteCodesAccountCodes: Codable, Sendable, Equatable {
+	public let account: String
+	public let codes: [String]
+
+	public init(
+		account: String,
+		codes: [String]
+	) {
+		self.account = account
+		self.codes = codes
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		account = try container.decode(String.self, forKey: .account)
+		codes = try container.decode([String].self, forKey: .codes)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(account, forKey: .account)
+		try container.encode(codes, forKey: .codes)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case account = "account"
+		case codes = "codes"
+	}
+}
+
+
+public struct ComAtprotoServerCreateInviteCodesInput: Codable, Sendable, Equatable {
+	public let codeCount: Int
+	public let forAccounts: [DID]?
+	public let useCount: Int
+
+	public init(
+		codeCount: Int,
+		forAccounts: [DID]? = nil,
+		useCount: Int
+	) {
+		self.codeCount = codeCount
+		self.forAccounts = forAccounts
+		self.useCount = useCount
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		codeCount = try container.decode(Int.self, forKey: .codeCount)
+		forAccounts = try container.decodeIfPresent([DID].self, forKey: .forAccounts)
+		useCount = try container.decode(Int.self, forKey: .useCount)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(codeCount, forKey: .codeCount)
+		try container.encodeIfPresent(forAccounts, forKey: .forAccounts)
+		try container.encode(useCount, forKey: .useCount)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case codeCount = "codeCount"
+		case forAccounts = "forAccounts"
+		case useCount = "useCount"
+	}
+}
+
+
+public struct ComAtprotoServerCreateInviteCodesOutput: Codable, Sendable, Equatable {
+	public let codes: [ComAtprotoServerCreateInviteCodesAccountCodes]
+
+	public init(
+		codes: [ComAtprotoServerCreateInviteCodesAccountCodes]
+	) {
+		self.codes = codes
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		codes = try container.decode([ComAtprotoServerCreateInviteCodesAccountCodes].self, forKey: .codes)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(codes, forKey: .codes)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case codes = "codes"
+	}
+}
+
+
+public enum ComAtprotoServerCreateSessionError: String, Swift.Error, CaseIterable, Sendable {
+	case accountTakedown = "AccountTakedown"
+	case authFactorTokenRequired = "AuthFactorTokenRequired"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ComAtprotoServerCreateSessionInput: Codable, Sendable, Equatable {
+	public let allowTakendown: Bool?
+	public let authFactorToken: String?
+	public let identifier: String
+	public let password: String
+
+	public init(
+		allowTakendown: Bool? = nil,
+		authFactorToken: String? = nil,
+		identifier: String,
+		password: String
+	) {
+		self.allowTakendown = allowTakendown
+		self.authFactorToken = authFactorToken
+		self.identifier = identifier
+		self.password = password
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		allowTakendown = try container.decodeIfPresent(Bool.self, forKey: .allowTakendown)
+		authFactorToken = try container.decodeIfPresent(String.self, forKey: .authFactorToken)
+		identifier = try container.decode(String.self, forKey: .identifier)
+		password = try container.decode(String.self, forKey: .password)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(allowTakendown, forKey: .allowTakendown)
+		try container.encodeIfPresent(authFactorToken, forKey: .authFactorToken)
+		try container.encode(identifier, forKey: .identifier)
+		try container.encode(password, forKey: .password)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case allowTakendown = "allowTakendown"
+		case authFactorToken = "authFactorToken"
+		case identifier = "identifier"
+		case password = "password"
+	}
+}
+
+
+public struct ComAtprotoServerCreateSessionOutput: Codable, Sendable, Equatable {
+	public let accessJwt: String
+	public let active: Bool?
+	public let did: DID
+	public let didDoc: ATProtocolValueContainer?
+	public let email: String?
+	public let emailAuthFactor: Bool?
+	public let emailConfirmed: Bool?
+	public let handle: Handle
+	public let refreshJwt: String
+	public let status: ComAtprotoServerCreateSessionOutputStatus?
+
+	public init(
+		accessJwt: String,
+		active: Bool? = nil,
+		did: DID,
+		didDoc: ATProtocolValueContainer? = nil,
+		email: String? = nil,
+		emailAuthFactor: Bool? = nil,
+		emailConfirmed: Bool? = nil,
+		handle: Handle,
+		refreshJwt: String,
+		status: ComAtprotoServerCreateSessionOutputStatus? = nil
+	) {
+		self.accessJwt = accessJwt
+		self.active = active
+		self.did = did
+		self.didDoc = didDoc
+		self.email = email
+		self.emailAuthFactor = emailAuthFactor
+		self.emailConfirmed = emailConfirmed
+		self.handle = handle
+		self.refreshJwt = refreshJwt
+		self.status = status
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		accessJwt = try container.decode(String.self, forKey: .accessJwt)
+		active = try container.decodeIfPresent(Bool.self, forKey: .active)
+		did = try container.decode(DID.self, forKey: .did)
+		didDoc = try container.decodeIfPresent(ATProtocolValueContainer.self, forKey: .didDoc)
+		email = try container.decodeIfPresent(String.self, forKey: .email)
+		emailAuthFactor = try container.decodeIfPresent(Bool.self, forKey: .emailAuthFactor)
+		emailConfirmed = try container.decodeIfPresent(Bool.self, forKey: .emailConfirmed)
+		handle = try container.decode(Handle.self, forKey: .handle)
+		refreshJwt = try container.decode(String.self, forKey: .refreshJwt)
+		status = try container.decodeIfPresent(ComAtprotoServerCreateSessionOutputStatus.self, forKey: .status)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(accessJwt, forKey: .accessJwt)
+		try container.encodeIfPresent(active, forKey: .active)
+		try container.encode(did, forKey: .did)
+		try container.encodeIfPresent(didDoc, forKey: .didDoc)
+		try container.encodeIfPresent(email, forKey: .email)
+		try container.encodeIfPresent(emailAuthFactor, forKey: .emailAuthFactor)
+		try container.encodeIfPresent(emailConfirmed, forKey: .emailConfirmed)
+		try container.encode(handle, forKey: .handle)
+		try container.encode(refreshJwt, forKey: .refreshJwt)
+		try container.encodeIfPresent(status, forKey: .status)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case accessJwt = "accessJwt"
+		case active = "active"
+		case did = "did"
+		case didDoc = "didDoc"
+		case email = "email"
+		case emailAuthFactor = "emailAuthFactor"
+		case emailConfirmed = "emailConfirmed"
+		case handle = "handle"
+		case refreshJwt = "refreshJwt"
+		case status = "status"
+	}
+}
+
+
+public enum ComAtprotoServerCreateSessionOutputStatus: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case takendown = "takendown"
+	case suspended = "suspended"
+	case deactivated = "deactivated"
+}
+
+
+public struct ComAtprotoServerDeactivateAccountInput: Codable, Sendable, Equatable {
+	public let deleteAfter: ATProtocolDate?
+
+	public init(
+		deleteAfter: ATProtocolDate? = nil
+	) {
+		self.deleteAfter = deleteAfter
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		deleteAfter = try container.decodeIfPresent(ATProtocolDate.self, forKey: .deleteAfter)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(deleteAfter, forKey: .deleteAfter)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case deleteAfter = "deleteAfter"
+	}
+}
+
+
+public struct ComAtprotoServerDefsInviteCode: Codable, Sendable, Equatable {
+	public let available: Int
+	public let code: String
+	public let createdAt: ATProtocolDate
+	public let createdBy: String
+	public let disabled: Bool
+	public let forAccount: String
+	public let uses: [ComAtprotoServerDefsInviteCodeUse]
+
+	public init(
+		available: Int,
+		code: String,
+		createdAt: ATProtocolDate,
+		createdBy: String,
+		disabled: Bool,
+		forAccount: String,
+		uses: [ComAtprotoServerDefsInviteCodeUse]
+	) {
+		self.available = available
+		self.code = code
+		self.createdAt = createdAt
+		self.createdBy = createdBy
+		self.disabled = disabled
+		self.forAccount = forAccount
+		self.uses = uses
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		available = try container.decode(Int.self, forKey: .available)
+		code = try container.decode(String.self, forKey: .code)
+		createdAt = try container.decode(ATProtocolDate.self, forKey: .createdAt)
+		createdBy = try container.decode(String.self, forKey: .createdBy)
+		disabled = try container.decode(Bool.self, forKey: .disabled)
+		forAccount = try container.decode(String.self, forKey: .forAccount)
+		uses = try container.decode([ComAtprotoServerDefsInviteCodeUse].self, forKey: .uses)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(available, forKey: .available)
+		try container.encode(code, forKey: .code)
+		try container.encode(createdAt, forKey: .createdAt)
+		try container.encode(createdBy, forKey: .createdBy)
+		try container.encode(disabled, forKey: .disabled)
+		try container.encode(forAccount, forKey: .forAccount)
+		try container.encode(uses, forKey: .uses)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case available = "available"
+		case code = "code"
+		case createdAt = "createdAt"
+		case createdBy = "createdBy"
+		case disabled = "disabled"
+		case forAccount = "forAccount"
+		case uses = "uses"
+	}
+}
+
+
+public struct ComAtprotoServerDefsInviteCodeUse: Codable, Sendable, Equatable {
+	public let usedAt: ATProtocolDate
+	public let usedBy: DID
+
+	public init(
+		usedAt: ATProtocolDate,
+		usedBy: DID
+	) {
+		self.usedAt = usedAt
+		self.usedBy = usedBy
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		usedAt = try container.decode(ATProtocolDate.self, forKey: .usedAt)
+		usedBy = try container.decode(DID.self, forKey: .usedBy)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(usedAt, forKey: .usedAt)
+		try container.encode(usedBy, forKey: .usedBy)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case usedAt = "usedAt"
+		case usedBy = "usedBy"
+	}
+}
+
+
+public enum ComAtprotoServerDeleteAccountError: String, Swift.Error, CaseIterable, Sendable {
+	case expiredToken = "ExpiredToken"
+	case invalidToken = "InvalidToken"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ComAtprotoServerDeleteAccountInput: Codable, Sendable, Equatable {
+	public let did: DID
+	public let password: String
+	public let token: String
+
+	public init(
+		did: DID,
+		password: String,
+		token: String
+	) {
+		self.did = did
+		self.password = password
+		self.token = token
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		did = try container.decode(DID.self, forKey: .did)
+		password = try container.decode(String.self, forKey: .password)
+		token = try container.decode(String.self, forKey: .token)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(did, forKey: .did)
+		try container.encode(password, forKey: .password)
+		try container.encode(token, forKey: .token)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case did = "did"
+		case password = "password"
+		case token = "token"
+	}
+}
+
+
+public enum ComAtprotoServerDeleteSessionError: String, Swift.Error, CaseIterable, Sendable {
+	case expiredToken = "ExpiredToken"
+	case invalidToken = "InvalidToken"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ComAtprotoServerDescribeServerContact: Codable, Sendable, Equatable {
+	public let email: String?
+
+	public init(
+		email: String? = nil
+	) {
+		self.email = email
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		email = try container.decodeIfPresent(String.self, forKey: .email)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(email, forKey: .email)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case email = "email"
+	}
+}
+
+
+public struct ComAtprotoServerDescribeServerLinks: Codable, Sendable, Equatable {
+	public let privacyPolicy: String?
+	public let termsOfService: String?
+
+	public init(
+		privacyPolicy: String? = nil,
+		termsOfService: String? = nil
+	) {
+		self.privacyPolicy = privacyPolicy
+		self.termsOfService = termsOfService
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		privacyPolicy = try container.decodeIfPresent(String.self, forKey: .privacyPolicy)
+		termsOfService = try container.decodeIfPresent(String.self, forKey: .termsOfService)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(privacyPolicy, forKey: .privacyPolicy)
+		try container.encodeIfPresent(termsOfService, forKey: .termsOfService)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case privacyPolicy = "privacyPolicy"
+		case termsOfService = "termsOfService"
+	}
+}
+
+
+public struct ComAtprotoServerDescribeServerOutput: Codable, Sendable, Equatable {
+	public let availableUserDomains: [String]
+	public let contact: ComAtprotoServerDescribeServerContact?
+	public let did: DID
+	public let inviteCodeRequired: Bool?
+	public let links: ComAtprotoServerDescribeServerLinks?
+	public let phoneVerificationRequired: Bool?
+
+	public init(
+		availableUserDomains: [String],
+		contact: ComAtprotoServerDescribeServerContact? = nil,
+		did: DID,
+		inviteCodeRequired: Bool? = nil,
+		links: ComAtprotoServerDescribeServerLinks? = nil,
+		phoneVerificationRequired: Bool? = nil
+	) {
+		self.availableUserDomains = availableUserDomains
+		self.contact = contact
+		self.did = did
+		self.inviteCodeRequired = inviteCodeRequired
+		self.links = links
+		self.phoneVerificationRequired = phoneVerificationRequired
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		availableUserDomains = try container.decode([String].self, forKey: .availableUserDomains)
+		contact = try container.decodeIfPresent(ComAtprotoServerDescribeServerContact.self, forKey: .contact)
+		did = try container.decode(DID.self, forKey: .did)
+		inviteCodeRequired = try container.decodeIfPresent(Bool.self, forKey: .inviteCodeRequired)
+		links = try container.decodeIfPresent(ComAtprotoServerDescribeServerLinks.self, forKey: .links)
+		phoneVerificationRequired = try container.decodeIfPresent(Bool.self, forKey: .phoneVerificationRequired)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(availableUserDomains, forKey: .availableUserDomains)
+		try container.encodeIfPresent(contact, forKey: .contact)
+		try container.encode(did, forKey: .did)
+		try container.encodeIfPresent(inviteCodeRequired, forKey: .inviteCodeRequired)
+		try container.encodeIfPresent(links, forKey: .links)
+		try container.encodeIfPresent(phoneVerificationRequired, forKey: .phoneVerificationRequired)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case availableUserDomains = "availableUserDomains"
+		case contact = "contact"
+		case did = "did"
+		case inviteCodeRequired = "inviteCodeRequired"
+		case links = "links"
+		case phoneVerificationRequired = "phoneVerificationRequired"
+	}
+}
+
+
+public enum ComAtprotoServerGetAccountInviteCodesError: String, Swift.Error, CaseIterable, Sendable {
+	case duplicateCreate = "DuplicateCreate"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ComAtprotoServerGetAccountInviteCodesOutput: Codable, Sendable, Equatable {
+	public let codes: [ComAtprotoServerDefsInviteCode]
+
+	public init(
+		codes: [ComAtprotoServerDefsInviteCode]
+	) {
+		self.codes = codes
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		codes = try container.decode([ComAtprotoServerDefsInviteCode].self, forKey: .codes)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(codes, forKey: .codes)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case codes = "codes"
+	}
+}
+
+
+public struct ComAtprotoServerGetAccountInviteCodesParameters: Codable, Sendable, Equatable {
+	public let createAvailable: Bool?
+	public let includeUsed: Bool?
+
+	public init(
+		createAvailable: Bool? = nil,
+		includeUsed: Bool? = nil
+	) {
+		self.createAvailable = createAvailable
+		self.includeUsed = includeUsed
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		createAvailable = try container.decodeIfPresent(Bool.self, forKey: .createAvailable)
+		includeUsed = try container.decodeIfPresent(Bool.self, forKey: .includeUsed)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(createAvailable, forKey: .createAvailable)
+		try container.encodeIfPresent(includeUsed, forKey: .includeUsed)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		if let value = createAvailable {
+			value.appendQueryItems(named: "createAvailable", to: &items)
+		}
+		if let value = includeUsed {
+			value.appendQueryItems(named: "includeUsed", to: &items)
+		}
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case createAvailable = "createAvailable"
+		case includeUsed = "includeUsed"
+	}
+}
+
+
+public enum ComAtprotoServerGetServiceAuthError: String, Swift.Error, CaseIterable, Sendable {
+	case badExpiration = "BadExpiration"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ComAtprotoServerGetServiceAuthOutput: Codable, Sendable, Equatable {
+	public let token: String
+
+	public init(
+		token: String
+	) {
+		self.token = token
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		token = try container.decode(String.self, forKey: .token)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(token, forKey: .token)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case token = "token"
+	}
+}
+
+
+public struct ComAtprotoServerGetServiceAuthParameters: Codable, Sendable, Equatable {
+	public let aud: DID
+	public let exp: Int?
+	public let lxm: NSID?
+
+	public init(
+		aud: DID,
+		exp: Int? = nil,
+		lxm: NSID? = nil
+	) {
+		self.aud = aud
+		self.exp = exp
+		self.lxm = lxm
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		aud = try container.decode(DID.self, forKey: .aud)
+		exp = try container.decodeIfPresent(Int.self, forKey: .exp)
+		lxm = try container.decodeIfPresent(NSID.self, forKey: .lxm)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(aud, forKey: .aud)
+		try container.encodeIfPresent(exp, forKey: .exp)
+		try container.encodeIfPresent(lxm, forKey: .lxm)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		aud.appendQueryItems(named: "aud", to: &items)
+		if let value = exp {
+			value.appendQueryItems(named: "exp", to: &items)
+		}
+		if let value = lxm {
+			value.appendQueryItems(named: "lxm", to: &items)
+		}
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case aud = "aud"
+		case exp = "exp"
+		case lxm = "lxm"
+	}
+}
+
+
+public struct ComAtprotoServerGetSessionOutput: Codable, Sendable, Equatable {
+	public let active: Bool?
+	public let did: DID
+	public let didDoc: ATProtocolValueContainer?
+	public let email: String?
+	public let emailAuthFactor: Bool?
+	public let emailConfirmed: Bool?
+	public let handle: Handle
+	public let status: ComAtprotoServerCreateSessionOutputStatus?
+
+	public init(
+		active: Bool? = nil,
+		did: DID,
+		didDoc: ATProtocolValueContainer? = nil,
+		email: String? = nil,
+		emailAuthFactor: Bool? = nil,
+		emailConfirmed: Bool? = nil,
+		handle: Handle,
+		status: ComAtprotoServerCreateSessionOutputStatus? = nil
+	) {
+		self.active = active
+		self.did = did
+		self.didDoc = didDoc
+		self.email = email
+		self.emailAuthFactor = emailAuthFactor
+		self.emailConfirmed = emailConfirmed
+		self.handle = handle
+		self.status = status
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		active = try container.decodeIfPresent(Bool.self, forKey: .active)
+		did = try container.decode(DID.self, forKey: .did)
+		didDoc = try container.decodeIfPresent(ATProtocolValueContainer.self, forKey: .didDoc)
+		email = try container.decodeIfPresent(String.self, forKey: .email)
+		emailAuthFactor = try container.decodeIfPresent(Bool.self, forKey: .emailAuthFactor)
+		emailConfirmed = try container.decodeIfPresent(Bool.self, forKey: .emailConfirmed)
+		handle = try container.decode(Handle.self, forKey: .handle)
+		status = try container.decodeIfPresent(ComAtprotoServerCreateSessionOutputStatus.self, forKey: .status)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(active, forKey: .active)
+		try container.encode(did, forKey: .did)
+		try container.encodeIfPresent(didDoc, forKey: .didDoc)
+		try container.encodeIfPresent(email, forKey: .email)
+		try container.encodeIfPresent(emailAuthFactor, forKey: .emailAuthFactor)
+		try container.encodeIfPresent(emailConfirmed, forKey: .emailConfirmed)
+		try container.encode(handle, forKey: .handle)
+		try container.encodeIfPresent(status, forKey: .status)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case active = "active"
+		case did = "did"
+		case didDoc = "didDoc"
+		case email = "email"
+		case emailAuthFactor = "emailAuthFactor"
+		case emailConfirmed = "emailConfirmed"
+		case handle = "handle"
+		case status = "status"
+	}
+}
+
+
+public struct ComAtprotoServerListAppPasswordsAppPassword: Codable, Sendable, Equatable {
+	public let createdAt: ATProtocolDate
+	public let name: String
+	public let privileged: Bool?
+
+	public init(
+		createdAt: ATProtocolDate,
+		name: String,
+		privileged: Bool? = nil
+	) {
+		self.createdAt = createdAt
+		self.name = name
+		self.privileged = privileged
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		createdAt = try container.decode(ATProtocolDate.self, forKey: .createdAt)
+		name = try container.decode(String.self, forKey: .name)
+		privileged = try container.decodeIfPresent(Bool.self, forKey: .privileged)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(createdAt, forKey: .createdAt)
+		try container.encode(name, forKey: .name)
+		try container.encodeIfPresent(privileged, forKey: .privileged)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case createdAt = "createdAt"
+		case name = "name"
+		case privileged = "privileged"
+	}
+}
+
+
+public enum ComAtprotoServerListAppPasswordsError: String, Swift.Error, CaseIterable, Sendable {
+	case accountTakedown = "AccountTakedown"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ComAtprotoServerListAppPasswordsOutput: Codable, Sendable, Equatable {
+	public let passwords: [ComAtprotoServerListAppPasswordsAppPassword]
+
+	public init(
+		passwords: [ComAtprotoServerListAppPasswordsAppPassword]
+	) {
+		self.passwords = passwords
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		passwords = try container.decode([ComAtprotoServerListAppPasswordsAppPassword].self, forKey: .passwords)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(passwords, forKey: .passwords)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case passwords = "passwords"
+	}
+}
+
+
+public enum ComAtprotoServerRefreshSessionError: String, Swift.Error, CaseIterable, Sendable {
+	case accountTakedown = "AccountTakedown"
+	case expiredToken = "ExpiredToken"
+	case invalidToken = "InvalidToken"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ComAtprotoServerRefreshSessionOutput: Codable, Sendable, Equatable {
+	public let accessJwt: String
+	public let active: Bool?
+	public let did: DID
+	public let didDoc: ATProtocolValueContainer?
+	public let email: String?
+	public let emailAuthFactor: Bool?
+	public let emailConfirmed: Bool?
+	public let handle: Handle
+	public let refreshJwt: String
+	public let status: ComAtprotoServerCreateSessionOutputStatus?
+
+	public init(
+		accessJwt: String,
+		active: Bool? = nil,
+		did: DID,
+		didDoc: ATProtocolValueContainer? = nil,
+		email: String? = nil,
+		emailAuthFactor: Bool? = nil,
+		emailConfirmed: Bool? = nil,
+		handle: Handle,
+		refreshJwt: String,
+		status: ComAtprotoServerCreateSessionOutputStatus? = nil
+	) {
+		self.accessJwt = accessJwt
+		self.active = active
+		self.did = did
+		self.didDoc = didDoc
+		self.email = email
+		self.emailAuthFactor = emailAuthFactor
+		self.emailConfirmed = emailConfirmed
+		self.handle = handle
+		self.refreshJwt = refreshJwt
+		self.status = status
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		accessJwt = try container.decode(String.self, forKey: .accessJwt)
+		active = try container.decodeIfPresent(Bool.self, forKey: .active)
+		did = try container.decode(DID.self, forKey: .did)
+		didDoc = try container.decodeIfPresent(ATProtocolValueContainer.self, forKey: .didDoc)
+		email = try container.decodeIfPresent(String.self, forKey: .email)
+		emailAuthFactor = try container.decodeIfPresent(Bool.self, forKey: .emailAuthFactor)
+		emailConfirmed = try container.decodeIfPresent(Bool.self, forKey: .emailConfirmed)
+		handle = try container.decode(Handle.self, forKey: .handle)
+		refreshJwt = try container.decode(String.self, forKey: .refreshJwt)
+		status = try container.decodeIfPresent(ComAtprotoServerCreateSessionOutputStatus.self, forKey: .status)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(accessJwt, forKey: .accessJwt)
+		try container.encodeIfPresent(active, forKey: .active)
+		try container.encode(did, forKey: .did)
+		try container.encodeIfPresent(didDoc, forKey: .didDoc)
+		try container.encodeIfPresent(email, forKey: .email)
+		try container.encodeIfPresent(emailAuthFactor, forKey: .emailAuthFactor)
+		try container.encodeIfPresent(emailConfirmed, forKey: .emailConfirmed)
+		try container.encode(handle, forKey: .handle)
+		try container.encode(refreshJwt, forKey: .refreshJwt)
+		try container.encodeIfPresent(status, forKey: .status)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case accessJwt = "accessJwt"
+		case active = "active"
+		case did = "did"
+		case didDoc = "didDoc"
+		case email = "email"
+		case emailAuthFactor = "emailAuthFactor"
+		case emailConfirmed = "emailConfirmed"
+		case handle = "handle"
+		case refreshJwt = "refreshJwt"
+		case status = "status"
+	}
+}
+
+
+public struct ComAtprotoServerRequestEmailUpdateOutput: Codable, Sendable, Equatable {
+	public let tokenRequired: Bool
+
+	public init(
+		tokenRequired: Bool
+	) {
+		self.tokenRequired = tokenRequired
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		tokenRequired = try container.decode(Bool.self, forKey: .tokenRequired)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(tokenRequired, forKey: .tokenRequired)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case tokenRequired = "tokenRequired"
+	}
+}
+
+
+public struct ComAtprotoServerRequestPasswordResetInput: Codable, Sendable, Equatable {
+	public let email: String
+
+	public init(
+		email: String
+	) {
+		self.email = email
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		email = try container.decode(String.self, forKey: .email)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(email, forKey: .email)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case email = "email"
+	}
+}
+
+
+public struct ComAtprotoServerReserveSigningKeyInput: Codable, Sendable, Equatable {
+	public let did: DID?
+
+	public init(
+		did: DID? = nil
+	) {
+		self.did = did
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		did = try container.decodeIfPresent(DID.self, forKey: .did)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(did, forKey: .did)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case did = "did"
+	}
+}
+
+
+public struct ComAtprotoServerReserveSigningKeyOutput: Codable, Sendable, Equatable {
+	public let signingKey: String
+
+	public init(
+		signingKey: String
+	) {
+		self.signingKey = signingKey
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		signingKey = try container.decode(String.self, forKey: .signingKey)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(signingKey, forKey: .signingKey)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case signingKey = "signingKey"
+	}
+}
+
+
+public enum ComAtprotoServerResetPasswordError: String, Swift.Error, CaseIterable, Sendable {
+	case expiredToken = "ExpiredToken"
+	case invalidToken = "InvalidToken"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ComAtprotoServerResetPasswordInput: Codable, Sendable, Equatable {
+	public let password: String
+	public let token: String
+
+	public init(
+		password: String,
+		token: String
+	) {
+		self.password = password
+		self.token = token
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		password = try container.decode(String.self, forKey: .password)
+		token = try container.decode(String.self, forKey: .token)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(password, forKey: .password)
+		try container.encode(token, forKey: .token)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case password = "password"
+		case token = "token"
+	}
+}
+
+
+public struct ComAtprotoServerRevokeAppPasswordInput: Codable, Sendable, Equatable {
+	public let name: String
+
+	public init(
+		name: String
+	) {
+		self.name = name
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		name = try container.decode(String.self, forKey: .name)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(name, forKey: .name)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case name = "name"
+	}
+}
+
+
+public enum ComAtprotoServerUpdateEmailError: String, Swift.Error, CaseIterable, Sendable {
+	case expiredToken = "ExpiredToken"
+	case invalidToken = "InvalidToken"
+	case tokenRequired = "TokenRequired"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ComAtprotoServerUpdateEmailInput: Codable, Sendable, Equatable {
+	public let email: String
+	public let emailAuthFactor: Bool?
+	public let token: String?
+
+	public init(
+		email: String,
+		emailAuthFactor: Bool? = nil,
+		token: String? = nil
+	) {
+		self.email = email
+		self.emailAuthFactor = emailAuthFactor
+		self.token = token
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		email = try container.decode(String.self, forKey: .email)
+		emailAuthFactor = try container.decodeIfPresent(Bool.self, forKey: .emailAuthFactor)
+		token = try container.decodeIfPresent(String.self, forKey: .token)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(email, forKey: .email)
+		try container.encodeIfPresent(emailAuthFactor, forKey: .emailAuthFactor)
+		try container.encodeIfPresent(token, forKey: .token)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case email = "email"
+		case emailAuthFactor = "emailAuthFactor"
+		case token = "token"
+	}
+}
+
+

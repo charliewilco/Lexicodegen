@@ -1,0 +1,648 @@
+import Foundation
+
+
+public struct AppBskyContactDefsMatchAndContactIndex: Codable, Sendable, Equatable {
+	public let contactIndex: Int
+	public let match: AppBskyActorDefsProfileView
+
+	public init(
+		contactIndex: Int,
+		match: AppBskyActorDefsProfileView
+	) {
+		self.contactIndex = contactIndex
+		self.match = match
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		contactIndex = try container.decode(Int.self, forKey: .contactIndex)
+		match = try container.decode(AppBskyActorDefsProfileView.self, forKey: .match)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(contactIndex, forKey: .contactIndex)
+		try container.encode(match, forKey: .match)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case contactIndex = "contactIndex"
+		case match = "match"
+	}
+}
+
+
+public struct AppBskyContactDefsNotification: Codable, Sendable, Equatable {
+	public let from: DID
+	public let to: DID
+
+	public init(
+		from: DID,
+		to: DID
+	) {
+		self.from = from
+		self.to = to
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		from = try container.decode(DID.self, forKey: .from)
+		to = try container.decode(DID.self, forKey: .to)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(from, forKey: .from)
+		try container.encode(to, forKey: .to)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case from = "from"
+		case to = "to"
+	}
+}
+
+
+public struct AppBskyContactDefsSyncStatus: Codable, Sendable, Equatable {
+	public let matchesCount: Int
+	public let syncedAt: ATProtocolDate
+
+	public init(
+		matchesCount: Int,
+		syncedAt: ATProtocolDate
+	) {
+		self.matchesCount = matchesCount
+		self.syncedAt = syncedAt
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		matchesCount = try container.decode(Int.self, forKey: .matchesCount)
+		syncedAt = try container.decode(ATProtocolDate.self, forKey: .syncedAt)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(matchesCount, forKey: .matchesCount)
+		try container.encode(syncedAt, forKey: .syncedAt)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case matchesCount = "matchesCount"
+		case syncedAt = "syncedAt"
+	}
+}
+
+
+public enum AppBskyContactDismissMatchError: String, Swift.Error, CaseIterable, Sendable {
+	case internalError = "InternalError"
+	case invalidDid = "InvalidDid"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct AppBskyContactDismissMatchInput: Codable, Sendable, Equatable {
+	public let subject: DID
+
+	public init(
+		subject: DID
+	) {
+		self.subject = subject
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		subject = try container.decode(DID.self, forKey: .subject)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(subject, forKey: .subject)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case subject = "subject"
+	}
+}
+
+
+public struct AppBskyContactDismissMatchOutput: Codable, Sendable, Equatable {
+
+	public init() {}
+
+	public init(from decoder: Decoder) throws {
+		_ = try decoder.container(keyedBy: CodingKeys.self)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		_ = encoder.container(keyedBy: CodingKeys.self)
+	}
+
+	private struct CodingKeys: CodingKey {
+		let stringValue = ""
+		init?(stringValue: String) {
+			return nil
+		}
+
+		let intValue: Int? = nil
+		init?(intValue: Int) {
+			return nil
+		}
+	}
+}
+
+
+public enum AppBskyContactGetMatchesError: String, Swift.Error, CaseIterable, Sendable {
+	case internalError = "InternalError"
+	case invalidCursor = "InvalidCursor"
+	case invalidDid = "InvalidDid"
+	case invalidLimit = "InvalidLimit"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct AppBskyContactGetMatchesOutput: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let matches: [AppBskyActorDefsProfileView]
+
+	public init(
+		cursor: String? = nil,
+		matches: [AppBskyActorDefsProfileView]
+	) {
+		self.cursor = cursor
+		self.matches = matches
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		matches = try container.decode([AppBskyActorDefsProfileView].self, forKey: .matches)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encode(matches, forKey: .matches)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case matches = "matches"
+	}
+}
+
+
+public struct AppBskyContactGetMatchesParameters: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let limit: Int?
+
+	public init(
+		cursor: String? = nil,
+		limit: Int? = nil
+	) {
+		self.cursor = cursor
+		self.limit = limit
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		limit = try container.decodeIfPresent(Int.self, forKey: .limit)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encodeIfPresent(limit, forKey: .limit)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		if let value = cursor {
+			value.appendQueryItems(named: "cursor", to: &items)
+		}
+		if let value = limit {
+			value.appendQueryItems(named: "limit", to: &items)
+		}
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case limit = "limit"
+	}
+}
+
+
+public enum AppBskyContactGetSyncStatusError: String, Swift.Error, CaseIterable, Sendable {
+	case internalError = "InternalError"
+	case invalidDid = "InvalidDid"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct AppBskyContactGetSyncStatusOutput: Codable, Sendable, Equatable {
+	public let syncStatus: AppBskyContactDefsSyncStatus?
+
+	public init(
+		syncStatus: AppBskyContactDefsSyncStatus? = nil
+	) {
+		self.syncStatus = syncStatus
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		syncStatus = try container.decodeIfPresent(AppBskyContactDefsSyncStatus.self, forKey: .syncStatus)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(syncStatus, forKey: .syncStatus)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case syncStatus = "syncStatus"
+	}
+}
+
+
+public struct AppBskyContactGetSyncStatusParameters: Codable, Sendable, Equatable {
+
+	public init() {}
+
+	public init(from decoder: Decoder) throws {
+		_ = try decoder.container(keyedBy: CodingKeys.self)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		_ = encoder.container(keyedBy: CodingKeys.self)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		[]
+	}
+
+	private struct CodingKeys: CodingKey {
+		let stringValue = ""
+		init?(stringValue: String) {
+			return nil
+		}
+
+		let intValue: Int? = nil
+		init?(intValue: Int) {
+			return nil
+		}
+	}
+}
+
+
+public enum AppBskyContactImportContactsError: String, Swift.Error, CaseIterable, Sendable {
+	case internalError = "InternalError"
+	case invalidContacts = "InvalidContacts"
+	case invalidDid = "InvalidDid"
+	case invalidToken = "InvalidToken"
+	case tooManyContacts = "TooManyContacts"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct AppBskyContactImportContactsInput: Codable, Sendable, Equatable {
+	public let contacts: [String]
+	public let token: String
+
+	public init(
+		contacts: [String],
+		token: String
+	) {
+		self.contacts = contacts
+		self.token = token
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		contacts = try container.decode([String].self, forKey: .contacts)
+		token = try container.decode(String.self, forKey: .token)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(contacts, forKey: .contacts)
+		try container.encode(token, forKey: .token)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case contacts = "contacts"
+		case token = "token"
+	}
+}
+
+
+public struct AppBskyContactImportContactsOutput: Codable, Sendable, Equatable {
+	public let matchesAndContactIndexes: [AppBskyContactDefsMatchAndContactIndex]
+
+	public init(
+		matchesAndContactIndexes: [AppBskyContactDefsMatchAndContactIndex]
+	) {
+		self.matchesAndContactIndexes = matchesAndContactIndexes
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		matchesAndContactIndexes = try container.decode([AppBskyContactDefsMatchAndContactIndex].self, forKey: .matchesAndContactIndexes)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(matchesAndContactIndexes, forKey: .matchesAndContactIndexes)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case matchesAndContactIndexes = "matchesAndContactIndexes"
+	}
+}
+
+
+public enum AppBskyContactRemoveDataError: String, Swift.Error, CaseIterable, Sendable {
+	case internalError = "InternalError"
+	case invalidDid = "InvalidDid"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct AppBskyContactRemoveDataInput: Codable, Sendable, Equatable {
+
+	public init() {}
+
+	public init(from decoder: Decoder) throws {
+		_ = try decoder.container(keyedBy: CodingKeys.self)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		_ = encoder.container(keyedBy: CodingKeys.self)
+	}
+
+	private struct CodingKeys: CodingKey {
+		let stringValue = ""
+		init?(stringValue: String) {
+			return nil
+		}
+
+		let intValue: Int? = nil
+		init?(intValue: Int) {
+			return nil
+		}
+	}
+}
+
+
+public struct AppBskyContactRemoveDataOutput: Codable, Sendable, Equatable {
+
+	public init() {}
+
+	public init(from decoder: Decoder) throws {
+		_ = try decoder.container(keyedBy: CodingKeys.self)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		_ = encoder.container(keyedBy: CodingKeys.self)
+	}
+
+	private struct CodingKeys: CodingKey {
+		let stringValue = ""
+		init?(stringValue: String) {
+			return nil
+		}
+
+		let intValue: Int? = nil
+		init?(intValue: Int) {
+			return nil
+		}
+	}
+}
+
+
+public struct AppBskyContactSendNotificationInput: Codable, Sendable, Equatable {
+	public let from: DID
+	public let to: DID
+
+	public init(
+		from: DID,
+		to: DID
+	) {
+		self.from = from
+		self.to = to
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		from = try container.decode(DID.self, forKey: .from)
+		to = try container.decode(DID.self, forKey: .to)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(from, forKey: .from)
+		try container.encode(to, forKey: .to)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case from = "from"
+		case to = "to"
+	}
+}
+
+
+public struct AppBskyContactSendNotificationOutput: Codable, Sendable, Equatable {
+
+	public init() {}
+
+	public init(from decoder: Decoder) throws {
+		_ = try decoder.container(keyedBy: CodingKeys.self)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		_ = encoder.container(keyedBy: CodingKeys.self)
+	}
+
+	private struct CodingKeys: CodingKey {
+		let stringValue = ""
+		init?(stringValue: String) {
+			return nil
+		}
+
+		let intValue: Int? = nil
+		init?(intValue: Int) {
+			return nil
+		}
+	}
+}
+
+
+public enum AppBskyContactStartPhoneVerificationError: String, Swift.Error, CaseIterable, Sendable {
+	case internalError = "InternalError"
+	case invalidDid = "InvalidDid"
+	case invalidPhone = "InvalidPhone"
+	case rateLimitExceeded = "RateLimitExceeded"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct AppBskyContactStartPhoneVerificationInput: Codable, Sendable, Equatable {
+	public let phone: String
+
+	public init(
+		phone: String
+	) {
+		self.phone = phone
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		phone = try container.decode(String.self, forKey: .phone)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(phone, forKey: .phone)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case phone = "phone"
+	}
+}
+
+
+public struct AppBskyContactStartPhoneVerificationOutput: Codable, Sendable, Equatable {
+
+	public init() {}
+
+	public init(from decoder: Decoder) throws {
+		_ = try decoder.container(keyedBy: CodingKeys.self)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		_ = encoder.container(keyedBy: CodingKeys.self)
+	}
+
+	private struct CodingKeys: CodingKey {
+		let stringValue = ""
+		init?(stringValue: String) {
+			return nil
+		}
+
+		let intValue: Int? = nil
+		init?(intValue: Int) {
+			return nil
+		}
+	}
+}
+
+
+public enum AppBskyContactVerifyPhoneError: String, Swift.Error, CaseIterable, Sendable {
+	case internalError = "InternalError"
+	case invalidCode = "InvalidCode"
+	case invalidDid = "InvalidDid"
+	case invalidPhone = "InvalidPhone"
+	case rateLimitExceeded = "RateLimitExceeded"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct AppBskyContactVerifyPhoneInput: Codable, Sendable, Equatable {
+	public let code: String
+	public let phone: String
+
+	public init(
+		code: String,
+		phone: String
+	) {
+		self.code = code
+		self.phone = phone
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		code = try container.decode(String.self, forKey: .code)
+		phone = try container.decode(String.self, forKey: .phone)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(code, forKey: .code)
+		try container.encode(phone, forKey: .phone)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case code = "code"
+		case phone = "phone"
+	}
+}
+
+
+public struct AppBskyContactVerifyPhoneOutput: Codable, Sendable, Equatable {
+	public let token: String
+
+	public init(
+		token: String
+	) {
+		self.token = token
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		token = try container.decode(String.self, forKey: .token)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(token, forKey: .token)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case token = "token"
+	}
+}
+
+

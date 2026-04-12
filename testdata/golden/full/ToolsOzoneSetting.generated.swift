@@ -1,0 +1,335 @@
+import Foundation
+
+
+public struct ToolsOzoneSettingDefsOption: Codable, Sendable, Equatable {
+	public let createdAt: ATProtocolDate?
+	public let createdBy: DID
+	public let description: String?
+	public let did: DID
+	public let key: NSID
+	public let lastUpdatedBy: DID
+	public let managerRole: ToolsOzoneSettingDefsOptionManagerRole?
+	public let scope: ToolsOzoneSettingDefsOptionScope
+	public let updatedAt: ATProtocolDate?
+	public let value: ATProtocolValueContainer
+
+	public init(
+		createdAt: ATProtocolDate? = nil,
+		createdBy: DID,
+		description: String? = nil,
+		did: DID,
+		key: NSID,
+		lastUpdatedBy: DID,
+		managerRole: ToolsOzoneSettingDefsOptionManagerRole? = nil,
+		scope: ToolsOzoneSettingDefsOptionScope,
+		updatedAt: ATProtocolDate? = nil,
+		value: ATProtocolValueContainer
+	) {
+		self.createdAt = createdAt
+		self.createdBy = createdBy
+		self.description = description
+		self.did = did
+		self.key = key
+		self.lastUpdatedBy = lastUpdatedBy
+		self.managerRole = managerRole
+		self.scope = scope
+		self.updatedAt = updatedAt
+		self.value = value
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		createdAt = try container.decodeIfPresent(ATProtocolDate.self, forKey: .createdAt)
+		createdBy = try container.decode(DID.self, forKey: .createdBy)
+		description = try container.decodeIfPresent(String.self, forKey: .description)
+		did = try container.decode(DID.self, forKey: .did)
+		key = try container.decode(NSID.self, forKey: .key)
+		lastUpdatedBy = try container.decode(DID.self, forKey: .lastUpdatedBy)
+		managerRole = try container.decodeIfPresent(ToolsOzoneSettingDefsOptionManagerRole.self, forKey: .managerRole)
+		scope = try container.decode(ToolsOzoneSettingDefsOptionScope.self, forKey: .scope)
+		updatedAt = try container.decodeIfPresent(ATProtocolDate.self, forKey: .updatedAt)
+		value = try container.decode(ATProtocolValueContainer.self, forKey: .value)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(createdAt, forKey: .createdAt)
+		try container.encode(createdBy, forKey: .createdBy)
+		try container.encodeIfPresent(description, forKey: .description)
+		try container.encode(did, forKey: .did)
+		try container.encode(key, forKey: .key)
+		try container.encode(lastUpdatedBy, forKey: .lastUpdatedBy)
+		try container.encodeIfPresent(managerRole, forKey: .managerRole)
+		try container.encode(scope, forKey: .scope)
+		try container.encodeIfPresent(updatedAt, forKey: .updatedAt)
+		try container.encode(value, forKey: .value)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case createdAt = "createdAt"
+		case createdBy = "createdBy"
+		case description = "description"
+		case did = "did"
+		case key = "key"
+		case lastUpdatedBy = "lastUpdatedBy"
+		case managerRole = "managerRole"
+		case scope = "scope"
+		case updatedAt = "updatedAt"
+		case value = "value"
+	}
+}
+
+
+public enum ToolsOzoneSettingDefsOptionManagerRole: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case toolsOzoneTeamDefsRoleModerator = "tools.ozone.team.defs#roleModerator"
+	case toolsOzoneTeamDefsRoleTriage = "tools.ozone.team.defs#roleTriage"
+	case toolsOzoneTeamDefsRoleAdmin = "tools.ozone.team.defs#roleAdmin"
+	case toolsOzoneTeamDefsRoleVerifier = "tools.ozone.team.defs#roleVerifier"
+}
+
+
+public enum ToolsOzoneSettingDefsOptionScope: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case instance = "instance"
+	case personal = "personal"
+}
+
+
+public struct ToolsOzoneSettingListOptionsOutput: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let options: [ToolsOzoneSettingDefsOption]
+
+	public init(
+		cursor: String? = nil,
+		options: [ToolsOzoneSettingDefsOption]
+	) {
+		self.cursor = cursor
+		self.options = options
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		options = try container.decode([ToolsOzoneSettingDefsOption].self, forKey: .options)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encode(options, forKey: .options)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case options = "options"
+	}
+}
+
+
+public struct ToolsOzoneSettingListOptionsParameters: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let keys: [NSID]?
+	public let limit: Int?
+	public let prefix: String?
+	public let scope: ToolsOzoneSettingDefsOptionScope?
+
+	public init(
+		cursor: String? = nil,
+		keys: [NSID]? = nil,
+		limit: Int? = nil,
+		prefix: String? = nil,
+		scope: ToolsOzoneSettingDefsOptionScope? = nil
+	) {
+		self.cursor = cursor
+		self.keys = keys
+		self.limit = limit
+		self.prefix = prefix
+		self.scope = scope
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		keys = try container.decodeIfPresent([NSID].self, forKey: .keys)
+		limit = try container.decodeIfPresent(Int.self, forKey: .limit)
+		prefix = try container.decodeIfPresent(String.self, forKey: .prefix)
+		scope = try container.decodeIfPresent(ToolsOzoneSettingDefsOptionScope.self, forKey: .scope)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encodeIfPresent(keys, forKey: .keys)
+		try container.encodeIfPresent(limit, forKey: .limit)
+		try container.encodeIfPresent(prefix, forKey: .prefix)
+		try container.encodeIfPresent(scope, forKey: .scope)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		if let value = cursor {
+			value.appendQueryItems(named: "cursor", to: &items)
+		}
+		if let value = keys {
+			value.appendQueryItems(named: "keys", to: &items)
+		}
+		if let value = limit {
+			value.appendQueryItems(named: "limit", to: &items)
+		}
+		if let value = prefix {
+			value.appendQueryItems(named: "prefix", to: &items)
+		}
+		if let value = scope {
+			value.appendQueryItems(named: "scope", to: &items)
+		}
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case keys = "keys"
+		case limit = "limit"
+		case prefix = "prefix"
+		case scope = "scope"
+	}
+}
+
+
+public struct ToolsOzoneSettingRemoveOptionsInput: Codable, Sendable, Equatable {
+	public let keys: [NSID]
+	public let scope: ToolsOzoneSettingDefsOptionScope
+
+	public init(
+		keys: [NSID],
+		scope: ToolsOzoneSettingDefsOptionScope
+	) {
+		self.keys = keys
+		self.scope = scope
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		keys = try container.decode([NSID].self, forKey: .keys)
+		scope = try container.decode(ToolsOzoneSettingDefsOptionScope.self, forKey: .scope)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(keys, forKey: .keys)
+		try container.encode(scope, forKey: .scope)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case keys = "keys"
+		case scope = "scope"
+	}
+}
+
+
+public struct ToolsOzoneSettingRemoveOptionsOutput: Codable, Sendable, Equatable {
+
+	public init() {}
+
+	public init(from decoder: Decoder) throws {
+		_ = try decoder.container(keyedBy: CodingKeys.self)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		_ = encoder.container(keyedBy: CodingKeys.self)
+	}
+
+	private struct CodingKeys: CodingKey {
+		let stringValue = ""
+		init?(stringValue: String) {
+			return nil
+		}
+
+		let intValue: Int? = nil
+		init?(intValue: Int) {
+			return nil
+		}
+	}
+}
+
+
+public struct ToolsOzoneSettingUpsertOptionInput: Codable, Sendable, Equatable {
+	public let description: String?
+	public let key: NSID
+	public let managerRole: ToolsOzoneSettingUpsertOptionInputManagerRole?
+	public let scope: ToolsOzoneSettingDefsOptionScope
+	public let value: ATProtocolValueContainer
+
+	public init(
+		description: String? = nil,
+		key: NSID,
+		managerRole: ToolsOzoneSettingUpsertOptionInputManagerRole? = nil,
+		scope: ToolsOzoneSettingDefsOptionScope,
+		value: ATProtocolValueContainer
+	) {
+		self.description = description
+		self.key = key
+		self.managerRole = managerRole
+		self.scope = scope
+		self.value = value
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		description = try container.decodeIfPresent(String.self, forKey: .description)
+		key = try container.decode(NSID.self, forKey: .key)
+		managerRole = try container.decodeIfPresent(ToolsOzoneSettingUpsertOptionInputManagerRole.self, forKey: .managerRole)
+		scope = try container.decode(ToolsOzoneSettingDefsOptionScope.self, forKey: .scope)
+		value = try container.decode(ATProtocolValueContainer.self, forKey: .value)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(description, forKey: .description)
+		try container.encode(key, forKey: .key)
+		try container.encodeIfPresent(managerRole, forKey: .managerRole)
+		try container.encode(scope, forKey: .scope)
+		try container.encode(value, forKey: .value)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case description = "description"
+		case key = "key"
+		case managerRole = "managerRole"
+		case scope = "scope"
+		case value = "value"
+	}
+}
+
+
+public enum ToolsOzoneSettingUpsertOptionInputManagerRole: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case toolsOzoneTeamDefsRoleModerator = "tools.ozone.team.defs#roleModerator"
+	case toolsOzoneTeamDefsRoleTriage = "tools.ozone.team.defs#roleTriage"
+	case toolsOzoneTeamDefsRoleVerifier = "tools.ozone.team.defs#roleVerifier"
+	case toolsOzoneTeamDefsRoleAdmin = "tools.ozone.team.defs#roleAdmin"
+}
+
+
+public struct ToolsOzoneSettingUpsertOptionOutput: Codable, Sendable, Equatable {
+	public let option: ToolsOzoneSettingDefsOption
+
+	public init(
+		option: ToolsOzoneSettingDefsOption
+	) {
+		self.option = option
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		option = try container.decode(ToolsOzoneSettingDefsOption.self, forKey: .option)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(option, forKey: .option)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case option = "option"
+	}
+}
+
+

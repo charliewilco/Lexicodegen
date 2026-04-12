@@ -1,0 +1,618 @@
+import Foundation
+
+
+public enum AppBskyDraftCreateDraftError: String, Swift.Error, CaseIterable, Sendable {
+	case draftLimitReached = "DraftLimitReached"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct AppBskyDraftCreateDraftInput: Codable, Sendable, Equatable {
+	public let draft: AppBskyDraftDefsDraft
+
+	public init(
+		draft: AppBskyDraftDefsDraft
+	) {
+		self.draft = draft
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		draft = try container.decode(AppBskyDraftDefsDraft.self, forKey: .draft)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(draft, forKey: .draft)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case draft = "draft"
+	}
+}
+
+
+public struct AppBskyDraftCreateDraftOutput: Codable, Sendable, Equatable {
+	public let id: String
+
+	public init(
+		id: String
+	) {
+		self.id = id
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		id = try container.decode(String.self, forKey: .id)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(id, forKey: .id)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case id = "id"
+	}
+}
+
+
+public struct AppBskyDraftDefsDraft: Codable, Sendable, Equatable {
+	public let deviceId: String?
+	public let deviceName: String?
+	public let langs: [String]?
+	public let postgateEmbeddingRules: [AppBskyDraftDefsDraftPostgateEmbeddingRulesItem]?
+	public let posts: [AppBskyDraftDefsDraftPost]
+	public let threadgateAllow: [AppBskyDraftDefsDraftThreadgateAllowItem]?
+
+	public init(
+		deviceId: String? = nil,
+		deviceName: String? = nil,
+		langs: [String]? = nil,
+		postgateEmbeddingRules: [AppBskyDraftDefsDraftPostgateEmbeddingRulesItem]? = nil,
+		posts: [AppBskyDraftDefsDraftPost],
+		threadgateAllow: [AppBskyDraftDefsDraftThreadgateAllowItem]? = nil
+	) {
+		self.deviceId = deviceId
+		self.deviceName = deviceName
+		self.langs = langs
+		self.postgateEmbeddingRules = postgateEmbeddingRules
+		self.posts = posts
+		self.threadgateAllow = threadgateAllow
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		deviceId = try container.decodeIfPresent(String.self, forKey: .deviceId)
+		deviceName = try container.decodeIfPresent(String.self, forKey: .deviceName)
+		langs = try container.decodeIfPresent([String].self, forKey: .langs)
+		postgateEmbeddingRules = try container.decodeIfPresent([AppBskyDraftDefsDraftPostgateEmbeddingRulesItem].self, forKey: .postgateEmbeddingRules)
+		posts = try container.decode([AppBskyDraftDefsDraftPost].self, forKey: .posts)
+		threadgateAllow = try container.decodeIfPresent([AppBskyDraftDefsDraftThreadgateAllowItem].self, forKey: .threadgateAllow)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(deviceId, forKey: .deviceId)
+		try container.encodeIfPresent(deviceName, forKey: .deviceName)
+		try container.encodeIfPresent(langs, forKey: .langs)
+		try container.encodeIfPresent(postgateEmbeddingRules, forKey: .postgateEmbeddingRules)
+		try container.encode(posts, forKey: .posts)
+		try container.encodeIfPresent(threadgateAllow, forKey: .threadgateAllow)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case deviceId = "deviceId"
+		case deviceName = "deviceName"
+		case langs = "langs"
+		case postgateEmbeddingRules = "postgateEmbeddingRules"
+		case posts = "posts"
+		case threadgateAllow = "threadgateAllow"
+	}
+}
+
+
+public struct AppBskyDraftDefsDraftEmbedCaption: Codable, Sendable, Equatable {
+	public let content: String
+	public let lang: String
+
+	public init(
+		content: String,
+		lang: String
+	) {
+		self.content = content
+		self.lang = lang
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		content = try container.decode(String.self, forKey: .content)
+		lang = try container.decode(String.self, forKey: .lang)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(content, forKey: .content)
+		try container.encode(lang, forKey: .lang)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case content = "content"
+		case lang = "lang"
+	}
+}
+
+
+public struct AppBskyDraftDefsDraftEmbedExternal: Codable, Sendable, Equatable {
+	public let uri: String
+
+	public init(
+		uri: String
+	) {
+		self.uri = uri
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		uri = try container.decode(String.self, forKey: .uri)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(uri, forKey: .uri)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case uri = "uri"
+	}
+}
+
+
+public struct AppBskyDraftDefsDraftEmbedImage: Codable, Sendable, Equatable {
+	public let alt: String?
+	public let localRef: AppBskyDraftDefsDraftEmbedLocalRef
+
+	public init(
+		alt: String? = nil,
+		localRef: AppBskyDraftDefsDraftEmbedLocalRef
+	) {
+		self.alt = alt
+		self.localRef = localRef
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		alt = try container.decodeIfPresent(String.self, forKey: .alt)
+		localRef = try container.decode(AppBskyDraftDefsDraftEmbedLocalRef.self, forKey: .localRef)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(alt, forKey: .alt)
+		try container.encode(localRef, forKey: .localRef)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case alt = "alt"
+		case localRef = "localRef"
+	}
+}
+
+
+public struct AppBskyDraftDefsDraftEmbedLocalRef: Codable, Sendable, Equatable {
+	public let path: String
+
+	public init(
+		path: String
+	) {
+		self.path = path
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		path = try container.decode(String.self, forKey: .path)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(path, forKey: .path)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case path = "path"
+	}
+}
+
+
+public struct AppBskyDraftDefsDraftEmbedRecord: Codable, Sendable, Equatable {
+	public let record: ComAtprotoRepoStrongRef
+
+	public init(
+		record: ComAtprotoRepoStrongRef
+	) {
+		self.record = record
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		record = try container.decode(ComAtprotoRepoStrongRef.self, forKey: .record)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(record, forKey: .record)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case record = "record"
+	}
+}
+
+
+public struct AppBskyDraftDefsDraftEmbedVideo: Codable, Sendable, Equatable {
+	public let alt: String?
+	public let captions: [AppBskyDraftDefsDraftEmbedCaption]?
+	public let localRef: AppBskyDraftDefsDraftEmbedLocalRef
+
+	public init(
+		alt: String? = nil,
+		captions: [AppBskyDraftDefsDraftEmbedCaption]? = nil,
+		localRef: AppBskyDraftDefsDraftEmbedLocalRef
+	) {
+		self.alt = alt
+		self.captions = captions
+		self.localRef = localRef
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		alt = try container.decodeIfPresent(String.self, forKey: .alt)
+		captions = try container.decodeIfPresent([AppBskyDraftDefsDraftEmbedCaption].self, forKey: .captions)
+		localRef = try container.decode(AppBskyDraftDefsDraftEmbedLocalRef.self, forKey: .localRef)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(alt, forKey: .alt)
+		try container.encodeIfPresent(captions, forKey: .captions)
+		try container.encode(localRef, forKey: .localRef)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case alt = "alt"
+		case captions = "captions"
+		case localRef = "localRef"
+	}
+}
+
+
+public struct AppBskyDraftDefsDraftPost: Codable, Sendable, Equatable {
+	public let embedExternals: [AppBskyDraftDefsDraftEmbedExternal]?
+	public let embedImages: [AppBskyDraftDefsDraftEmbedImage]?
+	public let embedRecords: [AppBskyDraftDefsDraftEmbedRecord]?
+	public let embedVideos: [AppBskyDraftDefsDraftEmbedVideo]?
+	public let labels: AppBskyDraftDefsDraftPostLabels?
+	public let text: String
+
+	public init(
+		embedExternals: [AppBskyDraftDefsDraftEmbedExternal]? = nil,
+		embedImages: [AppBskyDraftDefsDraftEmbedImage]? = nil,
+		embedRecords: [AppBskyDraftDefsDraftEmbedRecord]? = nil,
+		embedVideos: [AppBskyDraftDefsDraftEmbedVideo]? = nil,
+		labels: AppBskyDraftDefsDraftPostLabels? = nil,
+		text: String
+	) {
+		self.embedExternals = embedExternals
+		self.embedImages = embedImages
+		self.embedRecords = embedRecords
+		self.embedVideos = embedVideos
+		self.labels = labels
+		self.text = text
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		embedExternals = try container.decodeIfPresent([AppBskyDraftDefsDraftEmbedExternal].self, forKey: .embedExternals)
+		embedImages = try container.decodeIfPresent([AppBskyDraftDefsDraftEmbedImage].self, forKey: .embedImages)
+		embedRecords = try container.decodeIfPresent([AppBskyDraftDefsDraftEmbedRecord].self, forKey: .embedRecords)
+		embedVideos = try container.decodeIfPresent([AppBskyDraftDefsDraftEmbedVideo].self, forKey: .embedVideos)
+		labels = try container.decodeIfPresent(AppBskyDraftDefsDraftPostLabels.self, forKey: .labels)
+		text = try container.decode(String.self, forKey: .text)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(embedExternals, forKey: .embedExternals)
+		try container.encodeIfPresent(embedImages, forKey: .embedImages)
+		try container.encodeIfPresent(embedRecords, forKey: .embedRecords)
+		try container.encodeIfPresent(embedVideos, forKey: .embedVideos)
+		try container.encodeIfPresent(labels, forKey: .labels)
+		try container.encode(text, forKey: .text)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case embedExternals = "embedExternals"
+		case embedImages = "embedImages"
+		case embedRecords = "embedRecords"
+		case embedVideos = "embedVideos"
+		case labels = "labels"
+		case text = "text"
+	}
+}
+
+
+public indirect enum AppBskyDraftDefsDraftPostgateEmbeddingRulesItem: Codable, Sendable, Equatable {
+	case disableRule(AppBskyFeedPostgateDisableRule)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "app.bsky.feed.postgate#disableRule": self = .disableRule(try AppBskyFeedPostgateDisableRule(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .disableRule(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.feed.postgate#disableRule", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
+public indirect enum AppBskyDraftDefsDraftPostLabels: Codable, Sendable, Equatable {
+	case selfLabels(ComAtprotoLabelDefsSelfLabels)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "com.atproto.label.defs#selfLabels": self = .selfLabels(try ComAtprotoLabelDefsSelfLabels(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .selfLabels(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "com.atproto.label.defs#selfLabels", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
+public indirect enum AppBskyDraftDefsDraftThreadgateAllowItem: Codable, Sendable, Equatable {
+	case mentionRule(AppBskyFeedThreadgateMentionRule)
+	case followerRule(AppBskyFeedThreadgateFollowerRule)
+	case followingRule(AppBskyFeedThreadgateFollowingRule)
+	case listRule(AppBskyFeedThreadgateListRule)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "app.bsky.feed.threadgate#mentionRule": self = .mentionRule(try AppBskyFeedThreadgateMentionRule(from: decoder))
+		case "app.bsky.feed.threadgate#followerRule": self = .followerRule(try AppBskyFeedThreadgateFollowerRule(from: decoder))
+		case "app.bsky.feed.threadgate#followingRule": self = .followingRule(try AppBskyFeedThreadgateFollowingRule(from: decoder))
+		case "app.bsky.feed.threadgate#listRule": self = .listRule(try AppBskyFeedThreadgateListRule(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .mentionRule(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.feed.threadgate#mentionRule", to: encoder)
+		case .followerRule(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.feed.threadgate#followerRule", to: encoder)
+		case .followingRule(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.feed.threadgate#followingRule", to: encoder)
+		case .listRule(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "app.bsky.feed.threadgate#listRule", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
+public struct AppBskyDraftDefsDraftView: Codable, Sendable, Equatable {
+	public let createdAt: ATProtocolDate
+	public let draft: AppBskyDraftDefsDraft
+	public let id: TID
+	public let updatedAt: ATProtocolDate
+
+	public init(
+		createdAt: ATProtocolDate,
+		draft: AppBskyDraftDefsDraft,
+		id: TID,
+		updatedAt: ATProtocolDate
+	) {
+		self.createdAt = createdAt
+		self.draft = draft
+		self.id = id
+		self.updatedAt = updatedAt
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		createdAt = try container.decode(ATProtocolDate.self, forKey: .createdAt)
+		draft = try container.decode(AppBskyDraftDefsDraft.self, forKey: .draft)
+		id = try container.decode(TID.self, forKey: .id)
+		updatedAt = try container.decode(ATProtocolDate.self, forKey: .updatedAt)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(createdAt, forKey: .createdAt)
+		try container.encode(draft, forKey: .draft)
+		try container.encode(id, forKey: .id)
+		try container.encode(updatedAt, forKey: .updatedAt)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case createdAt = "createdAt"
+		case draft = "draft"
+		case id = "id"
+		case updatedAt = "updatedAt"
+	}
+}
+
+
+public struct AppBskyDraftDefsDraftWithId: Codable, Sendable, Equatable {
+	public let draft: AppBskyDraftDefsDraft
+	public let id: TID
+
+	public init(
+		draft: AppBskyDraftDefsDraft,
+		id: TID
+	) {
+		self.draft = draft
+		self.id = id
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		draft = try container.decode(AppBskyDraftDefsDraft.self, forKey: .draft)
+		id = try container.decode(TID.self, forKey: .id)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(draft, forKey: .draft)
+		try container.encode(id, forKey: .id)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case draft = "draft"
+		case id = "id"
+	}
+}
+
+
+public struct AppBskyDraftDeleteDraftInput: Codable, Sendable, Equatable {
+	public let id: TID
+
+	public init(
+		id: TID
+	) {
+		self.id = id
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		id = try container.decode(TID.self, forKey: .id)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(id, forKey: .id)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case id = "id"
+	}
+}
+
+
+public struct AppBskyDraftGetDraftsOutput: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let drafts: [AppBskyDraftDefsDraftView]
+
+	public init(
+		cursor: String? = nil,
+		drafts: [AppBskyDraftDefsDraftView]
+	) {
+		self.cursor = cursor
+		self.drafts = drafts
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		drafts = try container.decode([AppBskyDraftDefsDraftView].self, forKey: .drafts)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encode(drafts, forKey: .drafts)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case drafts = "drafts"
+	}
+}
+
+
+public struct AppBskyDraftGetDraftsParameters: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let limit: Int?
+
+	public init(
+		cursor: String? = nil,
+		limit: Int? = nil
+	) {
+		self.cursor = cursor
+		self.limit = limit
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		limit = try container.decodeIfPresent(Int.self, forKey: .limit)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encodeIfPresent(limit, forKey: .limit)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		if let value = cursor {
+			value.appendQueryItems(named: "cursor", to: &items)
+		}
+		if let value = limit {
+			value.appendQueryItems(named: "limit", to: &items)
+		}
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case limit = "limit"
+	}
+}
+
+
+public struct AppBskyDraftUpdateDraftInput: Codable, Sendable, Equatable {
+	public let draft: AppBskyDraftDefsDraftWithId
+
+	public init(
+		draft: AppBskyDraftDefsDraftWithId
+	) {
+		self.draft = draft
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		draft = try container.decode(AppBskyDraftDefsDraftWithId.self, forKey: .draft)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(draft, forKey: .draft)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case draft = "draft"
+	}
+}
+
+
