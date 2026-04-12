@@ -3,12 +3,17 @@ import path from "node:path";
 import ejs from "ejs";
 
 import type {
+	IRCycleAnalysis,
 	IREndpoint,
 	IRNamedType,
 	LexiconIR,
 	RawLexiconSchema,
 } from "../lexicon-ir";
-import { normalizeRef } from "../lexicon-ir";
+import {
+	createEmptyCycleAnalysis,
+	cyclePropertyKey,
+	normalizeRef,
+} from "../lexicon-ir";
 
 type SwiftModel = {
 	name: string;
@@ -21,6 +26,7 @@ type GeneratedContext = {
 	models: Map<string, SwiftModel>;
 	knownValueEnums: Map<string, string>;
 	inlineUnions: Map<string, string>;
+	cycleAnalysis: IRCycleAnalysis;
 };
 
 type EndpointOutputKind = "json" | "binary" | "jsonl" | "car";
@@ -52,6 +58,14 @@ type ObjectDeclarationOptions = {
 	typeIdentifier?: string;
 	queryEncodable?: boolean;
 	protocols?: string[];
+};
+
+type StoredProperty = {
+	key: string;
+	swiftName: string;
+	type: string;
+	optional: boolean;
+	boxed: boolean;
 };
 
 const SWIFT_RESERVED_WORDS = new Set([
@@ -473,41 +487,61 @@ function buildObjectDeclaration(
 			swiftName: propertySwiftName(key),
 			type,
 			optional,
+			boxed: context.cycleAnalysis.boxedObjectProperties.has(
+				cyclePropertyKey(fullName, key),
+			),
 		};
 	});
 
 	const usableProperties = storedProperties.filter(
-		(
-			property,
-		): property is {
-			key: string;
-			swiftName: string;
-			type: string;
-			optional: boolean;
-		} => property != null,
+		(property): property is StoredProperty => property != null,
 	);
 
 	const typeIdentifierKey = options.typeIdentifier
 		? '\t\tcase typeIdentifier = "$type"'
 		: null;
-	const propertyDecls = usableProperties.map(
-		(property) =>
-			`\tpublic let ${property.swiftName}: ${property.type}${property.optional ? "?" : ""}`,
-	);
+	const propertyDecls = usableProperties.flatMap((property) => {
+		if (!property.boxed) {
+			return [
+				`\tpublic let ${property.swiftName}: ${property.type}${property.optional ? "?" : ""}`,
+			];
+		}
+
+		const backingType = `Indirect<${property.type}>${property.optional ? "?" : ""}`;
+		return [
+			`\tprivate let _${property.swiftName}: ${backingType}`,
+			`\tpublic var ${property.swiftName}: ${property.type}${property.optional ? "?" : ""} { _${
+				property.swiftName
+			}${property.optional ? "?.value" : ".value"} }`,
+		];
+	});
 	const initializerParams = usableProperties.map(
 		(property) =>
 			`\t\t${property.swiftName}: ${property.type}${property.optional ? "? = nil" : ""}`,
 	);
-	const initializerBody = usableProperties.map(
-		(property) => `\t\tself.${property.swiftName} = ${property.swiftName}`,
+	const initializerBody = usableProperties.map((property) =>
+		property.boxed
+			? property.optional
+				? `\t\tself._${property.swiftName} = ${property.swiftName}.map(Indirect.init)`
+				: `\t\tself._${property.swiftName} = Indirect(${property.swiftName})`
+			: `\t\tself.${property.swiftName} = ${property.swiftName}`,
 	);
 	const decodeLines = usableProperties.map((property) => {
+		const storageType = property.boxed
+			? `Indirect<${property.type}>`
+			: property.type;
 		const decoderCall = property.optional ? "decodeIfPresent" : "decode";
-		return `\t\t${property.swiftName} = try container.${decoderCall}(${property.type}.self, forKey: .${property.swiftName})`;
+		const destination = property.boxed
+			? `_${property.swiftName}`
+			: property.swiftName;
+		return `\t\t${destination} = try container.${decoderCall}(${storageType}.self, forKey: .${property.swiftName})`;
 	});
 	const encodeLines = usableProperties.map((property) => {
 		const encoderCall = property.optional ? "encodeIfPresent" : "encode";
-		return `\t\ttry container.${encoderCall}(${property.swiftName}, forKey: .${property.swiftName})`;
+		const source = property.boxed
+			? `_${property.swiftName}`
+			: property.swiftName;
+		return `\t\ttry container.${encoderCall}(${source}, forKey: .${property.swiftName})`;
 	});
 	const hasNamedCodingKeys =
 		typeIdentifierKey != null || usableProperties.length > 0;
@@ -648,6 +682,11 @@ function buildUnionDeclaration(
 		return name;
 	}
 
+	const isIndirect =
+		context.cycleAnalysis.indirectUnions.has(fullName) ||
+		(options.canonicalKey != null &&
+			context.cycleAnalysis.indirectInlineUnionKeys.has(options.canonicalKey));
+
 	const usedCaseNames = new Set<string>();
 	const cases = refs.flatMap((ref) => {
 		const target = normalizeRef(ref, referenceBase);
@@ -689,7 +728,7 @@ function buildUnionDeclaration(
 	});
 
 	const body = [
-		`public indirect enum ${name}: Codable, Sendable, Equatable {`,
+		`public ${isIndirect ? "indirect " : ""}enum ${name}: Codable, Sendable, Equatable {`,
 		...cases.map((entry) => `\tcase ${entry.caseName}(${entry.caseType})`),
 		"\tcase unexpected(ATProtocolValueContainer)",
 		"",
@@ -1244,6 +1283,7 @@ export async function emitSwiftFromIR(
 		models: new Map(),
 		knownValueEnums: new Map(),
 		inlineUnions: new Map(),
+		cycleAnalysis: ir.cycleAnalysis ?? createEmptyCycleAnalysis(),
 	};
 
 	for (const named of ir.namedTypes) {

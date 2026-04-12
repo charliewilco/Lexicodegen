@@ -3,6 +3,7 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import type { LexiconDoc } from "@atproto/lexicon";
 import { emitSwiftFromIR } from "../lib/emitter/swift";
 import {
 	buildLexiconIR,
@@ -351,7 +352,7 @@ describe("emitSwiftFromIR", () => {
 		);
 
 		expect(repoFile).toContain(
-			"public indirect enum ComAtprotoRepoApplyWritesInputWritesItem",
+			"public enum ComAtprotoRepoApplyWritesInputWritesItem",
 		);
 		expect(repoFile).toContain("case create(ComAtprotoRepoApplyWritesCreate)");
 		expect(repoFile).toContain(
@@ -381,7 +382,7 @@ describe("emitSwiftFromIR", () => {
 		);
 
 		expect(syncFile).toContain(
-			"public indirect enum ComAtprotoSyncSubscribeReposMessage",
+			"public enum ComAtprotoSyncSubscribeReposMessage",
 		);
 		expect(syncFile).toContain(
 			"case commit(ComAtprotoSyncSubscribeReposCommit)",
@@ -400,7 +401,7 @@ describe("emitSwiftFromIR", () => {
 			'public static let typeIdentifier = "app.bsky.graph.list"',
 		);
 		expect(graphFile).toContain("public let avatar: Blob?");
-		expect(graphFile).toContain("public indirect enum AppBskyGraphListLabels");
+		expect(graphFile).toContain("public enum AppBskyGraphListLabels");
 		expect(graphFile).toContain(
 			"case selfLabels(ComAtprotoLabelDefsSelfLabels)",
 		);
@@ -443,7 +444,7 @@ describe("emitSwiftFromIR", () => {
 			"public let record: AppBskyEmbedRecordViewRecordUnion",
 		);
 		expect(embedFile).toContain(
-			"public indirect enum AppBskyEmbedRecordViewRecordUnion: Codable, Sendable, Equatable {",
+			"public enum AppBskyEmbedRecordViewRecordUnion: Codable, Sendable, Equatable {",
 		);
 		expect(notificationFile).toContain(
 			"public let record: ATProtocolValueContainer",
@@ -713,6 +714,103 @@ describe("emitSwiftFromIR", () => {
 			"utf8",
 		);
 		expect(queryModels).toContain("public let subject: ComExampleDefsTarget");
+	});
+
+	test("boxes recursive object properties and limits indirect unions to recursive cases", async () => {
+		const outputDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), "lexicodegen-swift-cycles-"),
+		);
+
+		const docs = [
+			{
+				lexicon: 1,
+				id: "com.example.graph",
+				defs: {
+					main: {
+						type: "query",
+						output: {
+							encoding: "application/json",
+							schema: {
+								type: "object",
+								required: ["root", "edge", "status"],
+								properties: {
+									root: { type: "ref", ref: "#node" },
+									edge: { type: "union", refs: ["#node", "#leaf"] },
+									status: {
+										type: "union",
+										refs: ["#leaf", "#summary"],
+									},
+								},
+							},
+						},
+					},
+					node: {
+						type: "object",
+						required: ["next", "edge"],
+						properties: {
+							next: { type: "ref", ref: "#node" },
+							children: {
+								type: "array",
+								items: { type: "ref", ref: "#node" },
+							},
+							edge: { type: "ref", ref: "#edge" },
+						},
+					},
+					leaf: {
+						type: "object",
+						required: ["value"],
+						properties: {
+							value: { type: "string" },
+						},
+					},
+					summary: {
+						type: "object",
+						required: ["count"],
+						properties: {
+							count: { type: "integer" },
+						},
+					},
+					edge: {
+						type: "union",
+						refs: ["#node", "#leaf"],
+					},
+				},
+			},
+		] as unknown as LexiconDoc[];
+
+		const ir = buildLexiconIR(docs, {
+			allowPrefixes: [],
+			denyPrefixes: [],
+			denyUnspecced: false,
+			denyDeprecated: false,
+		});
+
+		await emitSwiftFromIR(ir, outputDir);
+
+		const graphFile = await fs.readFile(
+			path.join(outputDir, "ComExampleGraph.generated.swift"),
+			"utf8",
+		);
+
+		expect(graphFile).toContain(
+			"private let _next: Indirect<ComExampleGraphNode>",
+		);
+		expect(graphFile).toContain(
+			"public var next: ComExampleGraphNode { _next.value }",
+		);
+		expect(graphFile).toContain("self._next = Indirect(next)");
+		expect(graphFile).toContain(
+			"public indirect enum ComExampleGraphEdge: Codable, Sendable, Equatable {",
+		);
+		expect(graphFile).toContain(
+			"public enum ComExampleGraphOutputStatus: Codable, Sendable, Equatable {",
+		);
+
+		if (hasSwiftCompiler()) {
+			const swiftc = await typecheckSwiftOutput(outputDir);
+			expect(swiftc.status).toBe(0);
+			expect(swiftc.stderr).toBe("");
+		}
 	});
 
 	(hasSwiftCompiler() ? test : test.skip)(
