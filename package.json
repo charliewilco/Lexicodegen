@@ -20,7 +20,7 @@
 	},
 	"dependencies": {
 		"@atproto/lexicon": "^0.6.2",
-		"ejs": "5.0.1"
+		"ejs": "5.0.2"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.4.11",
