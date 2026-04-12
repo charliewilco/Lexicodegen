@@ -100,9 +100,59 @@ export type LexiconIR = {
 	namedTypes: IRNamedType[];
 	endpoints: IREndpoint[];
 	definitionIndex: Map<string, IRNamedType>;
+	cycleAnalysis?: IRCycleAnalysis;
 };
 
 export type LexiconIRFilter = GenerationFilter;
+
+export type IRCycleAnalysis = {
+	boxedObjectProperties: Set<string>;
+	indirectUnions: Set<string>;
+	indirectInlineUnionKeys: Set<string>;
+};
+
+type CycleNodeKind = "object" | "union";
+
+type CycleEdge = {
+	target: string;
+	kind: CycleNodeKind;
+	propertyKey?: string;
+};
+
+type CycleNode = {
+	fullName: string;
+	kind: CycleNodeKind;
+	edges: CycleEdge[];
+	canonicalUnionKey?: string;
+};
+
+type CycleAnalysisState = {
+	definitionIndex: Map<string, IRNamedType>;
+	nodes: Map<string, CycleNode>;
+	visitedNamed: Set<string>;
+	visitedObjects: Set<string>;
+	visitedUnions: Set<string>;
+};
+
+type CycleTarget = {
+	fullName: string;
+	kind: CycleNodeKind;
+};
+
+export function createEmptyCycleAnalysis(): IRCycleAnalysis {
+	return {
+		boxedObjectProperties: new Set<string>(),
+		indirectUnions: new Set<string>(),
+		indirectInlineUnionKeys: new Set<string>(),
+	};
+}
+
+export function cyclePropertyKey(
+	fullName: string,
+	propertyKey: string,
+): string {
+	return `${fullName}\u0000${propertyKey}`;
+}
 
 function matchesPrefixFilter(value: string, prefixes: string[]): boolean {
 	return prefixes.some((prefix) => value.startsWith(prefix));
@@ -170,6 +220,484 @@ export function normalizeRef(ref: string, currentId: string): string {
 	}
 
 	return ref;
+}
+
+function modelGroupFromId(id: string): string {
+	const parts = id.split(".");
+	return parts.slice(0, Math.min(parts.length, 3)).join(".");
+}
+
+function inlineUnionCycleKey(group: string, refs: string[]): string {
+	return `${group}\u0000${refs.join("\u0001")}`;
+}
+
+function isObjectLikeDefinition(named: IRNamedType): boolean {
+	if (named.type === "object" || named.type === "params") {
+		return true;
+	}
+
+	return named.type === "record" && named.definition.record != null;
+}
+
+function isUnionLikeDefinition(named: IRNamedType): boolean {
+	return named.type === "union";
+}
+
+function ensureCycleNode(
+	state: CycleAnalysisState,
+	fullName: string,
+	kind: CycleNodeKind,
+	options: {
+		canonicalUnionKey?: string;
+	} = {},
+): CycleNode {
+	const existing = state.nodes.get(fullName);
+	if (existing) {
+		if (!existing.canonicalUnionKey && options.canonicalUnionKey) {
+			existing.canonicalUnionKey = options.canonicalUnionKey;
+		}
+		return existing;
+	}
+
+	const node: CycleNode = {
+		fullName,
+		kind,
+		edges: [],
+		canonicalUnionKey: options.canonicalUnionKey,
+	};
+	state.nodes.set(fullName, node);
+	return node;
+}
+
+function registerStandaloneSchema(
+	state: CycleAnalysisState,
+	schema: RawLexiconSchema | undefined,
+	fullName: string,
+	referenceBase: string,
+	group: string,
+): void {
+	if (!schema) {
+		return;
+	}
+
+	if (schema.type === "array" && schema.items) {
+		registerStandaloneSchema(
+			state,
+			schema.items,
+			`${fullName}.item`,
+			referenceBase,
+			group,
+		);
+		return;
+	}
+
+	resolveSchemaTarget(state, schema, fullName, referenceBase, group);
+}
+
+function resolveNamedTarget(
+	state: CycleAnalysisState,
+	ref: string,
+	referenceBase: string,
+): CycleTarget | null {
+	const target = normalizeRef(ref, referenceBase);
+	const named = state.definitionIndex.get(target);
+	if (!named) {
+		return null;
+	}
+
+	ensureNamedCycleRegistration(state, target);
+
+	if (isObjectLikeDefinition(named)) {
+		return { fullName: target, kind: "object" };
+	}
+
+	if (isUnionLikeDefinition(named)) {
+		return { fullName: target, kind: "union" };
+	}
+
+	if (named.type === "array" && named.definition.items) {
+		registerStandaloneSchema(
+			state,
+			named.definition.items,
+			`${target}.item`,
+			named.id,
+			modelGroupFromId(named.source),
+		);
+	}
+
+	return null;
+}
+
+function resolveSchemaTarget(
+	state: CycleAnalysisState,
+	schema: RawLexiconSchema,
+	fullName: string,
+	referenceBase: string,
+	group: string,
+): CycleTarget | null {
+	if (schema.type === "ref" && typeof schema.ref === "string") {
+		return resolveNamedTarget(state, schema.ref, referenceBase);
+	}
+
+	if (schema.type === "object" || schema.type === "params") {
+		registerObjectCycleNode(state, fullName, schema, referenceBase, group);
+		return { fullName, kind: "object" };
+	}
+
+	if (schema.type === "record" && schema.record) {
+		registerObjectCycleNode(
+			state,
+			fullName,
+			schema.record,
+			referenceBase,
+			group,
+		);
+		return { fullName, kind: "object" };
+	}
+
+	if (schema.type === "union") {
+		const normalizedRefs = (schema.refs ?? []).map((ref) =>
+			normalizeRef(ref, referenceBase),
+		);
+		registerUnionCycleNode(state, fullName, schema.refs ?? [], referenceBase, {
+			canonicalUnionKey: inlineUnionCycleKey(group, normalizedRefs),
+		});
+		return { fullName, kind: "union" };
+	}
+
+	if (schema.type === "array" && schema.items) {
+		registerStandaloneSchema(
+			state,
+			schema.items,
+			`${fullName}.item`,
+			referenceBase,
+			group,
+		);
+	}
+
+	return null;
+}
+
+function registerObjectCycleNode(
+	state: CycleAnalysisState,
+	fullName: string,
+	schema: RawLexiconSchema,
+	referenceBase: string,
+	group: string,
+): void {
+	ensureCycleNode(state, fullName, "object");
+	if (state.visitedObjects.has(fullName)) {
+		return;
+	}
+	state.visitedObjects.add(fullName);
+
+	const node = ensureCycleNode(state, fullName, "object");
+	const properties = schema.properties ?? {};
+	for (const key of Object.keys(properties).sort()) {
+		const property = properties[key];
+		if (!property || key === "$type") {
+			continue;
+		}
+
+		const target = resolveSchemaTarget(
+			state,
+			property,
+			`${fullName}.${key}`,
+			referenceBase,
+			group,
+		);
+		if (!target) {
+			continue;
+		}
+
+		node.edges.push({
+			target: target.fullName,
+			kind: target.kind,
+			propertyKey: key,
+		});
+	}
+}
+
+function registerUnionCycleNode(
+	state: CycleAnalysisState,
+	fullName: string,
+	refs: string[],
+	referenceBase: string,
+	options: {
+		canonicalUnionKey?: string;
+	} = {},
+): void {
+	ensureCycleNode(state, fullName, "union", options);
+	if (state.visitedUnions.has(fullName)) {
+		return;
+	}
+	state.visitedUnions.add(fullName);
+
+	const node = ensureCycleNode(state, fullName, "union", options);
+	for (const ref of [...refs].sort()) {
+		const target = resolveNamedTarget(state, ref, referenceBase);
+		if (!target) {
+			continue;
+		}
+		node.edges.push({ target: target.fullName, kind: target.kind });
+	}
+}
+
+function ensureNamedCycleRegistration(
+	state: CycleAnalysisState,
+	fullName: string,
+): void {
+	if (state.visitedNamed.has(fullName)) {
+		return;
+	}
+	state.visitedNamed.add(fullName);
+
+	const named = state.definitionIndex.get(fullName);
+	if (!named) {
+		return;
+	}
+
+	const group = modelGroupFromId(named.source);
+	if (named.type === "object" || named.type === "params") {
+		registerObjectCycleNode(state, fullName, named.definition, named.id, group);
+		return;
+	}
+
+	if (named.type === "record" && named.definition.record) {
+		registerObjectCycleNode(
+			state,
+			fullName,
+			named.definition.record,
+			named.id,
+			group,
+		);
+		return;
+	}
+
+	if (named.type === "union") {
+		registerUnionCycleNode(
+			state,
+			fullName,
+			named.definition.refs ?? [],
+			named.id,
+		);
+		return;
+	}
+
+	if (named.type === "array" && named.definition.items) {
+		registerStandaloneSchema(
+			state,
+			named.definition.items,
+			`${fullName}.item`,
+			named.id,
+			group,
+		);
+	}
+}
+
+function buildCycleAnalysis(
+	namedTypes: IRNamedType[],
+	endpoints: IREndpoint[],
+	definitionIndex: Map<string, IRNamedType>,
+): IRCycleAnalysis {
+	const state: CycleAnalysisState = {
+		definitionIndex,
+		nodes: new Map<string, CycleNode>(),
+		visitedNamed: new Set<string>(),
+		visitedObjects: new Set<string>(),
+		visitedUnions: new Set<string>(),
+	};
+
+	for (const namedType of namedTypes) {
+		ensureNamedCycleRegistration(state, namedType.fullName);
+	}
+
+	for (const endpoint of endpoints) {
+		const group = modelGroupFromId(endpoint.source);
+		registerStandaloneSchema(
+			state,
+			endpoint.parametersSchema,
+			`${endpoint.fullName}.Parameters`,
+			endpoint.id,
+			group,
+		);
+		registerStandaloneSchema(
+			state,
+			endpoint.inputSchema,
+			`${endpoint.fullName}.Input`,
+			endpoint.id,
+			group,
+		);
+		registerStandaloneSchema(
+			state,
+			endpoint.outputSchema,
+			`${endpoint.fullName}.Output`,
+			endpoint.id,
+			group,
+		);
+		registerStandaloneSchema(
+			state,
+			endpoint.messageSchema,
+			`${endpoint.fullName}.Message`,
+			endpoint.id,
+			group,
+		);
+	}
+
+	const boxedObjectProperties = new Set<string>();
+	const objectNodes = [...state.nodes.values()]
+		.filter((node) => node.kind === "object")
+		.map((node) => node.fullName)
+		.sort();
+	const objectColors = new Map<string, 0 | 1 | 2>();
+	const objectNodeSet = new Set(objectNodes);
+
+	for (const fullName of objectNodes) {
+		objectColors.set(fullName, 0);
+	}
+
+	function visitObject(fullName: string) {
+		objectColors.set(fullName, 1);
+		const node = state.nodes.get(fullName);
+		if (node) {
+			const edges = node.edges
+				.filter(
+					(edge): edge is CycleEdge & { propertyKey: string } =>
+						edge.kind === "object" &&
+						typeof edge.propertyKey === "string" &&
+						objectNodeSet.has(edge.target),
+				)
+				.sort((left, right) => {
+					if (left.propertyKey !== right.propertyKey) {
+						return left.propertyKey.localeCompare(right.propertyKey);
+					}
+					return left.target.localeCompare(right.target);
+				});
+
+			for (const edge of edges) {
+				const color = objectColors.get(edge.target) ?? 0;
+				if (color === 1) {
+					boxedObjectProperties.add(
+						cyclePropertyKey(fullName, edge.propertyKey),
+					);
+					continue;
+				}
+				if (color === 0) {
+					visitObject(edge.target);
+				}
+			}
+		}
+		objectColors.set(fullName, 2);
+	}
+
+	for (const fullName of objectNodes) {
+		if ((objectColors.get(fullName) ?? 0) === 0) {
+			visitObject(fullName);
+		}
+	}
+
+	const adjacency = new Map<string, string[]>();
+	for (const node of state.nodes.values()) {
+		const targets = node.edges
+			.filter((edge) => {
+				if (node.kind !== "object") {
+					return true;
+				}
+				if (edge.kind !== "object" || !edge.propertyKey) {
+					return true;
+				}
+				return !boxedObjectProperties.has(
+					cyclePropertyKey(node.fullName, edge.propertyKey),
+				);
+			})
+			.map((edge) => edge.target)
+			.sort();
+		adjacency.set(node.fullName, targets);
+	}
+
+	let index = 0;
+	const indices = new Map<string, number>();
+	const lowLink = new Map<string, number>();
+	const stack: string[] = [];
+	const onStack = new Set<string>();
+	const indirectUnions = new Set<string>();
+	const indirectInlineUnionKeys = new Set<string>();
+
+	function visitStronglyConnected(nodeName: string) {
+		indices.set(nodeName, index);
+		lowLink.set(nodeName, index);
+		index += 1;
+		stack.push(nodeName);
+		onStack.add(nodeName);
+
+		for (const target of adjacency.get(nodeName) ?? []) {
+			if (!indices.has(target)) {
+				visitStronglyConnected(target);
+				lowLink.set(
+					nodeName,
+					Math.min(lowLink.get(nodeName) ?? 0, lowLink.get(target) ?? 0),
+				);
+				continue;
+			}
+
+			if (onStack.has(target)) {
+				lowLink.set(
+					nodeName,
+					Math.min(lowLink.get(nodeName) ?? 0, indices.get(target) ?? 0),
+				);
+			}
+		}
+
+		if ((lowLink.get(nodeName) ?? -1) !== (indices.get(nodeName) ?? -2)) {
+			return;
+		}
+
+		const component: string[] = [];
+		while (stack.length > 0) {
+			const current = stack.pop();
+			if (!current) {
+				break;
+			}
+			onStack.delete(current);
+			component.push(current);
+			if (current === nodeName) {
+				break;
+			}
+		}
+
+		const componentSet = new Set(component);
+		const isRecursive =
+			component.length > 1 ||
+			component.some((name) =>
+				(adjacency.get(name) ?? []).some((target) => componentSet.has(target)),
+			);
+		if (!isRecursive) {
+			return;
+		}
+
+		for (const name of component) {
+			const node = state.nodes.get(name);
+			if (!node || node.kind !== "union") {
+				continue;
+			}
+			indirectUnions.add(name);
+			if (node.canonicalUnionKey) {
+				indirectInlineUnionKeys.add(node.canonicalUnionKey);
+			}
+		}
+	}
+
+	for (const nodeName of [...state.nodes.keys()].sort()) {
+		if (!indices.has(nodeName)) {
+			visitStronglyConnected(nodeName);
+		}
+	}
+
+	return {
+		boxedObjectProperties,
+		indirectUnions,
+		indirectInlineUnionKeys,
+	};
 }
 
 function collectReferencedDefinitions(
@@ -374,10 +902,17 @@ export function buildLexiconIR(
 		definitionIndex.set(namedType.fullName, namedType);
 	}
 
+	const cycleAnalysis = buildCycleAnalysis(
+		namedTypes,
+		endpoints,
+		definitionIndex,
+	);
+
 	return {
 		documents: byLexicon.sort((a, b) => a.id.localeCompare(b.id)),
 		namedTypes: namedTypes.sort((a, b) => a.fullName.localeCompare(b.fullName)),
 		endpoints: endpoints.sort((a, b) => a.fullName.localeCompare(b.fullName)),
 		definitionIndex,
+		cycleAnalysis,
 	};
 }

@@ -184,3 +184,64 @@ test("normalizeRef", () => {
 		"app.other.type",
 	);
 });
+
+test("analyzes recursive objects and unions for cycle-aware code generation", () => {
+	const docs = [
+		{
+			lexicon: 1,
+			id: "com.example.graph",
+			defs: {
+				main: {
+					type: "query",
+					output: {
+						encoding: "application/json",
+						schema: {
+							type: "object",
+							required: ["root", "edge"],
+							properties: {
+								root: { type: "ref", ref: "#node" },
+								edge: { type: "union", refs: ["#node", "#leaf"] },
+							},
+						},
+					},
+				},
+				node: {
+					type: "object",
+					required: ["next"],
+					properties: {
+						next: { type: "ref", ref: "#node" },
+						children: {
+							type: "array",
+							items: { type: "ref", ref: "#node" },
+						},
+						edge: { type: "ref", ref: "#edge" },
+					},
+				},
+				leaf: {
+					type: "object",
+					properties: {
+						value: { type: "string" },
+					},
+				},
+				edge: {
+					type: "union",
+					refs: ["#node", "#leaf"],
+				},
+			},
+		},
+	] as unknown as LexiconDoc[];
+
+	const ir = buildLexiconIR(docs, {
+		allowPrefixes: [],
+		denyPrefixes: [],
+		denyUnspecced: false,
+		denyDeprecated: false,
+	});
+
+	expect(ir.cycleAnalysis?.boxedObjectProperties).toEqual(
+		new Set(["com.example.graph.node\u0000next"]),
+	);
+	expect(ir.cycleAnalysis?.indirectUnions).toEqual(
+		new Set(["com.example.graph.edge"]),
+	);
+});
