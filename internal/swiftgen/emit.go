@@ -28,6 +28,10 @@ func (Emitter) Emit(data ir.LexiconIR, outputDir string) error {
 	return EmitSwiftFromIR(data, outputDir)
 }
 
+type EmitOptions struct {
+	FilePrefix string
+}
+
 type swiftModel struct {
 	Name  string
 	Body  string
@@ -89,7 +93,7 @@ var swiftReservedWords = map[string]struct{}{
 	"if": {}, "in": {}, "repeat": {}, "return": {}, "throw": {}, "where": {}, "while": {},
 }
 
-func EmitSwiftFromIR(data ir.LexiconIR, outputDir string) error {
+func EmitSwiftFromIR(data ir.LexiconIR, outputDir string, options ...EmitOptions) error {
 	outDir, err := filepath.Abs(outputDir)
 	if err != nil {
 		return err
@@ -103,6 +107,11 @@ func EmitSwiftFromIR(data ir.LexiconIR, outputDir string) error {
 		Models:          map[string]swiftModel{},
 		KnownValueEnums: map[string]string{},
 		InlineUnions:    map[string]string{},
+	}
+
+	settings := EmitOptions{}
+	if len(options) > 0 {
+		settings = options[0]
 	}
 
 	for _, named := range data.NamedTypes {
@@ -153,7 +162,7 @@ func EmitSwiftFromIR(data ir.LexiconIR, outputDir string) error {
 	if err := runtimeTemplate.Execute(&runtime, map[string]any{}); err != nil {
 		return err
 	}
-	if err := os.WriteFile(filepath.Join(outDir, "Models.swift"), runtime.Bytes(), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(outDir, prefixedFileName("Models.swift", settings.FilePrefix)), runtime.Bytes(), 0o644); err != nil {
 		return err
 	}
 
@@ -165,12 +174,12 @@ func EmitSwiftFromIR(data ir.LexiconIR, outputDir string) error {
 		if err := modelsTemplate.Execute(&rendered, payload); err != nil {
 			return err
 		}
-		if err := os.WriteFile(filepath.Join(outDir, modelFileName(group)), rendered.Bytes(), 0o644); err != nil {
+		if err := os.WriteFile(filepath.Join(outDir, modelFileName(group, settings.FilePrefix)), rendered.Bytes(), 0o644); err != nil {
 			return err
 		}
 	}
 
-	return os.WriteFile(filepath.Join(outDir, "Endpoints.swift"), []byte(renderEndpointNamespaces(endpointSurfaces)), 0o644)
+	return os.WriteFile(filepath.Join(outDir, prefixedFileName("Endpoints.swift", settings.FilePrefix)), []byte(renderEndpointNamespaces(endpointSurfaces)), 0o644)
 }
 
 func toSwiftSafeIdentifier(input string) string {
@@ -297,8 +306,12 @@ func modelGroupFromID(id string) string {
 	return strings.Join(parts[:limit], ".")
 }
 
-func modelFileName(group string) string {
-	return toPascalCase(group) + ".generated.swift"
+func prefixedFileName(name string, filePrefix string) string {
+	return filePrefix + name
+}
+
+func modelFileName(group string, filePrefix string) string {
+	return prefixedFileName(toPascalCase(group)+".generated.swift", filePrefix)
 }
 
 func ensureModel(models map[string]swiftModel, name string, body string, group string) string {

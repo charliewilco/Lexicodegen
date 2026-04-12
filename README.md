@@ -8,34 +8,20 @@ This repo used to be Bun/TypeScript-based. It is now Go-first:
 - config, source loading, IR building, and Swift emission are repo-owned Go code
 - generated Swift output is kept near-parity with the previous implementation
 
-## Current status
+The design intentionally keeps a repo-owned intermediate representation so future targets are possible without coupling the project to Indigo's generator packages.
 
-As of 2026-04-11, the primary local verification flow is:
+## Current Output
 
-- `go test ./...`
-- `go build -o ./lexicodegen ./cmd/lexicodegen`
-- `go run ./cmd/lexicodegen ./lexicons --output ./output/swift`
-- `bash ./scripts/check-swift-compile.sh ./output/swift`
+- Generated Swift files are written to `output/swift` by default.
+- Files are namespace-grouped, for example:
+	- `AppBskyActor.generated.swift`
+	- `AppBskyFeed.generated.swift`
+- Shared helper files are emitted as:
+	- `Models.swift`
+	- `Endpoints.swift`
+- `output.swiftFilePrefix` can prepend every generated Swift filename, for example `Generated_Models.swift`.
 
-`go test ./...` includes:
-
-- config precedence tests for JSON and TOML
-- source loading tests for local and HTTP inputs
-- IR filtering and determinism tests
-- full golden-output parity tests for the checked-in lexicon set
-- optional `swiftc` compilation of generated output when `swiftc` is available on `PATH`
-
-## Why this exists
-
-The generator is Swift-first. It takes one or more lexicon sources and emits:
-
-- namespace-grouped generated Swift model files such as `AppBskyFeed.generated.swift`
-- shared runtime helpers in `Models.swift`
-- namespaced endpoint accessors in `Endpoints.swift`
-
-The design intentionally keeps a repo-owned intermediate representation so future targets are possible without coupling the project to Indigo’s generator packages.
-
-## Project layout
+## Project Layout
 
 - `cmd/lexicodegen`: CLI entrypoint
 - `internal/config`: CLI and config-file parsing, defaults, normalization, validation
@@ -130,8 +116,9 @@ Notes:
 - `both` is accepted as a compatibility alias for `swift`
 - unknown flags are rejected
 - unknown targets are rejected
+- `output.swiftFilePrefix` is currently config-only
 
-## Config files
+## Config Files
 
 JSON and TOML config files are supported:
 
@@ -140,14 +127,82 @@ go run ./cmd/lexicodegen --config ./lexicodegen.toml
 go run ./cmd/lexicodegen --config ./lexicodegen.json
 ```
 
-Config shape:
+### Config Shape
 
-- `sources`
-- `filters`
-- `targets`
-- `output.swiftOutDir`
+| Key | Type | Default | Notes |
+|---|---|---|---|
+| `sources` | `LexiconSource[]` | `[{ kind: "local", path: "./lexicons", recursive: true }]` | Replaced entirely if any CLI source is provided |
+| `filters.allowPrefixes` | `string[]` | `[]` | Keep only matching lexicon IDs |
+| `filters.denyPrefixes` | `string[]` | `[]` | Exclude matching lexicon IDs |
+| `filters.denyUnspecced` | `boolean` | `false` | Skip unspecced defs |
+| `filters.denyDeprecated` | `boolean` | `false` | Skip deprecated defs |
+| `targets` | `string[]` | `["swift"]` | Only `swift` is currently meaningful |
+| `output.swiftOutDir` | `string` | `"./output/swift"` | Resolved relative to the current working directory |
+| `output.swiftFilePrefix` | `string` | `""` | Prepends every generated Swift filename; path separators are rejected |
 
-Example:
+This repo already supports filter prefixes in config via `filters.allowPrefixes` and `filters.denyPrefixes`. `output.swiftFilePrefix` is separate: it changes generated filenames, not lexicon filtering.
+
+### `sources` Schema
+
+Each source is one of:
+
+- Local source:
+
+```json
+{
+	"kind": "local",
+	"path": "./lexicons",
+	"recursive": true
+}
+```
+
+- HTTP source:
+
+```json
+{
+	"kind": "http",
+	"url": "https://example.com/lexicons.json"
+}
+```
+
+- Git archive source:
+
+```json
+{
+	"kind": "git-archive",
+	"url": "https://github.com/org/repo/archive/refs/heads/main.tar.gz",
+	"stripPath": "some/subfolder"
+}
+```
+
+`stripPath` is used during archive extraction. If you need a specific branch or tag, point `url` at the archive for that ref directly.
+
+### JSON Example
+
+```json
+{
+	"sources": [
+		{
+			"kind": "local",
+			"path": "./lexicons",
+			"recursive": true
+		}
+	],
+	"filters": {
+		"allowPrefixes": ["app.bsky", "frontpage"],
+		"denyPrefixes": ["com.atproto.lexicon.resolveLexicon"],
+		"denyUnspecced": false,
+		"denyDeprecated": false
+	},
+	"targets": ["swift"],
+	"output": {
+		"swiftOutDir": "./output/swift",
+		"swiftFilePrefix": "Generated_"
+	}
+}
+```
+
+### TOML Example
 
 ```toml
 [[sources]]
@@ -165,47 +220,35 @@ targets = ["swift"]
 
 [output]
 swiftOutDir = "./output/swift"
+swiftFilePrefix = "Generated_"
 ```
+
+`output.swiftFilePrefix` is applied verbatim. If you want a separator, include it yourself, for example `Generated_` or `ATProto`.
+
+### Precedence
+
+Merge behavior is intentionally simple:
+
+- CLI sources replace config-file sources when any positional source or `--source` is provided
+- CLI filter flags override config filters individually
+- `--output` and `--swift-output-dir` override `output.swiftOutDir`
+- `output.swiftFilePrefix` comes from config only
+- resolved local paths are normalized relative to the current working directory
 
 ## Development
 
 Common commands:
 
-```bash
-go test ./...
-go build -o ./lexicodegen ./cmd/lexicodegen
-go run ./cmd/lexicodegen ./lexicons --output ./output/swift
-bash ./scripts/check-swift-compile.sh ./output/swift
-```
+- `just build`
+- `just test`
+- `just lint`
+- `just generate`
+- `just verify-swift`
+- `just all`
 
-Optional `just` wrappers:
+Primary verification flow:
 
-```bash
-just test
-just build
-just generate
-just verify-swift
-```
-
-Refresh lexicons from upstream:
-
-```bash
-sh ./scripts/get-lexicons.sh
-```
-
-## Testing
-
-Run the full Go suite:
-
-```bash
-go test ./...
-```
-
-That suite verifies:
-
-- config merge and validation behavior
-- source loading behavior
-- IR inclusion and ordering
-- exact generated Swift parity against `testdata/golden/full`
-- deterministic repeat output
-- generated Swift compilation when `swiftc` is available
+- `go test ./...`
+- `go build -o ./lexicodegen ./cmd/lexicodegen`
+- `go run ./cmd/lexicodegen ./lexicons --output ./output/swift`
+- `bash ./scripts/check-swift-compile.sh ./output/swift`

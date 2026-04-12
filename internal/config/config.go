@@ -32,7 +32,8 @@ type GenerationFilter struct {
 }
 
 type OutputConfig struct {
-	SwiftOutDir string `json:"swiftOutDir,omitempty" toml:"swiftOutDir,omitempty"`
+	SwiftOutDir     string `json:"swiftOutDir,omitempty" toml:"swiftOutDir,omitempty"`
+	SwiftFilePrefix string `json:"swiftFilePrefix,omitempty" toml:"swiftFilePrefix,omitempty"`
 }
 
 type GeneratorConfig struct {
@@ -78,7 +79,8 @@ var defaultConfig = GeneratorConfig{
 	},
 	Targets: []Target{TargetSwift},
 	Output: OutputConfig{
-		SwiftOutDir: "./output/swift",
+		SwiftOutDir:     "./output/swift",
+		SwiftFilePrefix: "",
 	},
 }
 
@@ -117,12 +119,21 @@ func Load(argv []string, cwd string) (GeneratorConfig, error) {
 		output = cli.OutputDir
 	}
 
+	filePrefix := defaultConfig.Output.SwiftFilePrefix
+	if fileConfig.Output != nil {
+		filePrefix, err = normalizeSwiftFilePrefix(fileConfig.Output.SwiftFilePrefix)
+		if err != nil {
+			return GeneratorConfig{}, err
+		}
+	}
+
 	return GeneratorConfig{
 		Sources: sources,
 		Filters: filters,
 		Targets: targets,
 		Output: OutputConfig{
-			SwiftOutDir: resolvePath(cwd, output),
+			SwiftOutDir:     resolvePath(cwd, output),
+			SwiftFilePrefix: filePrefix,
 		},
 	}, nil
 }
@@ -369,6 +380,14 @@ func filterEmptyStrings(values []string) []string {
 		}
 	}
 	return filtered
+}
+
+func normalizeSwiftFilePrefix(raw string) (string, error) {
+	normalized := strings.TrimSpace(raw)
+	if strings.ContainsAny(normalized, `/\`) {
+		return "", errors.New("output.swiftFilePrefix cannot contain path separators")
+	}
+	return normalized, nil
 }
 
 func resolvePath(cwd string, raw string) string {

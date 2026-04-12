@@ -26,7 +26,8 @@ func TestLoadJSONConfigFile(t *testing.T) {
 		},
 		"targets": ["swift"],
 		"output": {
-			"swiftOutDir": "./output/custom"
+			"swiftOutDir": "./output/custom",
+			"swiftFilePrefix": "ATProto_"
 		}
 	}`
 	if err := os.WriteFile(configPath, []byte(content), 0o644); err != nil {
@@ -57,6 +58,9 @@ func TestLoadJSONConfigFile(t *testing.T) {
 	if got, want := cfg.Output.SwiftOutDir, filepath.Join(cwd, "output/custom"); got != want {
 		t.Fatalf("swift output dir mismatch: %s != %s", got, want)
 	}
+	if got, want := cfg.Output.SwiftFilePrefix, "ATProto_"; got != want {
+		t.Fatalf("swift file prefix mismatch: %s != %s", got, want)
+	}
 }
 
 func TestLoadTOMLConfigWithCLIOverrides(t *testing.T) {
@@ -84,6 +88,7 @@ targets = ["swift"]
 
 [output]
 swiftOutDir = "./output/toml"
+swiftFilePrefix = "Generated_"
 `
 	if err := os.WriteFile(configPath, []byte(content), 0o644); err != nil {
 		t.Fatal(err)
@@ -100,6 +105,9 @@ swiftOutDir = "./output/toml"
 	}
 	if got, want := cfg.Output.SwiftOutDir, filepath.Join(cwd, "cli-output"); got != want {
 		t.Fatalf("swift output dir mismatch: %s != %s", got, want)
+	}
+	if got, want := cfg.Output.SwiftFilePrefix, "Generated_"; got != want {
+		t.Fatalf("swift file prefix mismatch: %s != %s", got, want)
 	}
 	if len(cfg.Sources) != 1 || cfg.Sources[0].Path != localSource {
 		t.Fatalf("unexpected sources: %#v", cfg.Sources)
@@ -139,6 +147,9 @@ func TestLoadUsesPositionalAndSourceTogether(t *testing.T) {
 	}
 	if got, want := cfg.Output.SwiftOutDir, filepath.Join(cwd, "output/merged"); got != want {
 		t.Fatalf("swift output dir mismatch: %s != %s", got, want)
+	}
+	if cfg.Output.SwiftFilePrefix != "" {
+		t.Fatalf("expected empty swift file prefix, got %q", cfg.Output.SwiftFilePrefix)
 	}
 	if got, want := cfg.Filters.DenyPrefixes, []string{"com.atproto.lexicon.resolveLexicon"}; !equalStrings(got, want) {
 		t.Fatalf("deny prefixes mismatch: %#v != %#v", got, want)
@@ -187,6 +198,20 @@ func TestLoadAcceptsBothAliasAndRejectsMalformedLocalSource(t *testing.T) {
 	_, err = Load([]string{"--config", configPath}, t.TempDir())
 	if err == nil || err.Error() != "local source requires path" {
 		t.Fatalf("expected malformed local source error, got %v", err)
+	}
+}
+
+func TestLoadRejectsSwiftFilePrefixWithPathSeparators(t *testing.T) {
+	t.Parallel()
+
+	configPath := filepath.Join(t.TempDir(), "config.json")
+	if err := os.WriteFile(configPath, []byte(`{"output":{"swiftFilePrefix":"../generated-"}}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := Load([]string{"--config", configPath}, t.TempDir())
+	if err == nil || err.Error() != "output.swiftFilePrefix cannot contain path separators" {
+		t.Fatalf("expected invalid swift file prefix error, got %v", err)
 	}
 }
 

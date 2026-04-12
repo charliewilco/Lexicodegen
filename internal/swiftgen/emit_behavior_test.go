@@ -226,6 +226,80 @@ func TestEmitSwiftFromIREmptyParamsAndRelativeRefs(t *testing.T) {
 	}
 }
 
+func TestEmitSwiftFromIRPrefixesGeneratedFileNames(t *testing.T) {
+	t.Parallel()
+
+	namedTypes := []ir.NamedType{
+		{
+			ID:       "app.bsky.feed.defs",
+			Name:     "postView",
+			FullName: "app.bsky.feed.defs.postView",
+			Definition: schema.Schema{
+				Type:     "object",
+				Required: []string{"uri"},
+				Properties: map[string]schema.Schema{
+					"uri": {Type: "string", Format: "at-uri"},
+				},
+			},
+			Source: "app.bsky.feed.defs",
+			Tag:    "app.bsky.feed",
+			Type:   "object",
+		},
+	}
+
+	data := ir.LexiconIR{
+		NamedTypes: namedTypes,
+		Endpoints: []ir.Endpoint{
+			{
+				ID:       "app.bsky.feed.getTimeline",
+				Name:     "main",
+				FullName: "app.bsky.feed.getTimeline",
+				Method:   "query",
+				Source:   "app.bsky.feed",
+				Tag:      "app.bsky.feed",
+				Path:     "/xrpc/app.bsky.feed.getTimeline",
+				ParametersSchema: &schema.Schema{
+					Type:       "params",
+					Properties: map[string]schema.Schema{},
+				},
+			},
+		},
+		DefinitionIndex: map[string]ir.NamedType{
+			namedTypes[0].FullName: namedTypes[0],
+		},
+	}
+
+	outputDir := t.TempDir()
+	if err := EmitSwiftFromIR(data, outputDir, EmitOptions{FilePrefix: "Generated_"}); err != nil {
+		t.Fatal(err)
+	}
+
+	entries, err := os.ReadDir(outputDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	files := make([]string, 0, len(entries))
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			files = append(files, entry.Name())
+		}
+	}
+	expected := []string{
+		"Generated_AppBskyFeed.generated.swift",
+		"Generated_Endpoints.swift",
+		"Generated_Models.swift",
+	}
+	if len(files) != len(expected) {
+		t.Fatalf("unexpected file count: %#v", files)
+	}
+	for index, want := range expected {
+		if files[index] != want {
+			t.Fatalf("unexpected file at %d: %s != %s", index, files[index], want)
+		}
+	}
+}
+
 func readFile(t *testing.T, path string) string {
 	t.Helper()
 	content, err := os.ReadFile(path)
