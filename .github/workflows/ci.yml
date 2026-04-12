@@ -21,7 +21,7 @@ jobs:
         uses: oven-sh/setup-bun@v2
 
       - name: Setup Swift
-        uses: swift-actions/setup-swift@v2
+        uses: swift-actions/setup-swift@v2.4.0
         with:
           swift-version: "6.2"
 
