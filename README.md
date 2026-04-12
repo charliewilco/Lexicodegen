@@ -67,6 +67,27 @@ Or run it directly:
 go run ./cmd/lexicodegen ./lexicons --output ./output/swift
 ```
 
+## Git Hooks
+
+Lefthook is configured as a project-local Go tool and tracked in `go.mod`.
+
+Install the hooks with:
+
+```bash
+go tool github.com/evilmartians/lefthook/v2 install
+```
+
+Or use the repo helper:
+
+```bash
+just hooks-install
+```
+
+Configured hooks:
+
+- `pre-commit`: run `gofmt -w` on staged Go files and restage fixes
+- `pre-push`: run `go test ./...`
+
 ## Usage
 
 Basic usage:

@@ -2,6 +2,9 @@
 help:
 	@just --list
 
+hooks-install:
+	go tool github.com/evilmartians/lefthook/v2 install
+
 build:
 	go build -o ./lexicodegen ./cmd/lexicodegen
 
