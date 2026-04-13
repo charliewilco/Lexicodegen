@@ -2,13 +2,11 @@
 
 Generate Swift models and XRPC client surface from AT Protocol lexicons with a single Go CLI.
 
-This repo used to be Bun/TypeScript-based. It is now Go-first:
+Implementation notes:
 
 - lexicon parsing and validation use [Indigo](https://github.com/bluesky-social/indigo)
 - config, source loading, IR building, and Swift emission are repo-owned Go code
-- generated Swift output is kept near-parity with the previous implementation
-
-The design intentionally keeps a repo-owned intermediate representation so future targets are possible without coupling the project to Indigo's generator packages.
+- the generated output target is Swift
 
 ## Current Output
 
@@ -136,7 +134,7 @@ go run ./cmd/lexicodegen --config ./lexicodegen.json
 | `filters.denyPrefixes` | `string[]` | `[]` | Exclude matching lexicon IDs |
 | `filters.denyUnspecced` | `boolean` | `false` | Skip unspecced defs |
 | `filters.denyDeprecated` | `boolean` | `false` | Skip deprecated defs |
-| `targets` | `string[]` | `["swift"]` | Only `swift` is currently meaningful |
+| `targets` | `string[]` | `["swift"]` | Swift is the only supported target |
 | `output.swiftOutDir` | `string` | `"./output/swift"` | Resolved relative to the current working directory |
 | `output.swiftFilePrefix` | `string` | `""` | Prepends every generated Swift filename; path separators are rejected |
 

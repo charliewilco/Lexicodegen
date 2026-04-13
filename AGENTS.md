@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `cmd/lexicodegen/main.go`: CLI entrypoint (`load -> IR -> target emitters`) for Swift generation.
+- `cmd/lexicodegen/main.go`: CLI entrypoint (`load -> IR -> Swift emitter`) for Swift generation.
 - `internal/config`: CLI/config parsing, defaults, normalization, and validation.
 - `internal/source`: source loading (`local`, `http`, `git-archive`) and filtering.
 - `internal/schema`: raw normalized schema model plus Indigo-backed lexicon validation.
