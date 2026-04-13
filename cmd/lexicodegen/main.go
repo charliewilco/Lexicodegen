@@ -6,10 +6,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/charliewilco/lexicon-openapi-generator/internal/config"
-	"github.com/charliewilco/lexicon-openapi-generator/internal/ir"
-	"github.com/charliewilco/lexicon-openapi-generator/internal/source"
-	"github.com/charliewilco/lexicon-openapi-generator/internal/swiftgen"
+	"github.com/charliewilco/lexicodegen/internal/config"
+	"github.com/charliewilco/lexicodegen/internal/ir"
+	"github.com/charliewilco/lexicodegen/internal/source"
+	"github.com/charliewilco/lexicodegen/internal/swiftgen"
 )
 
 func main() {

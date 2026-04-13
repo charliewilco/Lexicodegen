@@ -12,8 +12,8 @@ import (
 	"text/template"
 	"unicode"
 
-	"github.com/charliewilco/lexicon-openapi-generator/internal/ir"
-	"github.com/charliewilco/lexicon-openapi-generator/internal/schema"
+	"github.com/charliewilco/lexicodegen/internal/ir"
+	"github.com/charliewilco/lexicodegen/internal/schema"
 )
 
 //go:embed templates/*.tmpl

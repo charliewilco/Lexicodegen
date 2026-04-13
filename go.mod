@@ -1,4 +1,4 @@
-module github.com/charliewilco/lexicon-openapi-generator
+module github.com/charliewilco/lexicodegen
 
 go 1.26.0
 
