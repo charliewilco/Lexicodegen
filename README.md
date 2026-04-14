@@ -42,7 +42,8 @@ Requirements:
 Install with Homebrew:
 
 ```bash
-brew install charliewilco/tap/lexicodegen
+brew tap charliewilco/lexicodegen
+brew install lexicodegen
 ```
 
 Install with Go:
@@ -272,14 +273,12 @@ Release flow:
 - create and push a semver tag such as `v0.1.0`
 - GitHub Actions runs GoReleaser
 - GoReleaser uploads release archives to GitHub Releases
-- GoReleaser updates `charliewilco/homebrew-tap` with `Formula/lexicodegen.rb`
+- GoReleaser updates this repository's `Formula/lexicodegen.rb`
 
 One-time setup:
 
-- create the tap repository `charliewilco/homebrew-tap`
-- add a repository secret named `HOMEBREW_TAP_GITHUB_TOKEN`
-- the token should be a GitHub personal access token with `contents: write` access to the tap repository
-- the release workflow uses the default `GITHUB_TOKEN` for this repository and `HOMEBREW_TAP_GITHUB_TOKEN` only for cross-repo tap updates
+- no extra tap repository or personal access token is required
+- the release workflow uses the default `GITHUB_TOKEN` with `contents: write` permission to publish releases and update `Formula/lexicodegen.rb` on `main`
 
 Local release validation:
 
@@ -288,4 +287,4 @@ goreleaser check
 goreleaser release --snapshot --clean
 ```
 
-If you publish to a different tap repository, update the `brews[0].repository` values in `.goreleaser.yaml`.
+If you later split distribution into a separate tap repository, update the `brews[0].repository` values in `.goreleaser.yaml` and provide a token that can write to that repo.

@@ -38,8 +38,8 @@ brews:
     license: MIT
     repository:
       owner: charliewilco
-      name: homebrew-tap
+      name: Lexicodegen
       branch: main
-      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+      token: "{{ .Env.GITHUB_TOKEN }}"
     test: |
       assert_match "unsupported target: invalid", shell_output("#{bin}/lexicodegen --target invalid", 1)
