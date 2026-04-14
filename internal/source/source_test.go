@@ -12,7 +12,7 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/charliewilco/lexicon-openapi-generator/internal/config"
+	"github.com/charliewilco/lexicodegen/internal/config"
 )
 
 func TestLoadLexiconsRecursivelyByDefault(t *testing.T) {

@@ -4,9 +4,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/charliewilco/lexicon-openapi-generator/internal/config"
-	"github.com/charliewilco/lexicon-openapi-generator/internal/schema"
-	"github.com/charliewilco/lexicon-openapi-generator/internal/util"
+	"github.com/charliewilco/lexicodegen/internal/config"
+	"github.com/charliewilco/lexicodegen/internal/schema"
+	"github.com/charliewilco/lexicodegen/internal/util"
 )
 
 type EndpointError struct {
