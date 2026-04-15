@@ -31,6 +31,7 @@ Implementation notes:
 - `testdata/golden/full/`: parity snapshot for generated Swift output
 - `scripts/get-lexicons.sh`: refreshes lexicon snapshots from upstream
 - `scripts/check-swift-compile.sh`: typechecks generated Swift with `swiftc`
+- `docs/`: focused documentation for CLI usage and TOML configuration
 
 ## Installation
 
