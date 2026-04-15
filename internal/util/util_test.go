@@ -4,6 +4,8 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -61,5 +63,73 @@ func TestCheckEndpoint(t *testing.T) {
 	}
 	if got, _ := CheckEndpoint(context.Background(), "missing", http.MethodGet); got != EndpointDoesNotExist {
 		t.Fatalf("expected missing endpoint, got %v", got)
+	}
+}
+
+func TestLoadJSONFile(t *testing.T) {
+	t.Parallel()
+
+	type payload struct {
+		Name  string `json:"name"`
+		Count int    `json:"count"`
+	}
+
+	tempDir := t.TempDir()
+	validPath := filepath.Join(tempDir, "valid.json")
+	if err := os.WriteFile(validPath, []byte(`{"name":"example","count":3}`), 0o644); err != nil {
+		t.Fatalf("write valid fixture: %v", err)
+	}
+
+	var got payload
+	if err := LoadJSONFile(validPath, &got); err != nil {
+		t.Fatalf("load valid json: %v", err)
+	}
+	if got.Name != "example" || got.Count != 3 {
+		t.Fatalf("unexpected payload: %#v", got)
+	}
+
+	if err := LoadJSONFile(filepath.Join(tempDir, "missing.json"), &got); err == nil {
+		t.Fatalf("expected missing-file error")
+	}
+
+	invalidPath := filepath.Join(tempDir, "invalid.json")
+	if err := os.WriteFile(invalidPath, []byte(`{"name":`), 0o644); err != nil {
+		t.Fatalf("write invalid fixture: %v", err)
+	}
+	if err := LoadJSONFile(invalidPath, &got); err == nil {
+		t.Fatalf("expected invalid-json error")
+	}
+}
+
+func TestCheckEndpoint_DefaultMethodAndInvalidBaseURL(t *testing.T) {
+	originalBaseURL := endpointBaseURL
+	originalClient := endpointHTTPClient
+	t.Cleanup(func() {
+		endpointBaseURL = originalBaseURL
+		endpointHTTPClient = originalClient
+	})
+
+	requestMethod := ""
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		requestMethod = request.Method
+		writer.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	endpointBaseURL = server.URL + "/xrpc/"
+	endpointHTTPClient = server.Client()
+
+	if got, err := CheckEndpoint(context.Background(), "defaults-method", ""); err != nil {
+		t.Fatalf("unexpected default-method error: %v", err)
+	} else if got != EndpointPublic {
+		t.Fatalf("expected public endpoint, got %v", got)
+	}
+	if requestMethod != http.MethodGet {
+		t.Fatalf("expected default method GET, got %q", requestMethod)
+	}
+
+	endpointBaseURL = ":// not a valid url"
+	if got, err := CheckEndpoint(context.Background(), "defaults-method", http.MethodGet); err == nil {
+		t.Fatalf("expected base-url parse error, got endpoint status %v", got)
 	}
 }
