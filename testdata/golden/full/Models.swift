@@ -285,6 +285,18 @@ public struct CID: RawRepresentable, Codable, Hashable, Sendable, QueryParameter
 	}
 }
 
+public struct CIDLink: Codable, Hashable, Sendable {
+	public let link: CID
+
+	public init(link: CID) {
+		self.link = link
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case link = "$link"
+	}
+}
+
 public struct DID: RawRepresentable, Codable, Hashable, Sendable, QueryParameterValue {
 	public let rawValue: String
 	public init(rawValue: String) { self.rawValue = rawValue }
@@ -378,6 +390,7 @@ public struct Blob: Codable, Hashable, Sendable {
 	private enum CodingKeys: String, CodingKey {
 		case typeIdentifier = "$type"
 		case ref
+		case cid
 		case mimeType
 		case size
 	}
@@ -385,7 +398,13 @@ public struct Blob: Codable, Hashable, Sendable {
 	public init(from decoder: Decoder) throws {
 		let container = try decoder.container(keyedBy: CodingKeys.self)
 		_ = try container.decodeIfPresent(String.self, forKey: .typeIdentifier)
-		ref = try container.decodeIfPresent(CID.self, forKey: .ref)
+		if let cidLink = try container.decodeIfPresent(CIDLink.self, forKey: .ref) {
+			ref = cidLink.link
+		} else if let legacyRef = try container.decodeIfPresent(CID.self, forKey: .ref) {
+			ref = legacyRef
+		} else {
+			ref = try container.decodeIfPresent(CID.self, forKey: .cid)
+		}
 		mimeType = try container.decodeIfPresent(String.self, forKey: .mimeType)
 		size = try container.decodeIfPresent(Int.self, forKey: .size)
 	}
@@ -393,7 +412,7 @@ public struct Blob: Codable, Hashable, Sendable {
 	public func encode(to encoder: Encoder) throws {
 		var container = encoder.container(keyedBy: CodingKeys.self)
 		try container.encode("blob", forKey: .typeIdentifier)
-		try container.encodeIfPresent(ref, forKey: .ref)
+		try container.encodeIfPresent(ref.map(CIDLink.init), forKey: .ref)
 		try container.encodeIfPresent(mimeType, forKey: .mimeType)
 		try container.encodeIfPresent(size, forKey: .size)
 	}
