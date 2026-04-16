@@ -2,6 +2,22 @@
 help:
 	@just --list
 
+# Validate GoReleaser configuration.
+release-check:
+	goreleaser check
+
+# Build release artifacts locally without publishing.
+release-snapshot:
+	goreleaser release --snapshot --clean
+
+# Create a semver release tag like `just release-tag 0.1.0`.
+release-tag version:
+	git tag "v{{version}}"
+
+# Push an existing semver release tag like `just release-push 0.1.0`.
+release-push version:
+	git push origin "v{{version}}"
+
 hooks-install:
 	go tool github.com/evilmartians/lefthook/v2 install
 

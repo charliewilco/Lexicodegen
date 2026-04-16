@@ -276,6 +276,14 @@ Release flow:
 - GoReleaser uploads release archives to GitHub Releases
 - GoReleaser updates this repository's `Formula/lexicodegen.rb`
 
+Release cheatsheet:
+
+- validate release config: `just release-check`
+- build release artifacts locally without publishing: `just release-snapshot`
+- create a release tag: `just release-tag 0.1.0`
+- push the release tag: `just release-push 0.1.0`
+- after the tag is pushed, GitHub Actions publishes the GitHub Release and updates `Formula/lexicodegen.rb`
+
 One-time setup:
 
 - no extra tap repository or personal access token is required
