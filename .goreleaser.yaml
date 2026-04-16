@@ -1,0 +1,45 @@
+version: 2
+
+project_name: lexicodegen
+
+before:
+  hooks:
+    - go test ./...
+
+builds:
+  - id: lexicodegen
+    main: ./cmd/lexicodegen
+    binary: lexicodegen
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - id: archive
+    ids:
+      - lexicodegen
+    formats:
+      - tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+
+checksum:
+  name_template: checksums.txt
+
+brews:
+  - name: lexicodegen
+    directory: Formula
+    homepage: https://github.com/charliewilco/Lexicodegen
+    description: Generate Swift models and XRPC client surface from AT Protocol lexicons
+    license: MIT
+    repository:
+      owner: charliewilco
+      name: Lexicodegen
+      branch: main
+      token: "{{ .Env.GITHUB_TOKEN }}"
+    test: |
+      assert_match "unsupported target: invalid", shell_output("#{bin}/lexicodegen --target invalid", 1)

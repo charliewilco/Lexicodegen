@@ -40,13 +40,26 @@ Requirements:
 - Go 1.26+
 - Swift 6.2+ if you want to run generated-code compilation checks
 
-Build the CLI:
+Install with Homebrew:
+
+```bash
+brew tap charliewilco/lexicodegen
+brew install lexicodegen
+```
+
+Install with Go:
+
+```bash
+go install github.com/charliewilco/lexicodegen/cmd/lexicodegen@latest
+```
+
+Build the CLI from source:
 
 ```bash
 go build -o ./lexicodegen ./cmd/lexicodegen
 ```
 
-Or run it directly:
+Or run it directly from a checkout:
 
 ```bash
 go run ./cmd/lexicodegen ./lexicons --output ./output/swift
@@ -251,3 +264,28 @@ Primary verification flow:
 - `go build -o ./lexicodegen ./cmd/lexicodegen`
 - `go run ./cmd/lexicodegen ./lexicons --output ./output/swift`
 - `bash ./scripts/check-swift-compile.sh ./output/swift`
+
+## Releases
+
+Tagged releases are published with GoReleaser via `.github/workflows/release.yml`.
+
+Release flow:
+
+- create and push a semver tag such as `v0.1.0`
+- GitHub Actions runs GoReleaser
+- GoReleaser uploads release archives to GitHub Releases
+- GoReleaser updates this repository's `Formula/lexicodegen.rb`
+
+One-time setup:
+
+- no extra tap repository or personal access token is required
+- the release workflow uses the default `GITHUB_TOKEN` with `contents: write` permission to publish releases and update `Formula/lexicodegen.rb` on `main`
+
+Local release validation:
+
+```bash
+goreleaser check
+goreleaser release --snapshot --clean
+```
+
+If you later split distribution into a separate tap repository, update the `brews[0].repository` values in `.goreleaser.yaml` and provide a token that can write to that repo.
