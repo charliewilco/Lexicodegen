@@ -2,6 +2,8 @@
 
 This document covers day-to-day usage of the `lexicodegen` command-line interface.
 
+If you are integrating `lexicodegen` into another repository, start with [docs/project-setup.md](/Users/charliewilco/Developer/Burton/Lexicodegen/docs/project-setup.md:1) first. This page focuses on the command surface after installation and basic setup are already in place.
+
 ## Quick Start
 
 Build the binary:

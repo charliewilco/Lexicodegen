@@ -31,7 +31,7 @@ Implementation notes:
 - `testdata/golden/full/`: parity snapshot for generated Swift output
 - `scripts/get-lexicons.sh`: refreshes lexicon snapshots from upstream
 - `scripts/check-swift-compile.sh`: typechecks generated Swift with `swiftc`
-- `docs/`: focused documentation for CLI usage and TOML configuration
+- `docs/`: focused documentation for project setup, CLI usage, and TOML configuration
 
 ## Installation
 
@@ -46,6 +46,8 @@ Install with Homebrew:
 brew tap charliewilco/lexicodegen
 brew install lexicodegen
 ```
+
+Homebrew installs are available after tagged releases have been published. If you are working from an unreleased commit, use `go install` or build from source instead.
 
 Install with Go:
 
@@ -64,6 +66,18 @@ Or run it directly from a checkout:
 ```bash
 go run ./cmd/lexicodegen ./lexicons --output ./output/swift
 ```
+
+## Project Setup
+
+If you want to use `lexicodegen` from another repository, the shortest maintainable path is:
+
+1. install the CLI with Homebrew or `go install`
+2. add a `lexicodegen.toml` file to your project
+3. point `sources` at your checked-in lexicons or an upstream archive
+4. run `lexicodegen --config ./lexicodegen.toml`
+5. wire that command into your app repo's automation
+
+A complete example lives in [docs/project-setup.md](/Users/charliewilco/Developer/Burton/Lexicodegen/docs/project-setup.md:1).
 
 ## Git Hooks
 
