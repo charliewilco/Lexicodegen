@@ -38,7 +38,7 @@ jobs:
           echo "key=${RUNNER_OS}-${version}-module-cache-v1" >> "$GITHUB_OUTPUT"
 
       - name: Restore Swift module cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ env.SWIFT_MODULE_CACHE_PATH }}
           key: ${{ steps.swift-cache-key.outputs.key }}
