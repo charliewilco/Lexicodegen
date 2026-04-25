@@ -147,6 +147,60 @@ public enum ToolsOzoneReportDefsReasonType: String, Codable, CaseIterable, Query
 	case toolsOzoneReportDefsReasonSelfHarmStunts = "tools.ozone.report.defs#reasonSelfHarmStunts"
 	case toolsOzoneReportDefsReasonSelfHarmSubstances = "tools.ozone.report.defs#reasonSelfHarmSubstances"
 	case toolsOzoneReportDefsReasonSelfHarmOther = "tools.ozone.report.defs#reasonSelfHarmOther"
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.singleValueContainer()
+		let rawValue = try container.decode(String.self)
+		switch rawValue {
+		case "tools.ozone.report.defs#reasonAppeal", "reasonAppeal": self = .toolsOzoneReportDefsReasonAppeal
+		case "tools.ozone.report.defs#reasonOther", "reasonOther": self = .toolsOzoneReportDefsReasonOther
+		case "tools.ozone.report.defs#reasonViolenceAnimal", "reasonViolenceAnimal": self = .toolsOzoneReportDefsReasonViolenceAnimal
+		case "tools.ozone.report.defs#reasonViolenceThreats", "reasonViolenceThreats": self = .toolsOzoneReportDefsReasonViolenceThreats
+		case "tools.ozone.report.defs#reasonViolenceGraphicContent", "reasonViolenceGraphicContent": self = .toolsOzoneReportDefsReasonViolenceGraphicContent
+		case "tools.ozone.report.defs#reasonViolenceGlorification", "reasonViolenceGlorification": self = .toolsOzoneReportDefsReasonViolenceGlorification
+		case "tools.ozone.report.defs#reasonViolenceExtremistContent", "reasonViolenceExtremistContent": self = .toolsOzoneReportDefsReasonViolenceExtremistContent
+		case "tools.ozone.report.defs#reasonViolenceTrafficking", "reasonViolenceTrafficking": self = .toolsOzoneReportDefsReasonViolenceTrafficking
+		case "tools.ozone.report.defs#reasonViolenceOther", "reasonViolenceOther": self = .toolsOzoneReportDefsReasonViolenceOther
+		case "tools.ozone.report.defs#reasonSexualAbuseContent", "reasonSexualAbuseContent": self = .toolsOzoneReportDefsReasonSexualAbuseContent
+		case "tools.ozone.report.defs#reasonSexualNCII", "reasonSexualNCII": self = .toolsOzoneReportDefsReasonSexualNcii
+		case "tools.ozone.report.defs#reasonSexualDeepfake", "reasonSexualDeepfake": self = .toolsOzoneReportDefsReasonSexualDeepfake
+		case "tools.ozone.report.defs#reasonSexualAnimal", "reasonSexualAnimal": self = .toolsOzoneReportDefsReasonSexualAnimal
+		case "tools.ozone.report.defs#reasonSexualUnlabeled", "reasonSexualUnlabeled": self = .toolsOzoneReportDefsReasonSexualUnlabeled
+		case "tools.ozone.report.defs#reasonSexualOther", "reasonSexualOther": self = .toolsOzoneReportDefsReasonSexualOther
+		case "tools.ozone.report.defs#reasonChildSafetyCSAM", "reasonChildSafetyCSAM": self = .toolsOzoneReportDefsReasonChildSafetyCsam
+		case "tools.ozone.report.defs#reasonChildSafetyGroom", "reasonChildSafetyGroom": self = .toolsOzoneReportDefsReasonChildSafetyGroom
+		case "tools.ozone.report.defs#reasonChildSafetyPrivacy", "reasonChildSafetyPrivacy": self = .toolsOzoneReportDefsReasonChildSafetyPrivacy
+		case "tools.ozone.report.defs#reasonChildSafetyHarassment", "reasonChildSafetyHarassment": self = .toolsOzoneReportDefsReasonChildSafetyHarassment
+		case "tools.ozone.report.defs#reasonChildSafetyOther", "reasonChildSafetyOther": self = .toolsOzoneReportDefsReasonChildSafetyOther
+		case "tools.ozone.report.defs#reasonHarassmentTroll", "reasonHarassmentTroll": self = .toolsOzoneReportDefsReasonHarassmentTroll
+		case "tools.ozone.report.defs#reasonHarassmentTargeted", "reasonHarassmentTargeted": self = .toolsOzoneReportDefsReasonHarassmentTargeted
+		case "tools.ozone.report.defs#reasonHarassmentHateSpeech", "reasonHarassmentHateSpeech": self = .toolsOzoneReportDefsReasonHarassmentHateSpeech
+		case "tools.ozone.report.defs#reasonHarassmentDoxxing", "reasonHarassmentDoxxing": self = .toolsOzoneReportDefsReasonHarassmentDoxxing
+		case "tools.ozone.report.defs#reasonHarassmentOther", "reasonHarassmentOther": self = .toolsOzoneReportDefsReasonHarassmentOther
+		case "tools.ozone.report.defs#reasonMisleadingBot", "reasonMisleadingBot": self = .toolsOzoneReportDefsReasonMisleadingBot
+		case "tools.ozone.report.defs#reasonMisleadingImpersonation", "reasonMisleadingImpersonation": self = .toolsOzoneReportDefsReasonMisleadingImpersonation
+		case "tools.ozone.report.defs#reasonMisleadingSpam", "reasonMisleadingSpam": self = .toolsOzoneReportDefsReasonMisleadingSpam
+		case "tools.ozone.report.defs#reasonMisleadingScam", "reasonMisleadingScam": self = .toolsOzoneReportDefsReasonMisleadingScam
+		case "tools.ozone.report.defs#reasonMisleadingElections", "reasonMisleadingElections": self = .toolsOzoneReportDefsReasonMisleadingElections
+		case "tools.ozone.report.defs#reasonMisleadingOther", "reasonMisleadingOther": self = .toolsOzoneReportDefsReasonMisleadingOther
+		case "tools.ozone.report.defs#reasonRuleSiteSecurity", "reasonRuleSiteSecurity": self = .toolsOzoneReportDefsReasonRuleSiteSecurity
+		case "tools.ozone.report.defs#reasonRuleProhibitedSales", "reasonRuleProhibitedSales": self = .toolsOzoneReportDefsReasonRuleProhibitedSales
+		case "tools.ozone.report.defs#reasonRuleBanEvasion", "reasonRuleBanEvasion": self = .toolsOzoneReportDefsReasonRuleBanEvasion
+		case "tools.ozone.report.defs#reasonRuleOther", "reasonRuleOther": self = .toolsOzoneReportDefsReasonRuleOther
+		case "tools.ozone.report.defs#reasonSelfHarmContent", "reasonSelfHarmContent": self = .toolsOzoneReportDefsReasonSelfHarmContent
+		case "tools.ozone.report.defs#reasonSelfHarmED", "reasonSelfHarmED": self = .toolsOzoneReportDefsReasonSelfHarmEd
+		case "tools.ozone.report.defs#reasonSelfHarmStunts", "reasonSelfHarmStunts": self = .toolsOzoneReportDefsReasonSelfHarmStunts
+		case "tools.ozone.report.defs#reasonSelfHarmSubstances", "reasonSelfHarmSubstances": self = .toolsOzoneReportDefsReasonSelfHarmSubstances
+		case "tools.ozone.report.defs#reasonSelfHarmOther", "reasonSelfHarmOther": self = .toolsOzoneReportDefsReasonSelfHarmOther
+		default:
+			throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot initialize \(Self.self) from invalid String value \(rawValue)")
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.singleValueContainer()
+		try container.encode(rawValue)
+	}
 }
 
 

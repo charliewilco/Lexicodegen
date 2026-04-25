@@ -532,8 +532,39 @@ func buildKnownValueEnum(fullName string, values []string, group string, context
 	name := modelName(fullName)
 	uniqueValues := uniqueStrings(values)
 	lines := []string{"public enum " + name + ": String, Codable, CaseIterable, QueryParameterValue, Sendable {"}
+	cases := make([]string, 0, len(uniqueValues))
 	for _, entry := range uniqueValues {
-		lines = append(lines, "\tcase "+toSwiftSafeIdentifier(toCamelCase(entry))+" = "+strconv.Quote(entry))
+		caseName := toSwiftSafeIdentifier(toCamelCase(entry))
+		cases = append(cases, caseName)
+		lines = append(lines, "\tcase "+caseName+" = "+strconv.Quote(entry))
+	}
+	if aliases := knownValueEnumAliases(uniqueValues, cases); len(aliases) > 0 {
+		lines = append(lines,
+			"",
+			"\tpublic init(from decoder: Decoder) throws {",
+			"\t\tlet container = try decoder.singleValueContainer()",
+			"\t\tlet rawValue = try container.decode(String.self)",
+			"\t\tswitch rawValue {",
+		)
+		for _, alias := range aliases {
+			matches := make([]string, 0, 1+len(alias.Aliases))
+			matches = append(matches, strconv.Quote(alias.RawValue))
+			for _, value := range alias.Aliases {
+				matches = append(matches, strconv.Quote(value))
+			}
+			lines = append(lines, "\t\tcase "+strings.Join(matches, ", ")+": self = ."+alias.CaseName)
+		}
+		lines = append(lines,
+			"\t\tdefault:",
+			"\t\t\tthrow DecodingError.dataCorruptedError(in: container, debugDescription: \"Cannot initialize \\(Self.self) from invalid String value \\(rawValue)\")",
+			"\t\t}",
+			"\t}",
+			"",
+			"\tpublic func encode(to encoder: Encoder) throws {",
+			"\t\tvar container = encoder.singleValueContainer()",
+			"\t\ttry container.encode(rawValue)",
+			"\t}",
+		)
 	}
 	lines = append(lines, "}")
 
@@ -542,6 +573,58 @@ func buildKnownValueEnum(fullName string, values []string, group string, context
 		context.KnownValueEnums[canonicalKey] = resolvedName
 	}
 	return resolvedName
+}
+
+type knownValueEnumAlias struct {
+	RawValue string
+	CaseName string
+	Aliases  []string
+}
+
+func knownValueEnumAliases(values []string, cases []string) []knownValueEnumAlias {
+	if len(values) != len(cases) {
+		return nil
+	}
+
+	rawValues := make(map[string]struct{}, len(values))
+	suffixCounts := map[string]int{}
+	for _, value := range values {
+		rawValues[value] = struct{}{}
+		if suffix, ok := knownValueShortAlias(value); ok {
+			suffixCounts[suffix]++
+		}
+	}
+
+	aliases := make([]knownValueEnumAlias, 0, len(values))
+	for index, value := range values {
+		alias := knownValueEnumAlias{
+			RawValue: value,
+			CaseName: cases[index],
+		}
+		if suffix, ok := knownValueShortAlias(value); ok {
+			if _, exists := rawValues[suffix]; !exists && suffixCounts[suffix] == 1 {
+				alias.Aliases = append(alias.Aliases, suffix)
+			}
+		}
+		aliases = append(aliases, alias)
+	}
+
+	for _, alias := range aliases {
+		if len(alias.Aliases) > 0 {
+			return aliases
+		}
+	}
+	return nil
+}
+
+func knownValueShortAlias(value string) (string, bool) {
+	if suffix, ok := strings.CutPrefix(value, "#"); ok && suffix != "" {
+		return suffix, true
+	}
+	if _, suffix, ok := strings.Cut(value, "#"); ok && suffix != "" {
+		return suffix, true
+	}
+	return "", false
 }
 
 func buildObjectDeclaration(fullName string, referenceBase string, schemaData schema.Schema, group string, context *generatedContext, options objectDeclarationOptions) string {

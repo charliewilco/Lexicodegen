@@ -91,6 +91,24 @@ public enum ToolsOzoneSettingDefsOptionManagerRole: String, Codable, CaseIterabl
 	case toolsOzoneTeamDefsRoleTriage = "tools.ozone.team.defs#roleTriage"
 	case toolsOzoneTeamDefsRoleAdmin = "tools.ozone.team.defs#roleAdmin"
 	case toolsOzoneTeamDefsRoleVerifier = "tools.ozone.team.defs#roleVerifier"
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.singleValueContainer()
+		let rawValue = try container.decode(String.self)
+		switch rawValue {
+		case "tools.ozone.team.defs#roleModerator", "roleModerator": self = .toolsOzoneTeamDefsRoleModerator
+		case "tools.ozone.team.defs#roleTriage", "roleTriage": self = .toolsOzoneTeamDefsRoleTriage
+		case "tools.ozone.team.defs#roleAdmin", "roleAdmin": self = .toolsOzoneTeamDefsRoleAdmin
+		case "tools.ozone.team.defs#roleVerifier", "roleVerifier": self = .toolsOzoneTeamDefsRoleVerifier
+		default:
+			throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot initialize \(Self.self) from invalid String value \(rawValue)")
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.singleValueContainer()
+		try container.encode(rawValue)
+	}
 }
 
 
@@ -311,6 +329,24 @@ public enum ToolsOzoneSettingUpsertOptionInputManagerRole: String, Codable, Case
 	case toolsOzoneTeamDefsRoleTriage = "tools.ozone.team.defs#roleTriage"
 	case toolsOzoneTeamDefsRoleVerifier = "tools.ozone.team.defs#roleVerifier"
 	case toolsOzoneTeamDefsRoleAdmin = "tools.ozone.team.defs#roleAdmin"
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.singleValueContainer()
+		let rawValue = try container.decode(String.self)
+		switch rawValue {
+		case "tools.ozone.team.defs#roleModerator", "roleModerator": self = .toolsOzoneTeamDefsRoleModerator
+		case "tools.ozone.team.defs#roleTriage", "roleTriage": self = .toolsOzoneTeamDefsRoleTriage
+		case "tools.ozone.team.defs#roleVerifier", "roleVerifier": self = .toolsOzoneTeamDefsRoleVerifier
+		case "tools.ozone.team.defs#roleAdmin", "roleAdmin": self = .toolsOzoneTeamDefsRoleAdmin
+		default:
+			throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot initialize \(Self.self) from invalid String value \(rawValue)")
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.singleValueContainer()
+		try container.encode(rawValue)
+	}
 }
 
 

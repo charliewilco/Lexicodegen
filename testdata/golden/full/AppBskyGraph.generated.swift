@@ -81,6 +81,23 @@ public enum AppBskyGraphDefsListPurpose: String, Codable, CaseIterable, QueryPar
 	case appBskyGraphDefsModlist = "app.bsky.graph.defs#modlist"
 	case appBskyGraphDefsCuratelist = "app.bsky.graph.defs#curatelist"
 	case appBskyGraphDefsReferencelist = "app.bsky.graph.defs#referencelist"
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.singleValueContainer()
+		let rawValue = try container.decode(String.self)
+		switch rawValue {
+		case "app.bsky.graph.defs#modlist", "modlist": self = .appBskyGraphDefsModlist
+		case "app.bsky.graph.defs#curatelist", "curatelist": self = .appBskyGraphDefsCuratelist
+		case "app.bsky.graph.defs#referencelist", "referencelist": self = .appBskyGraphDefsReferencelist
+		default:
+			throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot initialize \(Self.self) from invalid String value \(rawValue)")
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.singleValueContainer()
+		try container.encode(rawValue)
+	}
 }
 
 

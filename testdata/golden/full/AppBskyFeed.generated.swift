@@ -272,6 +272,22 @@ public struct AppBskyFeedDefsGeneratorView: Codable, Sendable, Equatable {
 public enum AppBskyFeedDefsGeneratorViewContentMode: String, Codable, CaseIterable, QueryParameterValue, Sendable {
 	case appBskyFeedDefsContentModeUnspecified = "app.bsky.feed.defs#contentModeUnspecified"
 	case appBskyFeedDefsContentModeVideo = "app.bsky.feed.defs#contentModeVideo"
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.singleValueContainer()
+		let rawValue = try container.decode(String.self)
+		switch rawValue {
+		case "app.bsky.feed.defs#contentModeUnspecified", "contentModeUnspecified": self = .appBskyFeedDefsContentModeUnspecified
+		case "app.bsky.feed.defs#contentModeVideo", "contentModeVideo": self = .appBskyFeedDefsContentModeVideo
+		default:
+			throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot initialize \(Self.self) from invalid String value \(rawValue)")
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.singleValueContainer()
+		try container.encode(rawValue)
+	}
 }
 
 
@@ -356,6 +372,32 @@ public enum AppBskyFeedDefsInteractionEvent: String, Codable, CaseIterable, Quer
 	case appBskyFeedDefsInteractionReply = "app.bsky.feed.defs#interactionReply"
 	case appBskyFeedDefsInteractionQuote = "app.bsky.feed.defs#interactionQuote"
 	case appBskyFeedDefsInteractionShare = "app.bsky.feed.defs#interactionShare"
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.singleValueContainer()
+		let rawValue = try container.decode(String.self)
+		switch rawValue {
+		case "app.bsky.feed.defs#requestLess", "requestLess": self = .appBskyFeedDefsRequestLess
+		case "app.bsky.feed.defs#requestMore", "requestMore": self = .appBskyFeedDefsRequestMore
+		case "app.bsky.feed.defs#clickthroughItem", "clickthroughItem": self = .appBskyFeedDefsClickthroughItem
+		case "app.bsky.feed.defs#clickthroughAuthor", "clickthroughAuthor": self = .appBskyFeedDefsClickthroughAuthor
+		case "app.bsky.feed.defs#clickthroughReposter", "clickthroughReposter": self = .appBskyFeedDefsClickthroughReposter
+		case "app.bsky.feed.defs#clickthroughEmbed", "clickthroughEmbed": self = .appBskyFeedDefsClickthroughEmbed
+		case "app.bsky.feed.defs#interactionSeen", "interactionSeen": self = .appBskyFeedDefsInteractionSeen
+		case "app.bsky.feed.defs#interactionLike", "interactionLike": self = .appBskyFeedDefsInteractionLike
+		case "app.bsky.feed.defs#interactionRepost", "interactionRepost": self = .appBskyFeedDefsInteractionRepost
+		case "app.bsky.feed.defs#interactionReply", "interactionReply": self = .appBskyFeedDefsInteractionReply
+		case "app.bsky.feed.defs#interactionQuote", "interactionQuote": self = .appBskyFeedDefsInteractionQuote
+		case "app.bsky.feed.defs#interactionShare", "interactionShare": self = .appBskyFeedDefsInteractionShare
+		default:
+			throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot initialize \(Self.self) from invalid String value \(rawValue)")
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.singleValueContainer()
+		try container.encode(rawValue)
+	}
 }
 
 

@@ -2414,6 +2414,24 @@ public enum ToolsOzoneModerationDefsSubjectReviewState: String, Codable, CaseIte
 	case toolsOzoneModerationDefsReviewEscalated = "tools.ozone.moderation.defs#reviewEscalated"
 	case toolsOzoneModerationDefsReviewClosed = "tools.ozone.moderation.defs#reviewClosed"
 	case toolsOzoneModerationDefsReviewNone = "tools.ozone.moderation.defs#reviewNone"
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.singleValueContainer()
+		let rawValue = try container.decode(String.self)
+		switch rawValue {
+		case "tools.ozone.moderation.defs#reviewOpen", "reviewOpen": self = .toolsOzoneModerationDefsReviewOpen
+		case "tools.ozone.moderation.defs#reviewEscalated", "reviewEscalated": self = .toolsOzoneModerationDefsReviewEscalated
+		case "tools.ozone.moderation.defs#reviewClosed", "reviewClosed": self = .toolsOzoneModerationDefsReviewClosed
+		case "tools.ozone.moderation.defs#reviewNone", "reviewNone": self = .toolsOzoneModerationDefsReviewNone
+		default:
+			throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot initialize \(Self.self) from invalid String value \(rawValue)")
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.singleValueContainer()
+		try container.encode(rawValue)
+	}
 }
 
 
@@ -3092,6 +3110,51 @@ public enum ToolsOzoneModerationGetAccountTimelineTimelineItemSummaryEventType: 
 	case toolsOzoneHostingGetAccountHistoryHandleUpdated = "tools.ozone.hosting.getAccountHistory#handleUpdated"
 	case toolsOzoneModerationDefsScheduleTakedownEvent = "tools.ozone.moderation.defs#scheduleTakedownEvent"
 	case toolsOzoneModerationDefsCancelScheduledTakedownEvent = "tools.ozone.moderation.defs#cancelScheduledTakedownEvent"
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.singleValueContainer()
+		let rawValue = try container.decode(String.self)
+		switch rawValue {
+		case "tools.ozone.moderation.defs#modEventTakedown", "modEventTakedown": self = .toolsOzoneModerationDefsModEventTakedown
+		case "tools.ozone.moderation.defs#modEventReverseTakedown", "modEventReverseTakedown": self = .toolsOzoneModerationDefsModEventReverseTakedown
+		case "tools.ozone.moderation.defs#modEventComment", "modEventComment": self = .toolsOzoneModerationDefsModEventComment
+		case "tools.ozone.moderation.defs#modEventReport", "modEventReport": self = .toolsOzoneModerationDefsModEventReport
+		case "tools.ozone.moderation.defs#modEventLabel", "modEventLabel": self = .toolsOzoneModerationDefsModEventLabel
+		case "tools.ozone.moderation.defs#modEventAcknowledge", "modEventAcknowledge": self = .toolsOzoneModerationDefsModEventAcknowledge
+		case "tools.ozone.moderation.defs#modEventEscalate", "modEventEscalate": self = .toolsOzoneModerationDefsModEventEscalate
+		case "tools.ozone.moderation.defs#modEventMute", "modEventMute": self = .toolsOzoneModerationDefsModEventMute
+		case "tools.ozone.moderation.defs#modEventUnmute", "modEventUnmute": self = .toolsOzoneModerationDefsModEventUnmute
+		case "tools.ozone.moderation.defs#modEventMuteReporter", "modEventMuteReporter": self = .toolsOzoneModerationDefsModEventMuteReporter
+		case "tools.ozone.moderation.defs#modEventUnmuteReporter", "modEventUnmuteReporter": self = .toolsOzoneModerationDefsModEventUnmuteReporter
+		case "tools.ozone.moderation.defs#modEventEmail", "modEventEmail": self = .toolsOzoneModerationDefsModEventEmail
+		case "tools.ozone.moderation.defs#modEventResolveAppeal", "modEventResolveAppeal": self = .toolsOzoneModerationDefsModEventResolveAppeal
+		case "tools.ozone.moderation.defs#modEventDivert", "modEventDivert": self = .toolsOzoneModerationDefsModEventDivert
+		case "tools.ozone.moderation.defs#modEventTag", "modEventTag": self = .toolsOzoneModerationDefsModEventTag
+		case "tools.ozone.moderation.defs#accountEvent", "accountEvent": self = .toolsOzoneModerationDefsAccountEvent
+		case "tools.ozone.moderation.defs#identityEvent", "identityEvent": self = .toolsOzoneModerationDefsIdentityEvent
+		case "tools.ozone.moderation.defs#recordEvent", "recordEvent": self = .toolsOzoneModerationDefsRecordEvent
+		case "tools.ozone.moderation.defs#modEventPriorityScore", "modEventPriorityScore": self = .toolsOzoneModerationDefsModEventPriorityScore
+		case "tools.ozone.moderation.defs#revokeAccountCredentialsEvent", "revokeAccountCredentialsEvent": self = .toolsOzoneModerationDefsRevokeAccountCredentialsEvent
+		case "tools.ozone.moderation.defs#ageAssuranceEvent", "ageAssuranceEvent": self = .toolsOzoneModerationDefsAgeAssuranceEvent
+		case "tools.ozone.moderation.defs#ageAssuranceOverrideEvent", "ageAssuranceOverrideEvent": self = .toolsOzoneModerationDefsAgeAssuranceOverrideEvent
+		case "tools.ozone.moderation.defs#timelineEventPlcCreate", "timelineEventPlcCreate": self = .toolsOzoneModerationDefsTimelineEventPlcCreate
+		case "tools.ozone.moderation.defs#timelineEventPlcOperation", "timelineEventPlcOperation": self = .toolsOzoneModerationDefsTimelineEventPlcOperation
+		case "tools.ozone.moderation.defs#timelineEventPlcTombstone", "timelineEventPlcTombstone": self = .toolsOzoneModerationDefsTimelineEventPlcTombstone
+		case "tools.ozone.hosting.getAccountHistory#accountCreated", "accountCreated": self = .toolsOzoneHostingGetAccountHistoryAccountCreated
+		case "tools.ozone.hosting.getAccountHistory#emailConfirmed", "emailConfirmed": self = .toolsOzoneHostingGetAccountHistoryEmailConfirmed
+		case "tools.ozone.hosting.getAccountHistory#passwordUpdated", "passwordUpdated": self = .toolsOzoneHostingGetAccountHistoryPasswordUpdated
+		case "tools.ozone.hosting.getAccountHistory#handleUpdated", "handleUpdated": self = .toolsOzoneHostingGetAccountHistoryHandleUpdated
+		case "tools.ozone.moderation.defs#scheduleTakedownEvent", "scheduleTakedownEvent": self = .toolsOzoneModerationDefsScheduleTakedownEvent
+		case "tools.ozone.moderation.defs#cancelScheduledTakedownEvent", "cancelScheduledTakedownEvent": self = .toolsOzoneModerationDefsCancelScheduledTakedownEvent
+		default:
+			throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot initialize \(Self.self) from invalid String value \(rawValue)")
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.singleValueContainer()
+		try container.encode(rawValue)
+	}
 }
 
 
@@ -4240,6 +4303,24 @@ public enum ToolsOzoneModerationQueryStatusesParametersReviewState: String, Coda
 	case toolsOzoneModerationDefsReviewClosed = "tools.ozone.moderation.defs#reviewClosed"
 	case toolsOzoneModerationDefsReviewEscalated = "tools.ozone.moderation.defs#reviewEscalated"
 	case toolsOzoneModerationDefsReviewNone = "tools.ozone.moderation.defs#reviewNone"
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.singleValueContainer()
+		let rawValue = try container.decode(String.self)
+		switch rawValue {
+		case "tools.ozone.moderation.defs#reviewOpen", "reviewOpen": self = .toolsOzoneModerationDefsReviewOpen
+		case "tools.ozone.moderation.defs#reviewClosed", "reviewClosed": self = .toolsOzoneModerationDefsReviewClosed
+		case "tools.ozone.moderation.defs#reviewEscalated", "reviewEscalated": self = .toolsOzoneModerationDefsReviewEscalated
+		case "tools.ozone.moderation.defs#reviewNone", "reviewNone": self = .toolsOzoneModerationDefsReviewNone
+		default:
+			throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot initialize \(Self.self) from invalid String value \(rawValue)")
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.singleValueContainer()
+		try container.encode(rawValue)
+	}
 }
 
 

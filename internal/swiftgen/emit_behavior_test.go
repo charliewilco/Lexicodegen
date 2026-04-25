@@ -234,6 +234,48 @@ func TestEmitSwiftFromIREmptyParamsAndRelativeRefs(t *testing.T) {
 	}
 }
 
+func TestEmitSwiftFromIRKnownValueEnumsDecodeUnambiguousHashAliases(t *testing.T) {
+	t.Parallel()
+
+	namedTypes := []ir.NamedType{
+		{
+			ID:       "app.bsky.actor.defs",
+			Name:     "statusViewStatus",
+			FullName: "app.bsky.actor.defs.statusViewStatus",
+			Definition: schema.Schema{
+				Type:        "string",
+				KnownValues: []string{"app.bsky.actor.status#live"},
+			},
+			Source: "app.bsky.actor.defs",
+			Tag:    "app.bsky.actor",
+			Type:   "string",
+		},
+	}
+
+	data := ir.LexiconIR{
+		NamedTypes: namedTypes,
+		DefinitionIndex: map[string]ir.NamedType{
+			namedTypes[0].FullName: namedTypes[0],
+		},
+	}
+
+	outputDir := t.TempDir()
+	if err := EmitSwiftFromIR(data, outputDir); err != nil {
+		t.Fatal(err)
+	}
+
+	actor := readFile(t, filepath.Join(outputDir, "AppBskyActor.generated.swift"))
+	for _, snippet := range []string{
+		`case "app.bsky.actor.status#live", "live": self = .appBskyActorStatusLive`,
+		"public func encode(to encoder: Encoder) throws",
+		"try container.encode(rawValue)",
+	} {
+		if !strings.Contains(actor, snippet) {
+			t.Fatalf("known-value enum output missing %q", snippet)
+		}
+	}
+}
+
 func TestEmitSwiftFromIRPrefixesGeneratedFileNames(t *testing.T) {
 	t.Parallel()
 

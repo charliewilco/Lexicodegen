@@ -1401,6 +1401,21 @@ public indirect enum AppBskyActorDefsStatusViewEmbed: Codable, Sendable, Equatab
 
 public enum AppBskyActorDefsStatusViewStatus: String, Codable, CaseIterable, QueryParameterValue, Sendable {
 	case appBskyActorStatusLive = "app.bsky.actor.status#live"
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.singleValueContainer()
+		let rawValue = try container.decode(String.self)
+		switch rawValue {
+		case "app.bsky.actor.status#live", "live": self = .appBskyActorStatusLive
+		default:
+			throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot initialize \(Self.self) from invalid String value \(rawValue)")
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.singleValueContainer()
+		try container.encode(rawValue)
+	}
 }
 
 
