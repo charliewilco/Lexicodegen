@@ -19,16 +19,19 @@ import (
 //go:embed templates/*.tmpl
 var templateFS embed.FS
 
+// TargetEmitter adapts the Swift emitter to the target-agnostic generator pipeline.
 type TargetEmitter interface {
 	Emit(ir.LexiconIR, string) error
 }
 
+// Emitter writes generated Swift files for a lexicon IR.
 type Emitter struct{}
 
 func (Emitter) Emit(data ir.LexiconIR, outputDir string) error {
 	return EmitSwiftFromIR(data, outputDir)
 }
 
+// EmitOptions controls optional file-level Swift emission behavior.
 type EmitOptions struct {
 	FilePrefix string
 }
@@ -39,6 +42,7 @@ type swiftModel struct {
 	Group string
 }
 
+// generatedContext tracks declarations that can be referenced while later definitions are rendered.
 type generatedContext struct {
 	Definitions     map[string]ir.NamedType
 	Models          map[string]swiftModel
@@ -46,6 +50,7 @@ type generatedContext struct {
 	InlineUnions    map[string]string
 }
 
+// endpointSurface is the rendered shape of an XRPC endpoint after helper models are emitted.
 type endpointSurface struct {
 	ID                string
 	NamespaceSegments []string
@@ -62,6 +67,7 @@ type endpointSurface struct {
 	BinaryInput       bool
 }
 
+// namespaceTreeNode groups endpoint methods into nested Swift namespace structs.
 type namespaceTreeNode struct {
 	Segment   string
 	Prefix    []string
@@ -94,6 +100,7 @@ var swiftReservedWords = map[string]struct{}{
 	"if": {}, "in": {}, "repeat": {}, "return": {}, "throw": {}, "where": {}, "while": {},
 }
 
+// EmitSwiftFromIR renders runtime helpers, namespace-grouped models, and endpoint namespaces.
 func EmitSwiftFromIR(data ir.LexiconIR, outputDir string, options ...EmitOptions) error {
 	outDir, err := filepath.Abs(outputDir)
 	if err != nil {
@@ -115,15 +122,18 @@ func EmitSwiftFromIR(data ir.LexiconIR, outputDir string, options ...EmitOptions
 		settings = options[0]
 	}
 
+	// First pass: named lexicon definitions become reusable Swift declarations.
 	for _, named := range data.NamedTypes {
 		buildNamedType(named, &context)
 	}
 
+	// Second pass: endpoints may add request, response, and error helper declarations.
 	endpointSurfaces := make([]endpointSurface, 0, len(data.Endpoints))
 	for _, endpoint := range data.Endpoints {
 		endpointSurfaces = append(endpointSurfaces, buildEndpointModels(endpoint, &context))
 	}
 
+	// Final pass: write stable namespace files after all declarations have been collected.
 	groupedModels := map[string][]swiftModel{}
 	for _, model := range context.Models {
 		groupedModels[model.Group] = append(groupedModels[model.Group], model)
@@ -477,6 +487,7 @@ func uniqueCaseName(existing map[string]struct{}, input string) string {
 	}
 }
 
+// mapSchemaToSwiftType is the recursive bridge from Lexicon schema shapes to Swift types.
 func mapSchemaToSwiftType(schemaData *schema.Schema, fullName string, referenceBase string, group string, context *generatedContext, options mapSchemaOptions) string {
 	if schemaData == nil {
 		return "ATProtocolValueContainer"
@@ -522,6 +533,7 @@ func mapSchemaToSwiftType(schemaData *schema.Schema, fullName string, referenceB
 	return primitiveSwiftType(*schemaData)
 }
 
+// buildKnownValueEnum deduplicates repeated known-value sets into one Swift enum per file group.
 func buildKnownValueEnum(fullName string, values []string, group string, context *generatedContext, canonicalKey string) string {
 	if canonicalKey != "" {
 		if existing, ok := context.KnownValueEnums[canonicalKey]; ok {
@@ -544,6 +556,7 @@ func buildKnownValueEnum(fullName string, values []string, group string, context
 	return resolvedName
 }
 
+// buildObjectDeclaration renders objects, records, and params as Codable Swift structs.
 func buildObjectDeclaration(fullName string, referenceBase string, schemaData schema.Schema, group string, context *generatedContext, options objectDeclarationOptions) string {
 	name := modelName(fullName)
 	if _, ok := context.Models[name]; ok {
@@ -703,6 +716,7 @@ func buildObjectDeclaration(fullName string, referenceBase string, schemaData sc
 	return name
 }
 
+// buildUnionDeclaration renders Lexicon unions as tagged Swift enums with an unexpected fallback.
 func buildUnionDeclaration(fullName string, referenceBase string, refs []string, group string, context *generatedContext, canonicalKey string) string {
 	if canonicalKey != "" {
 		if existing, ok := context.InlineUnions[canonicalKey]; ok {
@@ -786,6 +800,7 @@ func buildUnionDeclaration(fullName string, referenceBase string, refs []string,
 	return name
 }
 
+// buildPermissionSetDeclaration preserves permission-set metadata while decoding granted methods.
 func buildPermissionSetDeclaration(named ir.NamedType, context *generatedContext) string {
 	group := modelGroupFromID(named.Source)
 	name := modelName(named.FullName)
@@ -849,6 +864,7 @@ func buildPermissionSetDeclaration(named ir.NamedType, context *generatedContext
 	return ensureModel(context.Models, name, strings.Join(lines, "\n"), group)
 }
 
+// buildNamedType dispatches top-level lexicon definitions to the appropriate Swift declaration builder.
 func buildNamedType(named ir.NamedType, context *generatedContext) string {
 	group := modelGroupFromID(named.Source)
 	switch named.Type {
@@ -883,6 +899,7 @@ func buildNamedType(named ir.NamedType, context *generatedContext) string {
 	}
 }
 
+// buildEndpointHelperType emits endpoint-specific parameters, input, output, or message models.
 func buildEndpointHelperType(endpoint ir.Endpoint, suffix string, schemaData *schema.Schema, context *generatedContext, queryEncodable bool, binaryInput bool, contentType string) string {
 	if suffix == "Input" && binaryInput {
 		fullName := endpoint.FullName + "." + suffix
@@ -921,6 +938,7 @@ func buildEndpointHelperType(endpoint ir.Endpoint, suffix string, schemaData *sc
 	})
 }
 
+// buildEndpointErrorType maps declared XRPC error names into a typed Swift error enum.
 func buildEndpointErrorType(endpoint ir.Endpoint, context *generatedContext) string {
 	if len(endpoint.Errors) == 0 {
 		return ""
@@ -937,6 +955,7 @@ func buildEndpointErrorType(endpoint ir.Endpoint, context *generatedContext) str
 	return ensureModel(context.Models, name, strings.Join(lines, "\n"), group)
 }
 
+// buildEndpointModels emits any helper declarations needed before endpoint methods are rendered.
 func buildEndpointModels(endpoint ir.Endpoint, context *generatedContext) endpointSurface {
 	binaryInput := endpoint.Method == "procedure" && isBinaryInputEncoding(endpoint.InputEncoding)
 	outputKind := classifyOutputKind(endpoint.OutputEncoding)
@@ -995,6 +1014,7 @@ func namespaceNode(segment string, prefix []string) *namespaceTreeNode {
 	}
 }
 
+// buildNamespaceTree turns dotted endpoint IDs into the generated ATProtoClient namespace hierarchy.
 func buildNamespaceTree(endpoints []endpointSurface) *namespaceTreeNode {
 	root := namespaceNode("", []string{})
 	for _, endpoint := range endpoints {

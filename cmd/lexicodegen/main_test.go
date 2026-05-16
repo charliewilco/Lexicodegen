@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/charliewilco/lexicodegen/internal/config"
@@ -69,6 +71,36 @@ func TestRunGeneratesSwiftOutput(t *testing.T) {
 func TestRunRejectsUnknownFlag(t *testing.T) {
 	if err := run(context.Background(), []string{"--wat"}); err == nil || err.Error() != "unknown flag: --wat" {
 		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestRunPrintsHelp(t *testing.T) {
+	var output bytes.Buffer
+	if err := runWithOutput(context.Background(), []string{"--help"}, &output); err != nil {
+		t.Fatal(err)
+	}
+
+	got := output.String()
+	for _, snippet := range []string{
+		"lexicodegen generates Swift models",
+		"Usage:",
+		"--config <path>",
+		"--version",
+	} {
+		if !strings.Contains(got, snippet) {
+			t.Fatalf("help output missing %q:\n%s", snippet, got)
+		}
+	}
+}
+
+func TestRunPrintsVersion(t *testing.T) {
+	var output bytes.Buffer
+	if err := runWithOutput(context.Background(), []string{"--version"}, &output); err != nil {
+		t.Fatal(err)
+	}
+
+	if got, want := output.String(), "lexicodegen dev (none, unknown)\n"; got != want {
+		t.Fatalf("version output mismatch: %q != %q", got, want)
 	}
 }
 
