@@ -14,7 +14,7 @@ format:
 
 # Check Go formatting without writing.
 lint:
-	test -z "$$(gofmt -l ./cmd ./internal)"
+	test -z "$(gofmt -l ./cmd ./internal)"
 
 # Refresh lexicon JSON files from upstream sources.
 lexicons:
