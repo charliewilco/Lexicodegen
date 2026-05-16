@@ -170,6 +170,37 @@ func TestLoadLexiconsFromGitArchive(t *testing.T) {
 	}
 }
 
+func TestLoadLexiconsFromGitArchiveRejectsUnsafePaths(t *testing.T) {
+	t.Parallel()
+
+	var payload bytes.Buffer
+	gzipWriter := gzip.NewWriter(&payload)
+	tarWriter := tar.NewWriter(gzipWriter)
+
+	writeTarFile(t, tarWriter, "../escape.json", `{"id":"app.bsky.feed.escape","lexicon":1,"defs":{"main":{"type":"token"}}}`)
+
+	if err := tarWriter.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if err := gzipWriter.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		writer.WriteHeader(http.StatusOK)
+		_, _ = writer.Write(payload.Bytes())
+	}))
+	defer server.Close()
+
+	_, err := LoadLexiconsFromSources(context.Background(), []config.LexiconSource{{
+		Kind: "git-archive",
+		URL:  server.URL,
+	}})
+	if err == nil || err.Error() != "failed to load source git-archive: unsafe archive path: ../escape.json" {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func boolPointer(value bool) *bool {
 	return &value
 }
