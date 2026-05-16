@@ -121,6 +121,8 @@ Supported CLI flags:
 - `--output <dir>`
 - `--swift-output-dir <dir>`
 - `--target <target>` / `--targets <target>`
+- `--help` / `-h`
+- `--version`
 
 Notes:
 
@@ -129,6 +131,13 @@ Notes:
 - unknown flags are rejected
 - unknown targets are rejected
 - `output.swiftFilePrefix` is currently config-only
+
+To inspect the installed command without generating files:
+
+```bash
+lexicodegen --help
+lexicodegen --version
+```
 
 ## Config Files
 
