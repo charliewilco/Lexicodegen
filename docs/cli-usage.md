@@ -58,6 +58,8 @@ Examples:
 - `--output <dir>`
 - `--swift-output-dir <dir>`
 - `--target <target>` / `--targets <target>`
+- `--help` / `-h`
+- `--version`
 
 ### Filter flags
 
@@ -105,4 +107,11 @@ Generate a subset by namespace prefix:
 
 ```bash
 ./lexicodegen ./lexicons --allow-prefix app.bsky,com.atproto --output ./output/swift
+```
+
+Inspect an installed binary:
+
+```bash
+lexicodegen --help
+lexicodegen --version
 ```

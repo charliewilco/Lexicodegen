@@ -159,7 +159,10 @@ func (l DefaultLoader) loadGitArchive(ctx context.Context, source config.Lexicon
 			return nil, err
 		}
 
-		targetPath := filepath.Join(tempDir, header.Name)
+		targetPath, err := archiveTargetPath(tempDir, header.Name)
+		if err != nil {
+			return nil, err
+		}
 		switch header.Typeflag {
 		case tar.TypeDir:
 			if err := os.MkdirAll(targetPath, 0o755); err != nil {
@@ -200,4 +203,18 @@ func (l DefaultLoader) client() *http.Client {
 		return l.Client
 	}
 	return http.DefaultClient
+}
+
+func archiveTargetPath(root string, name string) (string, error) {
+	cleaned := filepath.Clean(name)
+	if cleaned == "." || filepath.IsAbs(cleaned) || cleaned == ".." || strings.HasPrefix(cleaned, ".."+string(filepath.Separator)) {
+		return "", fmt.Errorf("unsafe archive path: %s", name)
+	}
+
+	targetPath := filepath.Join(root, cleaned)
+	cleanRoot := filepath.Clean(root)
+	if targetPath != cleanRoot && !strings.HasPrefix(targetPath, cleanRoot+string(filepath.Separator)) {
+		return "", fmt.Errorf("unsafe archive path: %s", name)
+	}
+	return targetPath, nil
 }
