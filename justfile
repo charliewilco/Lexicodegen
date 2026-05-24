@@ -49,7 +49,7 @@ verify-swift:
 regenerate: lexicons generate format-lexicons
 
 format-lexicons:
-	npx prettier --write ./lexicons/**/**/**/*.json
+	npx prettier --write ./lexicons 
 
 # Run full generation flow.
 all: regenerate

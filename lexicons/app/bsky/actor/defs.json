@@ -169,6 +169,10 @@
 				"allowIncoming": {
 					"type": "string",
 					"knownValues": ["all", "none", "following"]
+				},
+				"allowGroupInvites": {
+					"type": "string",
+					"knownValues": ["all", "none", "following"]
 				}
 			}
 		},
@@ -707,6 +711,13 @@
 					"type": "union",
 					"description": "An optional embed associated with the status.",
 					"refs": ["app.bsky.embed.external#view"]
+				},
+				"labels": {
+					"type": "array",
+					"items": {
+						"type": "ref",
+						"ref": "com.atproto.label.defs#label"
+					}
 				},
 				"expiresAt": {
 					"type": "string",
