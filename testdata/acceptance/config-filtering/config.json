@@ -1,0 +1,14 @@
+{
+	"sources": [{ "kind": "local", "path": "./lexicons", "recursive": true }],
+	"filters": {
+		"allowPrefixes": ["app.bsky"],
+		"denyPrefixes": ["app.bsky.unspecced"],
+		"denyUnspecced": true,
+		"denyDeprecated": true
+	},
+	"targets": ["swift"],
+	"output": {
+		"swiftOutDir": "./generated",
+		"swiftFilePrefix": "Filtered_"
+	}
+}
