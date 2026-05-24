@@ -1,0 +1,20 @@
+{
+	"lexicon": 1,
+	"id": "app.bsky.feed.defs",
+	"defs": {
+		"postView": {
+			"type": "object",
+			"required": ["uri"],
+			"properties": {
+				"uri": { "type": "string", "format": "at-uri" }
+			}
+		},
+		"oldView": {
+			"type": "object",
+			"description": "Deprecated: old profile view.",
+			"properties": {
+				"name": { "type": "string" }
+			}
+		}
+	}
+}

@@ -39,6 +39,10 @@ lexicons:
 test:
 	go test ./...
 
+coverage:
+	go test ./... -coverprofile=/tmp/lexicodegen-cover.out -covermode=atomic
+	go tool cover -func=/tmp/lexicodegen-cover.out
+
 ci:
 	just lint
 	just test
