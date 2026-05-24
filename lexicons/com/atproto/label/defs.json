@@ -108,7 +108,10 @@
 				},
 				"locales": {
 					"type": "array",
-					"items": { "type": "ref", "ref": "#labelValueDefinitionStrings" }
+					"items": {
+						"type": "ref",
+						"ref": "#labelValueDefinitionStrings"
+					}
 				}
 			}
 		},

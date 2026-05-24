@@ -40,7 +40,10 @@
 						"cursor": { "type": "string" },
 						"listsWithMembership": {
 							"type": "array",
-							"items": { "type": "ref", "ref": "#listWithMembership" }
+							"items": {
+								"type": "ref",
+								"ref": "#listWithMembership"
+							}
 						}
 					}
 				}

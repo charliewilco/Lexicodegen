@@ -24,7 +24,10 @@
 					"facets": {
 						"type": "array",
 						"description": "Annotations of text (mentions, URLs, hashtags, etc)",
-						"items": { "type": "ref", "ref": "app.bsky.richtext.facet" }
+						"items": {
+							"type": "ref",
+							"ref": "app.bsky.richtext.facet"
+						}
 					},
 					"reply": { "type": "ref", "ref": "#replyRef" },
 					"embed": {
@@ -52,7 +55,11 @@
 						"type": "array",
 						"description": "Additional hashtags, in addition to any included in post text and facets.",
 						"maxLength": 8,
-						"items": { "type": "string", "maxLength": 640, "maxGraphemes": 64 }
+						"items": {
+							"type": "string",
+							"maxLength": 640,
+							"maxGraphemes": 64
+						}
 					},
 					"createdAt": {
 						"type": "string",

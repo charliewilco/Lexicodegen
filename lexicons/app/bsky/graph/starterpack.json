@@ -24,7 +24,10 @@
 					},
 					"descriptionFacets": {
 						"type": "array",
-						"items": { "type": "ref", "ref": "app.bsky.richtext.facet" }
+						"items": {
+							"type": "ref",
+							"ref": "app.bsky.richtext.facet"
+						}
 					},
 					"list": {
 						"type": "string",

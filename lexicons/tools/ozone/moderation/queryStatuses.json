@@ -197,7 +197,13 @@
 					"ageAssuranceState": {
 						"type": "string",
 						"description": "If specified, only subjects with the given age assurance state will be returned.",
-						"knownValues": ["pending", "assured", "unknown", "reset", "blocked"]
+						"knownValues": [
+							"pending",
+							"assured",
+							"unknown",
+							"reset",
+							"blocked"
+						]
 					}
 				}
 			},

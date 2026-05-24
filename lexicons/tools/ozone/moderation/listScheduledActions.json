@@ -35,7 +35,12 @@
 							"minLength": 1,
 							"items": {
 								"type": "string",
-								"knownValues": ["pending", "executed", "cancelled", "failed"]
+								"knownValues": [
+									"pending",
+									"executed",
+									"cancelled",
+									"failed"
+								]
 							},
 							"description": "Filter actions by status"
 						},

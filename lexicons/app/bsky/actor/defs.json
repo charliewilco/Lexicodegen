@@ -22,7 +22,10 @@
 				"viewer": { "type": "ref", "ref": "#viewerState" },
 				"labels": {
 					"type": "array",
-					"items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+					"items": {
+						"type": "ref",
+						"ref": "com.atproto.label.defs#label"
+					}
 				},
 				"createdAt": { "type": "string", "format": "datetime" },
 				"verification": {
@@ -66,7 +69,10 @@
 				"viewer": { "type": "ref", "ref": "#viewerState" },
 				"labels": {
 					"type": "array",
-					"items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+					"items": {
+						"type": "ref",
+						"ref": "com.atproto.label.defs#label"
+					}
 				},
 				"verification": {
 					"type": "ref",
@@ -118,7 +124,10 @@
 				"viewer": { "type": "ref", "ref": "#viewerState" },
 				"labels": {
 					"type": "array",
-					"items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+					"items": {
+						"type": "ref",
+						"ref": "com.atproto.label.defs#label"
+					}
 				},
 				"pinnedPost": {
 					"type": "ref",
@@ -236,7 +245,11 @@
 		"verificationState": {
 			"type": "object",
 			"description": "Represents the verification information about the user this object is attached to.",
-			"required": ["verifications", "verifiedStatus", "trustedVerifierStatus"],
+			"required": [
+				"verifications",
+				"verifiedStatus",
+				"trustedVerifierStatus"
+			],
 			"properties": {
 				"verifications": {
 					"type": "array",
@@ -448,7 +461,13 @@
 				"sort": {
 					"type": "string",
 					"description": "Sorting mode for threads.",
-					"knownValues": ["oldest", "newest", "most-likes", "random", "hotness"]
+					"knownValues": [
+						"oldest",
+						"newest",
+						"most-likes",
+						"random",
+						"hotness"
+					]
 				}
 			}
 		},
@@ -459,7 +478,11 @@
 				"tags": {
 					"type": "array",
 					"maxLength": 100,
-					"items": { "type": "string", "maxLength": 640, "maxGraphemes": 64 },
+					"items": {
+						"type": "string",
+						"maxLength": 640,
+						"maxGraphemes": 64
+					},
 					"description": "A list of tags which describe the account owner's interests gathered during onboarding."
 				}
 			}

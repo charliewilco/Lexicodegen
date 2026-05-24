@@ -52,7 +52,10 @@
 						"chat.bsky.convo.defs#messageRef"
 					]
 				},
-				"subjectBlobCids": { "type": "array", "items": { "type": "string" } },
+				"subjectBlobCids": {
+					"type": "array",
+					"items": { "type": "string" }
+				},
 				"createdBy": { "type": "string", "format": "did" },
 				"createdAt": { "type": "string", "format": "datetime" },
 				"creatorHandle": { "type": "string" },
@@ -122,7 +125,13 @@
 		},
 		"subjectStatusView": {
 			"type": "object",
-			"required": ["id", "subject", "createdAt", "updatedAt", "reviewState"],
+			"required": [
+				"id",
+				"subject",
+				"createdAt",
+				"updatedAt",
+				"reviewState"
+			],
 			"properties": {
 				"id": { "type": "integer" },
 				"subject": {
@@ -224,7 +233,13 @@
 				"ageAssuranceState": {
 					"type": "string",
 					"description": "Current age assurance state of the subject.",
-					"knownValues": ["pending", "assured", "unknown", "reset", "blocked"]
+					"knownValues": [
+						"pending",
+						"assured",
+						"unknown",
+						"reset",
+						"blocked"
+					]
 				},
 				"ageAssuranceUpdatedBy": {
 					"type": "string",
@@ -403,7 +418,10 @@
 				},
 				"targetServices": {
 					"type": "array",
-					"items": { "type": "string", "knownValues": ["appview", "pds"] },
+					"items": {
+						"type": "string",
+						"knownValues": ["appview", "pds"]
+					},
 					"description": "List of services where the takedown should be applied. If empty or not provided, takedown is applied on all configured services."
 				},
 				"strikeCount": {
@@ -828,7 +846,10 @@
 				"did": { "type": "string", "format": "did" },
 				"handle": { "type": "string", "format": "handle" },
 				"email": { "type": "string" },
-				"relatedRecords": { "type": "array", "items": { "type": "unknown" } },
+				"relatedRecords": {
+					"type": "array",
+					"items": { "type": "unknown" }
+				},
 				"indexedAt": { "type": "string", "format": "datetime" },
 				"moderation": { "type": "ref", "ref": "#moderation" },
 				"invitedBy": {
@@ -860,12 +881,18 @@
 				"did": { "type": "string", "format": "did" },
 				"handle": { "type": "string", "format": "handle" },
 				"email": { "type": "string" },
-				"relatedRecords": { "type": "array", "items": { "type": "unknown" } },
+				"relatedRecords": {
+					"type": "array",
+					"items": { "type": "unknown" }
+				},
 				"indexedAt": { "type": "string", "format": "datetime" },
 				"moderation": { "type": "ref", "ref": "#moderationDetail" },
 				"labels": {
 					"type": "array",
-					"items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+					"items": {
+						"type": "ref",
+						"ref": "com.atproto.label.defs#label"
+					}
 				},
 				"invitedBy": {
 					"type": "ref",
@@ -943,7 +970,10 @@
 				},
 				"labels": {
 					"type": "array",
-					"items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+					"items": {
+						"type": "ref",
+						"ref": "com.atproto.label.defs#label"
+					}
 				},
 				"indexedAt": { "type": "string", "format": "datetime" },
 				"moderation": { "type": "ref", "ref": "#moderationDetail" },
@@ -1144,7 +1174,14 @@
 		"scheduledActionView": {
 			"type": "object",
 			"description": "View of a scheduled moderation action",
-			"required": ["id", "action", "did", "createdBy", "createdAt", "status"],
+			"required": [
+				"id",
+				"action",
+				"did",
+				"createdBy",
+				"createdAt",
+				"status"
+			],
 			"properties": {
 				"id": {
 					"type": "integer",
@@ -1200,7 +1237,12 @@
 				},
 				"status": {
 					"type": "string",
-					"knownValues": ["pending", "executed", "cancelled", "failed"],
+					"knownValues": [
+						"pending",
+						"executed",
+						"cancelled",
+						"failed"
+					],
 					"description": "Current status of the scheduled action"
 				},
 				"lastExecutedAt": {

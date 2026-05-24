@@ -18,10 +18,16 @@
 					"type": "ref",
 					"ref": "app.bsky.actor.defs#profileAssociated"
 				},
-				"viewer": { "type": "ref", "ref": "app.bsky.actor.defs#viewerState" },
+				"viewer": {
+					"type": "ref",
+					"ref": "app.bsky.actor.defs#viewerState"
+				},
 				"labels": {
 					"type": "array",
-					"items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+					"items": {
+						"type": "ref",
+						"ref": "com.atproto.label.defs#label"
+					}
 				},
 				"chatDisabled": {
 					"type": "boolean",

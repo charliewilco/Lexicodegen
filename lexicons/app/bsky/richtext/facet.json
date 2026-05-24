@@ -10,7 +10,10 @@
 				"index": { "type": "ref", "ref": "#byteSlice" },
 				"features": {
 					"type": "array",
-					"items": { "type": "union", "refs": ["#mention", "#link", "#tag"] }
+					"items": {
+						"type": "union",
+						"refs": ["#mention", "#link", "#tag"]
+					}
 				}
 			}
 		},
@@ -35,7 +38,11 @@
 			"description": "Facet feature for a hashtag. The text usually includes a '#' prefix, but the facet reference should not (except in the case of 'double hash tags').",
 			"required": ["tag"],
 			"properties": {
-				"tag": { "type": "string", "maxLength": 640, "maxGraphemes": 64 }
+				"tag": {
+					"type": "string",
+					"maxLength": 640,
+					"maxGraphemes": 64
+				}
 			}
 		},
 		"byteSlice": {

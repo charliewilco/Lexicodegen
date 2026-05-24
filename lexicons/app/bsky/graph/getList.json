@@ -30,7 +30,10 @@
 					"required": ["list", "items"],
 					"properties": {
 						"cursor": { "type": "string" },
-						"list": { "type": "ref", "ref": "app.bsky.graph.defs#listView" },
+						"list": {
+							"type": "ref",
+							"ref": "app.bsky.graph.defs#listView"
+						},
 						"items": {
 							"type": "array",
 							"items": {

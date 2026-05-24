@@ -32,7 +32,10 @@
 						"cursor": { "type": "string" },
 						"starterPacksWithMembership": {
 							"type": "array",
-							"items": { "type": "ref", "ref": "#starterPackWithMembership" }
+							"items": {
+								"type": "ref",
+								"ref": "#starterPackWithMembership"
+							}
 						}
 					}
 				}

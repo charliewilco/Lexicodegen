@@ -15,7 +15,10 @@
 			],
 			"properties": {
 				"id": { "type": "string" },
-				"name": { "type": "string", "description": "Name of the template." },
+				"name": {
+					"type": "string",
+					"description": "Name of the template."
+				},
 				"subject": {
 					"type": "string",
 					"description": "Content of the template, can contain markdown and variable placeholders."

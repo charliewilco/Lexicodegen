@@ -17,7 +17,13 @@
 			"message": {
 				"schema": {
 					"type": "union",
-					"refs": ["#commit", "#sync", "#identity", "#account", "#info"]
+					"refs": [
+						"#commit",
+						"#sync",
+						"#identity",
+						"#account",
+						"#info"
+					]
 				}
 			},
 			"errors": [
@@ -50,7 +56,10 @@
 					"type": "integer",
 					"description": "The stream sequence number of this message."
 				},
-				"rebase": { "type": "boolean", "description": "DEPRECATED -- unused" },
+				"rebase": {
+					"type": "boolean",
+					"description": "DEPRECATED -- unused"
+				},
 				"tooBig": {
 					"type": "boolean",
 					"description": "DEPRECATED -- replaced by #sync event and data limits. Indicates that this commit contained too many ops, or data size was too large. Consumers will need to make a separate request to get missing data."
