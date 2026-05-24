@@ -1,0 +1,12 @@
+{
+	"lexicon": 1,
+	"id": "com.example.ignored",
+	"defs": {
+		"main": {
+			"type": "object",
+			"properties": {
+				"value": { "type": "string" }
+			}
+		}
+	}
+}

@@ -87,6 +87,28 @@ Configured hooks:
 - `pre-commit`: run `gofmt -w` on staged Go files and restage fixes
 - `pre-push`: run `go test ./...`
 
+## Testing
+
+The test suite is organized around generator regression safety:
+
+- unit tests cover config, source loading, schema parsing, IR construction, and small utility behavior
+- emitter behavior tests assert focused Swift snippets for generator contracts that should be easy to diagnose
+- acceptance tests under `testdata/acceptance` run small lexicon suites through the CLI path, verify stable generated files and API snippets, and typecheck tiny Swift usage fixtures when `swiftc` is available
+- the full golden snapshot under `testdata/golden/full` remains a broad regression alarm for current upstream lexicons
+- the generated Swift compile check verifies the full generated surface with `swiftc`
+
+Run the default suite with:
+
+```bash
+go test ./...
+```
+
+Inspect statement coverage without enforcing a threshold:
+
+```bash
+just coverage
+```
+
 ## Usage
 
 Basic usage:
