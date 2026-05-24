@@ -82,16 +82,13 @@ public struct ComAtprotoLabelDefsLabel: Codable, Sendable, Equatable {
 
 public enum ComAtprotoLabelDefsLabelValue: String, Codable, CaseIterable, QueryParameterValue, Sendable {
 	case hide = "!hide"
-	case noPromote = "!no-promote"
 	case warn = "!warn"
 	case noUnauthenticated = "!no-unauthenticated"
-	case dmcaViolation = "dmca-violation"
-	case doxxing = "doxxing"
 	case porn = "porn"
 	case sexual = "sexual"
 	case nudity = "nudity"
-	case nsfl = "nsfl"
-	case gore = "gore"
+	case graphicMedia = "graphic-media"
+	case bot = "bot"
 }
 
 

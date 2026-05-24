@@ -145,14 +145,14 @@ public struct ChatBskyModerationGetMessageContextOutput: Codable, Sendable, Equa
 
 public indirect enum ChatBskyModerationGetMessageContextOutputMessagesItem: Codable, Sendable, Equatable {
 	case messageView(ChatBskyConvoDefsMessageView)
-	case deletedMessageView(ChatBskyConvoDefsDeletedMessageView)
+	case systemMessageView(ChatBskyConvoDefsSystemMessageView)
 	case unexpected(ATProtocolValueContainer)
 
 	public init(from decoder: Decoder) throws {
 		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
 		switch typeIdentifier {
 		case "chat.bsky.convo.defs#messageView": self = .messageView(try ChatBskyConvoDefsMessageView(from: decoder))
-		case "chat.bsky.convo.defs#deletedMessageView": self = .deletedMessageView(try ChatBskyConvoDefsDeletedMessageView(from: decoder))
+		case "chat.bsky.convo.defs#systemMessageView": self = .systemMessageView(try ChatBskyConvoDefsSystemMessageView(from: decoder))
 		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
 		}
 	}
@@ -160,7 +160,7 @@ public indirect enum ChatBskyModerationGetMessageContextOutputMessagesItem: Coda
 	public func encode(to encoder: Encoder) throws {
 		switch self {
 		case .messageView(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#messageView", to: encoder)
-		case .deletedMessageView(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#deletedMessageView", to: encoder)
+		case .systemMessageView(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#systemMessageView", to: encoder)
 		case .unexpected(let value): try value.encode(to: encoder)
 		}
 	}
@@ -171,17 +171,20 @@ public struct ChatBskyModerationGetMessageContextParameters: Codable, Sendable, 
 	public let after: Int?
 	public let before: Int?
 	public let convoId: String?
+	public let maxInterleavedSystemMessages: Int?
 	public let messageId: String
 
 	public init(
 		after: Int? = nil,
 		before: Int? = nil,
 		convoId: String? = nil,
+		maxInterleavedSystemMessages: Int? = nil,
 		messageId: String
 	) {
 		self.after = after
 		self.before = before
 		self.convoId = convoId
+		self.maxInterleavedSystemMessages = maxInterleavedSystemMessages
 		self.messageId = messageId
 	}
 
@@ -190,6 +193,7 @@ public struct ChatBskyModerationGetMessageContextParameters: Codable, Sendable, 
 		after = try container.decodeIfPresent(Int.self, forKey: .after)
 		before = try container.decodeIfPresent(Int.self, forKey: .before)
 		convoId = try container.decodeIfPresent(String.self, forKey: .convoId)
+		maxInterleavedSystemMessages = try container.decodeIfPresent(Int.self, forKey: .maxInterleavedSystemMessages)
 		messageId = try container.decode(String.self, forKey: .messageId)
 	}
 
@@ -198,6 +202,7 @@ public struct ChatBskyModerationGetMessageContextParameters: Codable, Sendable, 
 		try container.encodeIfPresent(after, forKey: .after)
 		try container.encodeIfPresent(before, forKey: .before)
 		try container.encodeIfPresent(convoId, forKey: .convoId)
+		try container.encodeIfPresent(maxInterleavedSystemMessages, forKey: .maxInterleavedSystemMessages)
 		try container.encode(messageId, forKey: .messageId)
 	}
 
@@ -212,6 +217,9 @@ public struct ChatBskyModerationGetMessageContextParameters: Codable, Sendable, 
 		if let value = convoId {
 			value.appendQueryItems(named: "convoId", to: &items)
 		}
+		if let value = maxInterleavedSystemMessages {
+			value.appendQueryItems(named: "maxInterleavedSystemMessages", to: &items)
+		}
 		messageId.appendQueryItems(named: "messageId", to: &items)
 		return items
 	}
@@ -220,7 +228,914 @@ public struct ChatBskyModerationGetMessageContextParameters: Codable, Sendable, 
 		case after = "after"
 		case before = "before"
 		case convoId = "convoId"
+		case maxInterleavedSystemMessages = "maxInterleavedSystemMessages"
 		case messageId = "messageId"
+	}
+}
+
+
+public enum ChatBskyModerationSubscribeModEventsError: String, Swift.Error, CaseIterable, Sendable {
+	case consumerTooSlow = "ConsumerTooSlow"
+	case futureCursor = "FutureCursor"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ChatBskyModerationSubscribeModEventsEventChatAccepted: Codable, Sendable, Equatable {
+	public let actorDid: DID
+	public let convoCreatedAt: ATProtocolDate
+	public let convoId: String
+	public let createdAt: ATProtocolDate
+	public let groupMemberCount: Int?
+	public let groupName: String?
+	public let method: ChatBskyModerationSubscribeModEventsEventChatAcceptedMethod
+	public let ownerDid: DID?
+	public let rev: String
+
+	public init(
+		actorDid: DID,
+		convoCreatedAt: ATProtocolDate,
+		convoId: String,
+		createdAt: ATProtocolDate,
+		groupMemberCount: Int? = nil,
+		groupName: String? = nil,
+		method: ChatBskyModerationSubscribeModEventsEventChatAcceptedMethod,
+		ownerDid: DID? = nil,
+		rev: String
+	) {
+		self.actorDid = actorDid
+		self.convoCreatedAt = convoCreatedAt
+		self.convoId = convoId
+		self.createdAt = createdAt
+		self.groupMemberCount = groupMemberCount
+		self.groupName = groupName
+		self.method = method
+		self.ownerDid = ownerDid
+		self.rev = rev
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		actorDid = try container.decode(DID.self, forKey: .actorDid)
+		convoCreatedAt = try container.decode(ATProtocolDate.self, forKey: .convoCreatedAt)
+		convoId = try container.decode(String.self, forKey: .convoId)
+		createdAt = try container.decode(ATProtocolDate.self, forKey: .createdAt)
+		groupMemberCount = try container.decodeIfPresent(Int.self, forKey: .groupMemberCount)
+		groupName = try container.decodeIfPresent(String.self, forKey: .groupName)
+		method = try container.decode(ChatBskyModerationSubscribeModEventsEventChatAcceptedMethod.self, forKey: .method)
+		ownerDid = try container.decodeIfPresent(DID.self, forKey: .ownerDid)
+		rev = try container.decode(String.self, forKey: .rev)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(actorDid, forKey: .actorDid)
+		try container.encode(convoCreatedAt, forKey: .convoCreatedAt)
+		try container.encode(convoId, forKey: .convoId)
+		try container.encode(createdAt, forKey: .createdAt)
+		try container.encodeIfPresent(groupMemberCount, forKey: .groupMemberCount)
+		try container.encodeIfPresent(groupName, forKey: .groupName)
+		try container.encode(method, forKey: .method)
+		try container.encodeIfPresent(ownerDid, forKey: .ownerDid)
+		try container.encode(rev, forKey: .rev)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case actorDid = "actorDid"
+		case convoCreatedAt = "convoCreatedAt"
+		case convoId = "convoId"
+		case createdAt = "createdAt"
+		case groupMemberCount = "groupMemberCount"
+		case groupName = "groupName"
+		case method = "method"
+		case ownerDid = "ownerDid"
+		case rev = "rev"
+	}
+}
+
+
+public enum ChatBskyModerationSubscribeModEventsEventChatAcceptedMethod: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case explicit = "explicit"
+	case message = "message"
+}
+
+
+public struct ChatBskyModerationSubscribeModEventsEventConvoFirstMessage: Codable, Sendable, Equatable {
+	public let convoId: String
+	public let createdAt: ATProtocolDate
+	public let messageId: String?
+	public let recipients: [DID]
+	public let rev: String
+	public let user: DID
+
+	public init(
+		convoId: String,
+		createdAt: ATProtocolDate,
+		messageId: String? = nil,
+		recipients: [DID],
+		rev: String,
+		user: DID
+	) {
+		self.convoId = convoId
+		self.createdAt = createdAt
+		self.messageId = messageId
+		self.recipients = recipients
+		self.rev = rev
+		self.user = user
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		convoId = try container.decode(String.self, forKey: .convoId)
+		createdAt = try container.decode(ATProtocolDate.self, forKey: .createdAt)
+		messageId = try container.decodeIfPresent(String.self, forKey: .messageId)
+		recipients = try container.decode([DID].self, forKey: .recipients)
+		rev = try container.decode(String.self, forKey: .rev)
+		user = try container.decode(DID.self, forKey: .user)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(convoId, forKey: .convoId)
+		try container.encode(createdAt, forKey: .createdAt)
+		try container.encodeIfPresent(messageId, forKey: .messageId)
+		try container.encode(recipients, forKey: .recipients)
+		try container.encode(rev, forKey: .rev)
+		try container.encode(user, forKey: .user)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case convoId = "convoId"
+		case createdAt = "createdAt"
+		case messageId = "messageId"
+		case recipients = "recipients"
+		case rev = "rev"
+		case user = "user"
+	}
+}
+
+
+public struct ChatBskyModerationSubscribeModEventsEventGroupChatCreated: Codable, Sendable, Equatable {
+	public let actorDid: DID
+	public let convoCreatedAt: ATProtocolDate
+	public let convoId: String
+	public let createdAt: ATProtocolDate
+	public let groupMemberCount: Int
+	public let groupName: String
+	public let initialMemberDids: [DID]
+	public let ownerDid: DID
+	public let rev: String
+
+	public init(
+		actorDid: DID,
+		convoCreatedAt: ATProtocolDate,
+		convoId: String,
+		createdAt: ATProtocolDate,
+		groupMemberCount: Int,
+		groupName: String,
+		initialMemberDids: [DID],
+		ownerDid: DID,
+		rev: String
+	) {
+		self.actorDid = actorDid
+		self.convoCreatedAt = convoCreatedAt
+		self.convoId = convoId
+		self.createdAt = createdAt
+		self.groupMemberCount = groupMemberCount
+		self.groupName = groupName
+		self.initialMemberDids = initialMemberDids
+		self.ownerDid = ownerDid
+		self.rev = rev
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		actorDid = try container.decode(DID.self, forKey: .actorDid)
+		convoCreatedAt = try container.decode(ATProtocolDate.self, forKey: .convoCreatedAt)
+		convoId = try container.decode(String.self, forKey: .convoId)
+		createdAt = try container.decode(ATProtocolDate.self, forKey: .createdAt)
+		groupMemberCount = try container.decode(Int.self, forKey: .groupMemberCount)
+		groupName = try container.decode(String.self, forKey: .groupName)
+		initialMemberDids = try container.decode([DID].self, forKey: .initialMemberDids)
+		ownerDid = try container.decode(DID.self, forKey: .ownerDid)
+		rev = try container.decode(String.self, forKey: .rev)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(actorDid, forKey: .actorDid)
+		try container.encode(convoCreatedAt, forKey: .convoCreatedAt)
+		try container.encode(convoId, forKey: .convoId)
+		try container.encode(createdAt, forKey: .createdAt)
+		try container.encode(groupMemberCount, forKey: .groupMemberCount)
+		try container.encode(groupName, forKey: .groupName)
+		try container.encode(initialMemberDids, forKey: .initialMemberDids)
+		try container.encode(ownerDid, forKey: .ownerDid)
+		try container.encode(rev, forKey: .rev)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case actorDid = "actorDid"
+		case convoCreatedAt = "convoCreatedAt"
+		case convoId = "convoId"
+		case createdAt = "createdAt"
+		case groupMemberCount = "groupMemberCount"
+		case groupName = "groupName"
+		case initialMemberDids = "initialMemberDids"
+		case ownerDid = "ownerDid"
+		case rev = "rev"
+	}
+}
+
+
+public struct ChatBskyModerationSubscribeModEventsEventGroupChatJoinRequest: Codable, Sendable, Equatable {
+	public let actorDid: DID
+	public let convoCreatedAt: ATProtocolDate
+	public let convoId: String
+	public let createdAt: ATProtocolDate
+	public let groupMemberCount: Int
+	public let groupName: String
+	public let joinLinkCode: String
+	public let ownerDid: DID
+	public let rev: String
+	public let subjectFollowsOwner: Bool
+
+	public init(
+		actorDid: DID,
+		convoCreatedAt: ATProtocolDate,
+		convoId: String,
+		createdAt: ATProtocolDate,
+		groupMemberCount: Int,
+		groupName: String,
+		joinLinkCode: String,
+		ownerDid: DID,
+		rev: String,
+		subjectFollowsOwner: Bool
+	) {
+		self.actorDid = actorDid
+		self.convoCreatedAt = convoCreatedAt
+		self.convoId = convoId
+		self.createdAt = createdAt
+		self.groupMemberCount = groupMemberCount
+		self.groupName = groupName
+		self.joinLinkCode = joinLinkCode
+		self.ownerDid = ownerDid
+		self.rev = rev
+		self.subjectFollowsOwner = subjectFollowsOwner
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		actorDid = try container.decode(DID.self, forKey: .actorDid)
+		convoCreatedAt = try container.decode(ATProtocolDate.self, forKey: .convoCreatedAt)
+		convoId = try container.decode(String.self, forKey: .convoId)
+		createdAt = try container.decode(ATProtocolDate.self, forKey: .createdAt)
+		groupMemberCount = try container.decode(Int.self, forKey: .groupMemberCount)
+		groupName = try container.decode(String.self, forKey: .groupName)
+		joinLinkCode = try container.decode(String.self, forKey: .joinLinkCode)
+		ownerDid = try container.decode(DID.self, forKey: .ownerDid)
+		rev = try container.decode(String.self, forKey: .rev)
+		subjectFollowsOwner = try container.decode(Bool.self, forKey: .subjectFollowsOwner)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(actorDid, forKey: .actorDid)
+		try container.encode(convoCreatedAt, forKey: .convoCreatedAt)
+		try container.encode(convoId, forKey: .convoId)
+		try container.encode(createdAt, forKey: .createdAt)
+		try container.encode(groupMemberCount, forKey: .groupMemberCount)
+		try container.encode(groupName, forKey: .groupName)
+		try container.encode(joinLinkCode, forKey: .joinLinkCode)
+		try container.encode(ownerDid, forKey: .ownerDid)
+		try container.encode(rev, forKey: .rev)
+		try container.encode(subjectFollowsOwner, forKey: .subjectFollowsOwner)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case actorDid = "actorDid"
+		case convoCreatedAt = "convoCreatedAt"
+		case convoId = "convoId"
+		case createdAt = "createdAt"
+		case groupMemberCount = "groupMemberCount"
+		case groupName = "groupName"
+		case joinLinkCode = "joinLinkCode"
+		case ownerDid = "ownerDid"
+		case rev = "rev"
+		case subjectFollowsOwner = "subjectFollowsOwner"
+	}
+}
+
+
+public struct ChatBskyModerationSubscribeModEventsEventGroupChatJoinRequestApproved: Codable, Sendable, Equatable {
+	public let actorDid: DID
+	public let convoCreatedAt: ATProtocolDate
+	public let convoId: String
+	public let createdAt: ATProtocolDate
+	public let groupMemberCount: Int
+	public let groupName: String
+	public let ownerDid: DID
+	public let rev: String
+	public let subjectDid: DID
+
+	public init(
+		actorDid: DID,
+		convoCreatedAt: ATProtocolDate,
+		convoId: String,
+		createdAt: ATProtocolDate,
+		groupMemberCount: Int,
+		groupName: String,
+		ownerDid: DID,
+		rev: String,
+		subjectDid: DID
+	) {
+		self.actorDid = actorDid
+		self.convoCreatedAt = convoCreatedAt
+		self.convoId = convoId
+		self.createdAt = createdAt
+		self.groupMemberCount = groupMemberCount
+		self.groupName = groupName
+		self.ownerDid = ownerDid
+		self.rev = rev
+		self.subjectDid = subjectDid
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		actorDid = try container.decode(DID.self, forKey: .actorDid)
+		convoCreatedAt = try container.decode(ATProtocolDate.self, forKey: .convoCreatedAt)
+		convoId = try container.decode(String.self, forKey: .convoId)
+		createdAt = try container.decode(ATProtocolDate.self, forKey: .createdAt)
+		groupMemberCount = try container.decode(Int.self, forKey: .groupMemberCount)
+		groupName = try container.decode(String.self, forKey: .groupName)
+		ownerDid = try container.decode(DID.self, forKey: .ownerDid)
+		rev = try container.decode(String.self, forKey: .rev)
+		subjectDid = try container.decode(DID.self, forKey: .subjectDid)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(actorDid, forKey: .actorDid)
+		try container.encode(convoCreatedAt, forKey: .convoCreatedAt)
+		try container.encode(convoId, forKey: .convoId)
+		try container.encode(createdAt, forKey: .createdAt)
+		try container.encode(groupMemberCount, forKey: .groupMemberCount)
+		try container.encode(groupName, forKey: .groupName)
+		try container.encode(ownerDid, forKey: .ownerDid)
+		try container.encode(rev, forKey: .rev)
+		try container.encode(subjectDid, forKey: .subjectDid)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case actorDid = "actorDid"
+		case convoCreatedAt = "convoCreatedAt"
+		case convoId = "convoId"
+		case createdAt = "createdAt"
+		case groupMemberCount = "groupMemberCount"
+		case groupName = "groupName"
+		case ownerDid = "ownerDid"
+		case rev = "rev"
+		case subjectDid = "subjectDid"
+	}
+}
+
+
+public struct ChatBskyModerationSubscribeModEventsEventGroupChatJoinRequestRejected: Codable, Sendable, Equatable {
+	public let actorDid: DID
+	public let convoCreatedAt: ATProtocolDate
+	public let convoId: String
+	public let createdAt: ATProtocolDate
+	public let groupMemberCount: Int
+	public let groupName: String
+	public let ownerDid: DID
+	public let rev: String
+	public let subjectDid: DID
+
+	public init(
+		actorDid: DID,
+		convoCreatedAt: ATProtocolDate,
+		convoId: String,
+		createdAt: ATProtocolDate,
+		groupMemberCount: Int,
+		groupName: String,
+		ownerDid: DID,
+		rev: String,
+		subjectDid: DID
+	) {
+		self.actorDid = actorDid
+		self.convoCreatedAt = convoCreatedAt
+		self.convoId = convoId
+		self.createdAt = createdAt
+		self.groupMemberCount = groupMemberCount
+		self.groupName = groupName
+		self.ownerDid = ownerDid
+		self.rev = rev
+		self.subjectDid = subjectDid
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		actorDid = try container.decode(DID.self, forKey: .actorDid)
+		convoCreatedAt = try container.decode(ATProtocolDate.self, forKey: .convoCreatedAt)
+		convoId = try container.decode(String.self, forKey: .convoId)
+		createdAt = try container.decode(ATProtocolDate.self, forKey: .createdAt)
+		groupMemberCount = try container.decode(Int.self, forKey: .groupMemberCount)
+		groupName = try container.decode(String.self, forKey: .groupName)
+		ownerDid = try container.decode(DID.self, forKey: .ownerDid)
+		rev = try container.decode(String.self, forKey: .rev)
+		subjectDid = try container.decode(DID.self, forKey: .subjectDid)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(actorDid, forKey: .actorDid)
+		try container.encode(convoCreatedAt, forKey: .convoCreatedAt)
+		try container.encode(convoId, forKey: .convoId)
+		try container.encode(createdAt, forKey: .createdAt)
+		try container.encode(groupMemberCount, forKey: .groupMemberCount)
+		try container.encode(groupName, forKey: .groupName)
+		try container.encode(ownerDid, forKey: .ownerDid)
+		try container.encode(rev, forKey: .rev)
+		try container.encode(subjectDid, forKey: .subjectDid)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case actorDid = "actorDid"
+		case convoCreatedAt = "convoCreatedAt"
+		case convoId = "convoId"
+		case createdAt = "createdAt"
+		case groupMemberCount = "groupMemberCount"
+		case groupName = "groupName"
+		case ownerDid = "ownerDid"
+		case rev = "rev"
+		case subjectDid = "subjectDid"
+	}
+}
+
+
+public struct ChatBskyModerationSubscribeModEventsEventGroupChatMemberAdded: Codable, Sendable, Equatable {
+	public let actorDid: DID
+	public let convoCreatedAt: ATProtocolDate
+	public let convoId: String
+	public let createdAt: ATProtocolDate
+	public let groupMemberCount: Int
+	public let groupName: String
+	public let ownerDid: DID
+	public let requestMembersCount: Int
+	public let rev: String
+	public let subjectDid: DID
+	public let subjectFollowsOwner: Bool
+
+	public init(
+		actorDid: DID,
+		convoCreatedAt: ATProtocolDate,
+		convoId: String,
+		createdAt: ATProtocolDate,
+		groupMemberCount: Int,
+		groupName: String,
+		ownerDid: DID,
+		requestMembersCount: Int,
+		rev: String,
+		subjectDid: DID,
+		subjectFollowsOwner: Bool
+	) {
+		self.actorDid = actorDid
+		self.convoCreatedAt = convoCreatedAt
+		self.convoId = convoId
+		self.createdAt = createdAt
+		self.groupMemberCount = groupMemberCount
+		self.groupName = groupName
+		self.ownerDid = ownerDid
+		self.requestMembersCount = requestMembersCount
+		self.rev = rev
+		self.subjectDid = subjectDid
+		self.subjectFollowsOwner = subjectFollowsOwner
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		actorDid = try container.decode(DID.self, forKey: .actorDid)
+		convoCreatedAt = try container.decode(ATProtocolDate.self, forKey: .convoCreatedAt)
+		convoId = try container.decode(String.self, forKey: .convoId)
+		createdAt = try container.decode(ATProtocolDate.self, forKey: .createdAt)
+		groupMemberCount = try container.decode(Int.self, forKey: .groupMemberCount)
+		groupName = try container.decode(String.self, forKey: .groupName)
+		ownerDid = try container.decode(DID.self, forKey: .ownerDid)
+		requestMembersCount = try container.decode(Int.self, forKey: .requestMembersCount)
+		rev = try container.decode(String.self, forKey: .rev)
+		subjectDid = try container.decode(DID.self, forKey: .subjectDid)
+		subjectFollowsOwner = try container.decode(Bool.self, forKey: .subjectFollowsOwner)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(actorDid, forKey: .actorDid)
+		try container.encode(convoCreatedAt, forKey: .convoCreatedAt)
+		try container.encode(convoId, forKey: .convoId)
+		try container.encode(createdAt, forKey: .createdAt)
+		try container.encode(groupMemberCount, forKey: .groupMemberCount)
+		try container.encode(groupName, forKey: .groupName)
+		try container.encode(ownerDid, forKey: .ownerDid)
+		try container.encode(requestMembersCount, forKey: .requestMembersCount)
+		try container.encode(rev, forKey: .rev)
+		try container.encode(subjectDid, forKey: .subjectDid)
+		try container.encode(subjectFollowsOwner, forKey: .subjectFollowsOwner)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case actorDid = "actorDid"
+		case convoCreatedAt = "convoCreatedAt"
+		case convoId = "convoId"
+		case createdAt = "createdAt"
+		case groupMemberCount = "groupMemberCount"
+		case groupName = "groupName"
+		case ownerDid = "ownerDid"
+		case requestMembersCount = "requestMembersCount"
+		case rev = "rev"
+		case subjectDid = "subjectDid"
+		case subjectFollowsOwner = "subjectFollowsOwner"
+	}
+}
+
+
+public struct ChatBskyModerationSubscribeModEventsEventGroupChatMemberJoined: Codable, Sendable, Equatable {
+	public let actorDid: DID
+	public let convoCreatedAt: ATProtocolDate
+	public let convoId: String
+	public let createdAt: ATProtocolDate
+	public let groupMemberCount: Int
+	public let groupName: String
+	public let joinLinkCode: String
+	public let ownerDid: DID
+	public let rev: String
+	public let subjectFollowsOwner: Bool
+
+	public init(
+		actorDid: DID,
+		convoCreatedAt: ATProtocolDate,
+		convoId: String,
+		createdAt: ATProtocolDate,
+		groupMemberCount: Int,
+		groupName: String,
+		joinLinkCode: String,
+		ownerDid: DID,
+		rev: String,
+		subjectFollowsOwner: Bool
+	) {
+		self.actorDid = actorDid
+		self.convoCreatedAt = convoCreatedAt
+		self.convoId = convoId
+		self.createdAt = createdAt
+		self.groupMemberCount = groupMemberCount
+		self.groupName = groupName
+		self.joinLinkCode = joinLinkCode
+		self.ownerDid = ownerDid
+		self.rev = rev
+		self.subjectFollowsOwner = subjectFollowsOwner
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		actorDid = try container.decode(DID.self, forKey: .actorDid)
+		convoCreatedAt = try container.decode(ATProtocolDate.self, forKey: .convoCreatedAt)
+		convoId = try container.decode(String.self, forKey: .convoId)
+		createdAt = try container.decode(ATProtocolDate.self, forKey: .createdAt)
+		groupMemberCount = try container.decode(Int.self, forKey: .groupMemberCount)
+		groupName = try container.decode(String.self, forKey: .groupName)
+		joinLinkCode = try container.decode(String.self, forKey: .joinLinkCode)
+		ownerDid = try container.decode(DID.self, forKey: .ownerDid)
+		rev = try container.decode(String.self, forKey: .rev)
+		subjectFollowsOwner = try container.decode(Bool.self, forKey: .subjectFollowsOwner)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(actorDid, forKey: .actorDid)
+		try container.encode(convoCreatedAt, forKey: .convoCreatedAt)
+		try container.encode(convoId, forKey: .convoId)
+		try container.encode(createdAt, forKey: .createdAt)
+		try container.encode(groupMemberCount, forKey: .groupMemberCount)
+		try container.encode(groupName, forKey: .groupName)
+		try container.encode(joinLinkCode, forKey: .joinLinkCode)
+		try container.encode(ownerDid, forKey: .ownerDid)
+		try container.encode(rev, forKey: .rev)
+		try container.encode(subjectFollowsOwner, forKey: .subjectFollowsOwner)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case actorDid = "actorDid"
+		case convoCreatedAt = "convoCreatedAt"
+		case convoId = "convoId"
+		case createdAt = "createdAt"
+		case groupMemberCount = "groupMemberCount"
+		case groupName = "groupName"
+		case joinLinkCode = "joinLinkCode"
+		case ownerDid = "ownerDid"
+		case rev = "rev"
+		case subjectFollowsOwner = "subjectFollowsOwner"
+	}
+}
+
+
+public struct ChatBskyModerationSubscribeModEventsEventGroupChatMemberLeft: Codable, Sendable, Equatable {
+	public let actorDid: DID
+	public let convoCreatedAt: ATProtocolDate
+	public let convoId: String
+	public let createdAt: ATProtocolDate
+	public let groupMemberCount: Int
+	public let groupName: String
+	public let leaveMethod: ChatBskyModerationSubscribeModEventsEventGroupChatMemberLeftLeaveMethod
+	public let ownerDid: DID
+	public let rev: String
+	public let subjectDid: DID
+
+	public init(
+		actorDid: DID,
+		convoCreatedAt: ATProtocolDate,
+		convoId: String,
+		createdAt: ATProtocolDate,
+		groupMemberCount: Int,
+		groupName: String,
+		leaveMethod: ChatBskyModerationSubscribeModEventsEventGroupChatMemberLeftLeaveMethod,
+		ownerDid: DID,
+		rev: String,
+		subjectDid: DID
+	) {
+		self.actorDid = actorDid
+		self.convoCreatedAt = convoCreatedAt
+		self.convoId = convoId
+		self.createdAt = createdAt
+		self.groupMemberCount = groupMemberCount
+		self.groupName = groupName
+		self.leaveMethod = leaveMethod
+		self.ownerDid = ownerDid
+		self.rev = rev
+		self.subjectDid = subjectDid
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		actorDid = try container.decode(DID.self, forKey: .actorDid)
+		convoCreatedAt = try container.decode(ATProtocolDate.self, forKey: .convoCreatedAt)
+		convoId = try container.decode(String.self, forKey: .convoId)
+		createdAt = try container.decode(ATProtocolDate.self, forKey: .createdAt)
+		groupMemberCount = try container.decode(Int.self, forKey: .groupMemberCount)
+		groupName = try container.decode(String.self, forKey: .groupName)
+		leaveMethod = try container.decode(ChatBskyModerationSubscribeModEventsEventGroupChatMemberLeftLeaveMethod.self, forKey: .leaveMethod)
+		ownerDid = try container.decode(DID.self, forKey: .ownerDid)
+		rev = try container.decode(String.self, forKey: .rev)
+		subjectDid = try container.decode(DID.self, forKey: .subjectDid)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(actorDid, forKey: .actorDid)
+		try container.encode(convoCreatedAt, forKey: .convoCreatedAt)
+		try container.encode(convoId, forKey: .convoId)
+		try container.encode(createdAt, forKey: .createdAt)
+		try container.encode(groupMemberCount, forKey: .groupMemberCount)
+		try container.encode(groupName, forKey: .groupName)
+		try container.encode(leaveMethod, forKey: .leaveMethod)
+		try container.encode(ownerDid, forKey: .ownerDid)
+		try container.encode(rev, forKey: .rev)
+		try container.encode(subjectDid, forKey: .subjectDid)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case actorDid = "actorDid"
+		case convoCreatedAt = "convoCreatedAt"
+		case convoId = "convoId"
+		case createdAt = "createdAt"
+		case groupMemberCount = "groupMemberCount"
+		case groupName = "groupName"
+		case leaveMethod = "leaveMethod"
+		case ownerDid = "ownerDid"
+		case rev = "rev"
+		case subjectDid = "subjectDid"
+	}
+}
+
+
+public enum ChatBskyModerationSubscribeModEventsEventGroupChatMemberLeftLeaveMethod: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case voluntary = "voluntary"
+	case kicked = "kicked"
+}
+
+
+public struct ChatBskyModerationSubscribeModEventsEventGroupChatUpdated: Codable, Sendable, Equatable {
+	public let actorDid: DID
+	public let convoCreatedAt: ATProtocolDate
+	public let convoId: String
+	public let createdAt: ATProtocolDate
+	public let groupMemberCount: Int
+	public let groupName: String
+	public let joinLinkCode: String?
+	public let joinLinkFollowersOnly: Bool?
+	public let joinLinkRequiresApproval: Bool?
+	public let lockReason: ChatBskyModerationSubscribeModEventsEventGroupChatUpdatedLockReason?
+	public let newName: String?
+	public let oldName: String?
+	public let ownerDid: DID
+	public let rev: String
+	public let updateType: ChatBskyModerationSubscribeModEventsEventGroupChatUpdatedUpdateType
+
+	public init(
+		actorDid: DID,
+		convoCreatedAt: ATProtocolDate,
+		convoId: String,
+		createdAt: ATProtocolDate,
+		groupMemberCount: Int,
+		groupName: String,
+		joinLinkCode: String? = nil,
+		joinLinkFollowersOnly: Bool? = nil,
+		joinLinkRequiresApproval: Bool? = nil,
+		lockReason: ChatBskyModerationSubscribeModEventsEventGroupChatUpdatedLockReason? = nil,
+		newName: String? = nil,
+		oldName: String? = nil,
+		ownerDid: DID,
+		rev: String,
+		updateType: ChatBskyModerationSubscribeModEventsEventGroupChatUpdatedUpdateType
+	) {
+		self.actorDid = actorDid
+		self.convoCreatedAt = convoCreatedAt
+		self.convoId = convoId
+		self.createdAt = createdAt
+		self.groupMemberCount = groupMemberCount
+		self.groupName = groupName
+		self.joinLinkCode = joinLinkCode
+		self.joinLinkFollowersOnly = joinLinkFollowersOnly
+		self.joinLinkRequiresApproval = joinLinkRequiresApproval
+		self.lockReason = lockReason
+		self.newName = newName
+		self.oldName = oldName
+		self.ownerDid = ownerDid
+		self.rev = rev
+		self.updateType = updateType
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		actorDid = try container.decode(DID.self, forKey: .actorDid)
+		convoCreatedAt = try container.decode(ATProtocolDate.self, forKey: .convoCreatedAt)
+		convoId = try container.decode(String.self, forKey: .convoId)
+		createdAt = try container.decode(ATProtocolDate.self, forKey: .createdAt)
+		groupMemberCount = try container.decode(Int.self, forKey: .groupMemberCount)
+		groupName = try container.decode(String.self, forKey: .groupName)
+		joinLinkCode = try container.decodeIfPresent(String.self, forKey: .joinLinkCode)
+		joinLinkFollowersOnly = try container.decodeIfPresent(Bool.self, forKey: .joinLinkFollowersOnly)
+		joinLinkRequiresApproval = try container.decodeIfPresent(Bool.self, forKey: .joinLinkRequiresApproval)
+		lockReason = try container.decodeIfPresent(ChatBskyModerationSubscribeModEventsEventGroupChatUpdatedLockReason.self, forKey: .lockReason)
+		newName = try container.decodeIfPresent(String.self, forKey: .newName)
+		oldName = try container.decodeIfPresent(String.self, forKey: .oldName)
+		ownerDid = try container.decode(DID.self, forKey: .ownerDid)
+		rev = try container.decode(String.self, forKey: .rev)
+		updateType = try container.decode(ChatBskyModerationSubscribeModEventsEventGroupChatUpdatedUpdateType.self, forKey: .updateType)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(actorDid, forKey: .actorDid)
+		try container.encode(convoCreatedAt, forKey: .convoCreatedAt)
+		try container.encode(convoId, forKey: .convoId)
+		try container.encode(createdAt, forKey: .createdAt)
+		try container.encode(groupMemberCount, forKey: .groupMemberCount)
+		try container.encode(groupName, forKey: .groupName)
+		try container.encodeIfPresent(joinLinkCode, forKey: .joinLinkCode)
+		try container.encodeIfPresent(joinLinkFollowersOnly, forKey: .joinLinkFollowersOnly)
+		try container.encodeIfPresent(joinLinkRequiresApproval, forKey: .joinLinkRequiresApproval)
+		try container.encodeIfPresent(lockReason, forKey: .lockReason)
+		try container.encodeIfPresent(newName, forKey: .newName)
+		try container.encodeIfPresent(oldName, forKey: .oldName)
+		try container.encode(ownerDid, forKey: .ownerDid)
+		try container.encode(rev, forKey: .rev)
+		try container.encode(updateType, forKey: .updateType)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case actorDid = "actorDid"
+		case convoCreatedAt = "convoCreatedAt"
+		case convoId = "convoId"
+		case createdAt = "createdAt"
+		case groupMemberCount = "groupMemberCount"
+		case groupName = "groupName"
+		case joinLinkCode = "joinLinkCode"
+		case joinLinkFollowersOnly = "joinLinkFollowersOnly"
+		case joinLinkRequiresApproval = "joinLinkRequiresApproval"
+		case lockReason = "lockReason"
+		case newName = "newName"
+		case oldName = "oldName"
+		case ownerDid = "ownerDid"
+		case rev = "rev"
+		case updateType = "updateType"
+	}
+}
+
+
+public enum ChatBskyModerationSubscribeModEventsEventGroupChatUpdatedLockReason: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case ownerAction = "owner_action"
+	case ownerLeft = "owner_left"
+	case ownerDeactivated = "owner_deactivated"
+	case ownerDeleted = "owner_deleted"
+	case ownerSuspended = "owner_suspended"
+	case ownerTakenDown = "owner_taken_down"
+	case labelApplied = "label_applied"
+}
+
+
+public enum ChatBskyModerationSubscribeModEventsEventGroupChatUpdatedUpdateType: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case nameChanged = "name_changed"
+	case locked = "locked"
+	case lockedPermanently = "locked_permanently"
+	case unlocked = "unlocked"
+	case joinLinkCreated = "join_link_created"
+	case joinLinkDisabled = "join_link_disabled"
+	case joinLinkSettingsChanged = "join_link_settings_changed"
+}
+
+
+public indirect enum ChatBskyModerationSubscribeModEventsMessage: Codable, Sendable, Equatable {
+	case eventConvoFirstMessage(ChatBskyModerationSubscribeModEventsEventConvoFirstMessage)
+	case eventGroupChatCreated(ChatBskyModerationSubscribeModEventsEventGroupChatCreated)
+	case eventGroupChatMemberAdded(ChatBskyModerationSubscribeModEventsEventGroupChatMemberAdded)
+	case eventGroupChatMemberJoined(ChatBskyModerationSubscribeModEventsEventGroupChatMemberJoined)
+	case eventGroupChatJoinRequest(ChatBskyModerationSubscribeModEventsEventGroupChatJoinRequest)
+	case eventGroupChatJoinRequestApproved(ChatBskyModerationSubscribeModEventsEventGroupChatJoinRequestApproved)
+	case eventGroupChatJoinRequestRejected(ChatBskyModerationSubscribeModEventsEventGroupChatJoinRequestRejected)
+	case eventChatAccepted(ChatBskyModerationSubscribeModEventsEventChatAccepted)
+	case eventGroupChatMemberLeft(ChatBskyModerationSubscribeModEventsEventGroupChatMemberLeft)
+	case eventGroupChatUpdated(ChatBskyModerationSubscribeModEventsEventGroupChatUpdated)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "chat.bsky.moderation.subscribeModEvents#eventConvoFirstMessage": self = .eventConvoFirstMessage(try ChatBskyModerationSubscribeModEventsEventConvoFirstMessage(from: decoder))
+		case "chat.bsky.moderation.subscribeModEvents#eventGroupChatCreated": self = .eventGroupChatCreated(try ChatBskyModerationSubscribeModEventsEventGroupChatCreated(from: decoder))
+		case "chat.bsky.moderation.subscribeModEvents#eventGroupChatMemberAdded": self = .eventGroupChatMemberAdded(try ChatBskyModerationSubscribeModEventsEventGroupChatMemberAdded(from: decoder))
+		case "chat.bsky.moderation.subscribeModEvents#eventGroupChatMemberJoined": self = .eventGroupChatMemberJoined(try ChatBskyModerationSubscribeModEventsEventGroupChatMemberJoined(from: decoder))
+		case "chat.bsky.moderation.subscribeModEvents#eventGroupChatJoinRequest": self = .eventGroupChatJoinRequest(try ChatBskyModerationSubscribeModEventsEventGroupChatJoinRequest(from: decoder))
+		case "chat.bsky.moderation.subscribeModEvents#eventGroupChatJoinRequestApproved": self = .eventGroupChatJoinRequestApproved(try ChatBskyModerationSubscribeModEventsEventGroupChatJoinRequestApproved(from: decoder))
+		case "chat.bsky.moderation.subscribeModEvents#eventGroupChatJoinRequestRejected": self = .eventGroupChatJoinRequestRejected(try ChatBskyModerationSubscribeModEventsEventGroupChatJoinRequestRejected(from: decoder))
+		case "chat.bsky.moderation.subscribeModEvents#eventChatAccepted": self = .eventChatAccepted(try ChatBskyModerationSubscribeModEventsEventChatAccepted(from: decoder))
+		case "chat.bsky.moderation.subscribeModEvents#eventGroupChatMemberLeft": self = .eventGroupChatMemberLeft(try ChatBskyModerationSubscribeModEventsEventGroupChatMemberLeft(from: decoder))
+		case "chat.bsky.moderation.subscribeModEvents#eventGroupChatUpdated": self = .eventGroupChatUpdated(try ChatBskyModerationSubscribeModEventsEventGroupChatUpdated(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .eventConvoFirstMessage(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.moderation.subscribeModEvents#eventConvoFirstMessage", to: encoder)
+		case .eventGroupChatCreated(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.moderation.subscribeModEvents#eventGroupChatCreated", to: encoder)
+		case .eventGroupChatMemberAdded(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.moderation.subscribeModEvents#eventGroupChatMemberAdded", to: encoder)
+		case .eventGroupChatMemberJoined(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.moderation.subscribeModEvents#eventGroupChatMemberJoined", to: encoder)
+		case .eventGroupChatJoinRequest(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.moderation.subscribeModEvents#eventGroupChatJoinRequest", to: encoder)
+		case .eventGroupChatJoinRequestApproved(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.moderation.subscribeModEvents#eventGroupChatJoinRequestApproved", to: encoder)
+		case .eventGroupChatJoinRequestRejected(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.moderation.subscribeModEvents#eventGroupChatJoinRequestRejected", to: encoder)
+		case .eventChatAccepted(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.moderation.subscribeModEvents#eventChatAccepted", to: encoder)
+		case .eventGroupChatMemberLeft(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.moderation.subscribeModEvents#eventGroupChatMemberLeft", to: encoder)
+		case .eventGroupChatUpdated(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.moderation.subscribeModEvents#eventGroupChatUpdated", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
+public struct ChatBskyModerationSubscribeModEventsParameters: Codable, Sendable, Equatable {
+	public let cursor: String?
+
+	public init(
+		cursor: String? = nil
+	) {
+		self.cursor = cursor
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		if let value = cursor {
+			value.appendQueryItems(named: "cursor", to: &items)
+		}
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
 	}
 }
 

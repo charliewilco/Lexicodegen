@@ -7,6 +7,18 @@
 import Foundation
 
 
+public enum ChatBskyConvoAcceptConvoError: String, Swift.Error, CaseIterable, Sendable {
+	case invalidConvo = "InvalidConvo"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
 public struct ChatBskyConvoAcceptConvoInput: Codable, Sendable, Equatable {
 	public let convoId: String
 
@@ -58,9 +70,11 @@ public struct ChatBskyConvoAcceptConvoOutput: Codable, Sendable, Equatable {
 
 
 public enum ChatBskyConvoAddReactionError: String, Swift.Error, CaseIterable, Sendable {
+	case invalidConvo = "InvalidConvo"
 	case reactionInvalidValue = "ReactionInvalidValue"
 	case reactionLimitReached = "ReactionLimitReached"
 	case reactionMessageDeleted = "ReactionMessageDeleted"
+	case reactionNotAllowed = "ReactionNotAllowed"
 
 	public init?(transportError: XRPCTransportError) {
 		guard let rawValue = transportError.payload?.error else {
@@ -133,27 +147,80 @@ public struct ChatBskyConvoAddReactionOutput: Codable, Sendable, Equatable {
 }
 
 
+public enum ChatBskyConvoDefsConvoKind: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case direct = "direct"
+	case group = "group"
+}
+
+
+public enum ChatBskyConvoDefsConvoLockStatus: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case unlocked = "unlocked"
+	case locked = "locked"
+	case lockedPermanently = "locked-permanently"
+}
+
+
+public struct ChatBskyConvoDefsConvoRef: Codable, Sendable, Equatable {
+	public let convoId: String
+	public let did: DID
+
+	public init(
+		convoId: String,
+		did: DID
+	) {
+		self.convoId = convoId
+		self.did = did
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		convoId = try container.decode(String.self, forKey: .convoId)
+		did = try container.decode(DID.self, forKey: .did)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(convoId, forKey: .convoId)
+		try container.encode(did, forKey: .did)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case convoId = "convoId"
+		case did = "did"
+	}
+}
+
+
+public enum ChatBskyConvoDefsConvoStatus: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case request = "request"
+	case accepted = "accepted"
+}
+
+
 public struct ChatBskyConvoDefsConvoView: Codable, Sendable, Equatable {
 	public let id: String
+	public let kind: ChatBskyConvoDefsConvoViewKind?
 	public let lastMessage: ChatBskyConvoDefsConvoViewLastMessage?
 	public let lastReaction: ChatBskyConvoDefsConvoViewLastReaction?
 	public let members: [ChatBskyActorDefsProfileViewBasic]
 	public let muted: Bool
 	public let rev: String
-	public let status: ChatBskyConvoDefsConvoViewStatus?
+	public let status: ChatBskyConvoDefsConvoStatus?
 	public let unreadCount: Int
 
 	public init(
 		id: String,
+		kind: ChatBskyConvoDefsConvoViewKind? = nil,
 		lastMessage: ChatBskyConvoDefsConvoViewLastMessage? = nil,
 		lastReaction: ChatBskyConvoDefsConvoViewLastReaction? = nil,
 		members: [ChatBskyActorDefsProfileViewBasic],
 		muted: Bool,
 		rev: String,
-		status: ChatBskyConvoDefsConvoViewStatus? = nil,
+		status: ChatBskyConvoDefsConvoStatus? = nil,
 		unreadCount: Int
 	) {
 		self.id = id
+		self.kind = kind
 		self.lastMessage = lastMessage
 		self.lastReaction = lastReaction
 		self.members = members
@@ -166,18 +233,20 @@ public struct ChatBskyConvoDefsConvoView: Codable, Sendable, Equatable {
 	public init(from decoder: Decoder) throws {
 		let container = try decoder.container(keyedBy: CodingKeys.self)
 		id = try container.decode(String.self, forKey: .id)
+		kind = try container.decodeIfPresent(ChatBskyConvoDefsConvoViewKind.self, forKey: .kind)
 		lastMessage = try container.decodeIfPresent(ChatBskyConvoDefsConvoViewLastMessage.self, forKey: .lastMessage)
 		lastReaction = try container.decodeIfPresent(ChatBskyConvoDefsConvoViewLastReaction.self, forKey: .lastReaction)
 		members = try container.decode([ChatBskyActorDefsProfileViewBasic].self, forKey: .members)
 		muted = try container.decode(Bool.self, forKey: .muted)
 		rev = try container.decode(String.self, forKey: .rev)
-		status = try container.decodeIfPresent(ChatBskyConvoDefsConvoViewStatus.self, forKey: .status)
+		status = try container.decodeIfPresent(ChatBskyConvoDefsConvoStatus.self, forKey: .status)
 		unreadCount = try container.decode(Int.self, forKey: .unreadCount)
 	}
 
 	public func encode(to encoder: Encoder) throws {
 		var container = encoder.container(keyedBy: CodingKeys.self)
 		try container.encode(id, forKey: .id)
+		try container.encodeIfPresent(kind, forKey: .kind)
 		try container.encodeIfPresent(lastMessage, forKey: .lastMessage)
 		try container.encodeIfPresent(lastReaction, forKey: .lastReaction)
 		try container.encode(members, forKey: .members)
@@ -189,6 +258,7 @@ public struct ChatBskyConvoDefsConvoView: Codable, Sendable, Equatable {
 
 	private enum CodingKeys: String, CodingKey {
 		case id = "id"
+		case kind = "kind"
 		case lastMessage = "lastMessage"
 		case lastReaction = "lastReaction"
 		case members = "members"
@@ -200,9 +270,34 @@ public struct ChatBskyConvoDefsConvoView: Codable, Sendable, Equatable {
 }
 
 
+public indirect enum ChatBskyConvoDefsConvoViewKind: Codable, Sendable, Equatable {
+	case directConvo(ChatBskyConvoDefsDirectConvo)
+	case groupConvo(ChatBskyConvoDefsGroupConvo)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "chat.bsky.convo.defs#directConvo": self = .directConvo(try ChatBskyConvoDefsDirectConvo(from: decoder))
+		case "chat.bsky.convo.defs#groupConvo": self = .groupConvo(try ChatBskyConvoDefsGroupConvo(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .directConvo(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#directConvo", to: encoder)
+		case .groupConvo(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#groupConvo", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
 public indirect enum ChatBskyConvoDefsConvoViewLastMessage: Codable, Sendable, Equatable {
 	case messageView(ChatBskyConvoDefsMessageView)
 	case deletedMessageView(ChatBskyConvoDefsDeletedMessageView)
+	case systemMessageView(ChatBskyConvoDefsSystemMessageView)
 	case unexpected(ATProtocolValueContainer)
 
 	public init(from decoder: Decoder) throws {
@@ -210,6 +305,7 @@ public indirect enum ChatBskyConvoDefsConvoViewLastMessage: Codable, Sendable, E
 		switch typeIdentifier {
 		case "chat.bsky.convo.defs#messageView": self = .messageView(try ChatBskyConvoDefsMessageView(from: decoder))
 		case "chat.bsky.convo.defs#deletedMessageView": self = .deletedMessageView(try ChatBskyConvoDefsDeletedMessageView(from: decoder))
+		case "chat.bsky.convo.defs#systemMessageView": self = .systemMessageView(try ChatBskyConvoDefsSystemMessageView(from: decoder))
 		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
 		}
 	}
@@ -218,6 +314,7 @@ public indirect enum ChatBskyConvoDefsConvoViewLastMessage: Codable, Sendable, E
 		switch self {
 		case .messageView(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#messageView", to: encoder)
 		case .deletedMessageView(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#deletedMessageView", to: encoder)
+		case .systemMessageView(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#systemMessageView", to: encoder)
 		case .unexpected(let value): try value.encode(to: encoder)
 		}
 	}
@@ -242,12 +339,6 @@ public indirect enum ChatBskyConvoDefsConvoViewLastReaction: Codable, Sendable, 
 		case .unexpected(let value): try value.encode(to: encoder)
 		}
 	}
-}
-
-
-public enum ChatBskyConvoDefsConvoViewStatus: String, Codable, CaseIterable, QueryParameterValue, Sendable {
-	case request = "request"
-	case accepted = "accepted"
 }
 
 
@@ -294,6 +385,93 @@ public struct ChatBskyConvoDefsDeletedMessageView: Codable, Sendable, Equatable 
 }
 
 
+public struct ChatBskyConvoDefsDirectConvo: Codable, Sendable, Equatable {
+
+	public init() {}
+
+	public init(from decoder: Decoder) throws {
+		_ = try decoder.container(keyedBy: CodingKeys.self)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		_ = encoder.container(keyedBy: CodingKeys.self)
+	}
+
+	private struct CodingKeys: CodingKey {
+		let stringValue = ""
+		init?(stringValue: String) {
+			return nil
+		}
+
+		let intValue: Int? = nil
+		init?(intValue: Int) {
+			return nil
+		}
+	}
+}
+
+
+public struct ChatBskyConvoDefsGroupConvo: Codable, Sendable, Equatable {
+	public let createdAt: ATProtocolDate
+	public let joinLink: ChatBskyGroupDefsJoinLinkView?
+	public let joinRequestCount: Int?
+	public let lockStatus: ChatBskyConvoDefsConvoLockStatus
+	public let memberCount: Int
+	public let memberLimit: Int
+	public let name: String
+
+	public init(
+		createdAt: ATProtocolDate,
+		joinLink: ChatBskyGroupDefsJoinLinkView? = nil,
+		joinRequestCount: Int? = nil,
+		lockStatus: ChatBskyConvoDefsConvoLockStatus,
+		memberCount: Int,
+		memberLimit: Int,
+		name: String
+	) {
+		self.createdAt = createdAt
+		self.joinLink = joinLink
+		self.joinRequestCount = joinRequestCount
+		self.lockStatus = lockStatus
+		self.memberCount = memberCount
+		self.memberLimit = memberLimit
+		self.name = name
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		createdAt = try container.decode(ATProtocolDate.self, forKey: .createdAt)
+		joinLink = try container.decodeIfPresent(ChatBskyGroupDefsJoinLinkView.self, forKey: .joinLink)
+		joinRequestCount = try container.decodeIfPresent(Int.self, forKey: .joinRequestCount)
+		lockStatus = try container.decode(ChatBskyConvoDefsConvoLockStatus.self, forKey: .lockStatus)
+		memberCount = try container.decode(Int.self, forKey: .memberCount)
+		memberLimit = try container.decode(Int.self, forKey: .memberLimit)
+		name = try container.decode(String.self, forKey: .name)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(createdAt, forKey: .createdAt)
+		try container.encodeIfPresent(joinLink, forKey: .joinLink)
+		try container.encodeIfPresent(joinRequestCount, forKey: .joinRequestCount)
+		try container.encode(lockStatus, forKey: .lockStatus)
+		try container.encode(memberCount, forKey: .memberCount)
+		try container.encode(memberLimit, forKey: .memberLimit)
+		try container.encode(name, forKey: .name)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case createdAt = "createdAt"
+		case joinLink = "joinLink"
+		case joinRequestCount = "joinRequestCount"
+		case lockStatus = "lockStatus"
+		case memberCount = "memberCount"
+		case memberLimit = "memberLimit"
+		case name = "name"
+	}
+}
+
+
 public struct ChatBskyConvoDefsLogAcceptConvo: Codable, Sendable, Equatable {
 	public let convoId: String
 	public let rev: String
@@ -325,29 +503,76 @@ public struct ChatBskyConvoDefsLogAcceptConvo: Codable, Sendable, Equatable {
 }
 
 
-public struct ChatBskyConvoDefsLogAddReaction: Codable, Sendable, Equatable {
+public struct ChatBskyConvoDefsLogAddMember: Codable, Sendable, Equatable {
 	public let convoId: String
-	public let message: ChatBskyConvoDefsConvoViewLastMessage
-	public let reaction: ChatBskyConvoDefsReactionView
+	public let message: ChatBskyConvoDefsSystemMessageView
+	public let relatedProfiles: [ChatBskyActorDefsProfileViewBasic]
 	public let rev: String
 
 	public init(
 		convoId: String,
-		message: ChatBskyConvoDefsConvoViewLastMessage,
-		reaction: ChatBskyConvoDefsReactionView,
+		message: ChatBskyConvoDefsSystemMessageView,
+		relatedProfiles: [ChatBskyActorDefsProfileViewBasic],
 		rev: String
 	) {
 		self.convoId = convoId
 		self.message = message
-		self.reaction = reaction
+		self.relatedProfiles = relatedProfiles
 		self.rev = rev
 	}
 
 	public init(from decoder: Decoder) throws {
 		let container = try decoder.container(keyedBy: CodingKeys.self)
 		convoId = try container.decode(String.self, forKey: .convoId)
-		message = try container.decode(ChatBskyConvoDefsConvoViewLastMessage.self, forKey: .message)
+		message = try container.decode(ChatBskyConvoDefsSystemMessageView.self, forKey: .message)
+		relatedProfiles = try container.decode([ChatBskyActorDefsProfileViewBasic].self, forKey: .relatedProfiles)
+		rev = try container.decode(String.self, forKey: .rev)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(convoId, forKey: .convoId)
+		try container.encode(message, forKey: .message)
+		try container.encode(relatedProfiles, forKey: .relatedProfiles)
+		try container.encode(rev, forKey: .rev)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case convoId = "convoId"
+		case message = "message"
+		case relatedProfiles = "relatedProfiles"
+		case rev = "rev"
+	}
+}
+
+
+public struct ChatBskyConvoDefsLogAddReaction: Codable, Sendable, Equatable {
+	public let convoId: String
+	public let message: ChatBskyConvoDefsLogAddReactionMessage
+	public let reaction: ChatBskyConvoDefsReactionView
+	public let relatedProfiles: [ChatBskyActorDefsProfileViewBasic]?
+	public let rev: String
+
+	public init(
+		convoId: String,
+		message: ChatBskyConvoDefsLogAddReactionMessage,
+		reaction: ChatBskyConvoDefsReactionView,
+		relatedProfiles: [ChatBskyActorDefsProfileViewBasic]? = nil,
+		rev: String
+	) {
+		self.convoId = convoId
+		self.message = message
+		self.reaction = reaction
+		self.relatedProfiles = relatedProfiles
+		self.rev = rev
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		convoId = try container.decode(String.self, forKey: .convoId)
+		message = try container.decode(ChatBskyConvoDefsLogAddReactionMessage.self, forKey: .message)
 		reaction = try container.decode(ChatBskyConvoDefsReactionView.self, forKey: .reaction)
+		relatedProfiles = try container.decodeIfPresent([ChatBskyActorDefsProfileViewBasic].self, forKey: .relatedProfiles)
 		rev = try container.decode(String.self, forKey: .rev)
 	}
 
@@ -356,6 +581,7 @@ public struct ChatBskyConvoDefsLogAddReaction: Codable, Sendable, Equatable {
 		try container.encode(convoId, forKey: .convoId)
 		try container.encode(message, forKey: .message)
 		try container.encode(reaction, forKey: .reaction)
+		try container.encodeIfPresent(relatedProfiles, forKey: .relatedProfiles)
 		try container.encode(rev, forKey: .rev)
 	}
 
@@ -363,6 +589,68 @@ public struct ChatBskyConvoDefsLogAddReaction: Codable, Sendable, Equatable {
 		case convoId = "convoId"
 		case message = "message"
 		case reaction = "reaction"
+		case relatedProfiles = "relatedProfiles"
+		case rev = "rev"
+	}
+}
+
+
+public indirect enum ChatBskyConvoDefsLogAddReactionMessage: Codable, Sendable, Equatable {
+	case messageView(ChatBskyConvoDefsMessageView)
+	case deletedMessageView(ChatBskyConvoDefsDeletedMessageView)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "chat.bsky.convo.defs#messageView": self = .messageView(try ChatBskyConvoDefsMessageView(from: decoder))
+		case "chat.bsky.convo.defs#deletedMessageView": self = .deletedMessageView(try ChatBskyConvoDefsDeletedMessageView(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .messageView(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#messageView", to: encoder)
+		case .deletedMessageView(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#deletedMessageView", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
+public struct ChatBskyConvoDefsLogApproveJoinRequest: Codable, Sendable, Equatable {
+	public let convoId: String
+	public let member: ChatBskyActorDefsProfileViewBasic
+	public let rev: String
+
+	public init(
+		convoId: String,
+		member: ChatBskyActorDefsProfileViewBasic,
+		rev: String
+	) {
+		self.convoId = convoId
+		self.member = member
+		self.rev = rev
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		convoId = try container.decode(String.self, forKey: .convoId)
+		member = try container.decode(ChatBskyActorDefsProfileViewBasic.self, forKey: .member)
+		rev = try container.decode(String.self, forKey: .rev)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(convoId, forKey: .convoId)
+		try container.encode(member, forKey: .member)
+		try container.encode(rev, forKey: .rev)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case convoId = "convoId"
+		case member = "member"
 		case rev = "rev"
 	}
 }
@@ -399,14 +687,14 @@ public struct ChatBskyConvoDefsLogBeginConvo: Codable, Sendable, Equatable {
 }
 
 
-public struct ChatBskyConvoDefsLogCreateMessage: Codable, Sendable, Equatable {
+public struct ChatBskyConvoDefsLogCreateJoinLink: Codable, Sendable, Equatable {
 	public let convoId: String
-	public let message: ChatBskyConvoDefsConvoViewLastMessage
+	public let message: ChatBskyConvoDefsSystemMessageView
 	public let rev: String
 
 	public init(
 		convoId: String,
-		message: ChatBskyConvoDefsConvoViewLastMessage,
+		message: ChatBskyConvoDefsSystemMessageView,
 		rev: String
 	) {
 		self.convoId = convoId
@@ -417,7 +705,7 @@ public struct ChatBskyConvoDefsLogCreateMessage: Codable, Sendable, Equatable {
 	public init(from decoder: Decoder) throws {
 		let container = try decoder.container(keyedBy: CodingKeys.self)
 		convoId = try container.decode(String.self, forKey: .convoId)
-		message = try container.decode(ChatBskyConvoDefsConvoViewLastMessage.self, forKey: .message)
+		message = try container.decode(ChatBskyConvoDefsSystemMessageView.self, forKey: .message)
 		rev = try container.decode(String.self, forKey: .rev)
 	}
 
@@ -436,14 +724,57 @@ public struct ChatBskyConvoDefsLogCreateMessage: Codable, Sendable, Equatable {
 }
 
 
-public struct ChatBskyConvoDefsLogDeleteMessage: Codable, Sendable, Equatable {
+public struct ChatBskyConvoDefsLogCreateMessage: Codable, Sendable, Equatable {
 	public let convoId: String
-	public let message: ChatBskyConvoDefsConvoViewLastMessage
+	public let message: ChatBskyConvoDefsLogAddReactionMessage
+	public let relatedProfiles: [ChatBskyActorDefsProfileViewBasic]?
 	public let rev: String
 
 	public init(
 		convoId: String,
-		message: ChatBskyConvoDefsConvoViewLastMessage,
+		message: ChatBskyConvoDefsLogAddReactionMessage,
+		relatedProfiles: [ChatBskyActorDefsProfileViewBasic]? = nil,
+		rev: String
+	) {
+		self.convoId = convoId
+		self.message = message
+		self.relatedProfiles = relatedProfiles
+		self.rev = rev
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		convoId = try container.decode(String.self, forKey: .convoId)
+		message = try container.decode(ChatBskyConvoDefsLogAddReactionMessage.self, forKey: .message)
+		relatedProfiles = try container.decodeIfPresent([ChatBskyActorDefsProfileViewBasic].self, forKey: .relatedProfiles)
+		rev = try container.decode(String.self, forKey: .rev)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(convoId, forKey: .convoId)
+		try container.encode(message, forKey: .message)
+		try container.encodeIfPresent(relatedProfiles, forKey: .relatedProfiles)
+		try container.encode(rev, forKey: .rev)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case convoId = "convoId"
+		case message = "message"
+		case relatedProfiles = "relatedProfiles"
+		case rev = "rev"
+	}
+}
+
+
+public struct ChatBskyConvoDefsLogDeleteMessage: Codable, Sendable, Equatable {
+	public let convoId: String
+	public let message: ChatBskyConvoDefsLogAddReactionMessage
+	public let rev: String
+
+	public init(
+		convoId: String,
+		message: ChatBskyConvoDefsLogAddReactionMessage,
 		rev: String
 	) {
 		self.convoId = convoId
@@ -454,7 +785,7 @@ public struct ChatBskyConvoDefsLogDeleteMessage: Codable, Sendable, Equatable {
 	public init(from decoder: Decoder) throws {
 		let container = try decoder.container(keyedBy: CodingKeys.self)
 		convoId = try container.decode(String.self, forKey: .convoId)
-		message = try container.decode(ChatBskyConvoDefsConvoViewLastMessage.self, forKey: .message)
+		message = try container.decode(ChatBskyConvoDefsLogAddReactionMessage.self, forKey: .message)
 		rev = try container.decode(String.self, forKey: .rev)
 	}
 
@@ -468,6 +799,191 @@ public struct ChatBskyConvoDefsLogDeleteMessage: Codable, Sendable, Equatable {
 	private enum CodingKeys: String, CodingKey {
 		case convoId = "convoId"
 		case message = "message"
+		case rev = "rev"
+	}
+}
+
+
+public struct ChatBskyConvoDefsLogDisableJoinLink: Codable, Sendable, Equatable {
+	public let convoId: String
+	public let message: ChatBskyConvoDefsSystemMessageView
+	public let rev: String
+
+	public init(
+		convoId: String,
+		message: ChatBskyConvoDefsSystemMessageView,
+		rev: String
+	) {
+		self.convoId = convoId
+		self.message = message
+		self.rev = rev
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		convoId = try container.decode(String.self, forKey: .convoId)
+		message = try container.decode(ChatBskyConvoDefsSystemMessageView.self, forKey: .message)
+		rev = try container.decode(String.self, forKey: .rev)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(convoId, forKey: .convoId)
+		try container.encode(message, forKey: .message)
+		try container.encode(rev, forKey: .rev)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case convoId = "convoId"
+		case message = "message"
+		case rev = "rev"
+	}
+}
+
+
+public struct ChatBskyConvoDefsLogEditGroup: Codable, Sendable, Equatable {
+	public let convoId: String
+	public let message: ChatBskyConvoDefsSystemMessageView
+	public let rev: String
+
+	public init(
+		convoId: String,
+		message: ChatBskyConvoDefsSystemMessageView,
+		rev: String
+	) {
+		self.convoId = convoId
+		self.message = message
+		self.rev = rev
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		convoId = try container.decode(String.self, forKey: .convoId)
+		message = try container.decode(ChatBskyConvoDefsSystemMessageView.self, forKey: .message)
+		rev = try container.decode(String.self, forKey: .rev)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(convoId, forKey: .convoId)
+		try container.encode(message, forKey: .message)
+		try container.encode(rev, forKey: .rev)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case convoId = "convoId"
+		case message = "message"
+		case rev = "rev"
+	}
+}
+
+
+public struct ChatBskyConvoDefsLogEditJoinLink: Codable, Sendable, Equatable {
+	public let convoId: String
+	public let message: ChatBskyConvoDefsSystemMessageView
+	public let rev: String
+
+	public init(
+		convoId: String,
+		message: ChatBskyConvoDefsSystemMessageView,
+		rev: String
+	) {
+		self.convoId = convoId
+		self.message = message
+		self.rev = rev
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		convoId = try container.decode(String.self, forKey: .convoId)
+		message = try container.decode(ChatBskyConvoDefsSystemMessageView.self, forKey: .message)
+		rev = try container.decode(String.self, forKey: .rev)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(convoId, forKey: .convoId)
+		try container.encode(message, forKey: .message)
+		try container.encode(rev, forKey: .rev)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case convoId = "convoId"
+		case message = "message"
+		case rev = "rev"
+	}
+}
+
+
+public struct ChatBskyConvoDefsLogEnableJoinLink: Codable, Sendable, Equatable {
+	public let convoId: String
+	public let message: ChatBskyConvoDefsSystemMessageView
+	public let rev: String
+
+	public init(
+		convoId: String,
+		message: ChatBskyConvoDefsSystemMessageView,
+		rev: String
+	) {
+		self.convoId = convoId
+		self.message = message
+		self.rev = rev
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		convoId = try container.decode(String.self, forKey: .convoId)
+		message = try container.decode(ChatBskyConvoDefsSystemMessageView.self, forKey: .message)
+		rev = try container.decode(String.self, forKey: .rev)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(convoId, forKey: .convoId)
+		try container.encode(message, forKey: .message)
+		try container.encode(rev, forKey: .rev)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case convoId = "convoId"
+		case message = "message"
+		case rev = "rev"
+	}
+}
+
+
+public struct ChatBskyConvoDefsLogIncomingJoinRequest: Codable, Sendable, Equatable {
+	public let convoId: String
+	public let member: ChatBskyActorDefsProfileViewBasic
+	public let rev: String
+
+	public init(
+		convoId: String,
+		member: ChatBskyActorDefsProfileViewBasic,
+		rev: String
+	) {
+		self.convoId = convoId
+		self.member = member
+		self.rev = rev
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		convoId = try container.decode(String.self, forKey: .convoId)
+		member = try container.decode(ChatBskyActorDefsProfileViewBasic.self, forKey: .member)
+		rev = try container.decode(String.self, forKey: .rev)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(convoId, forKey: .convoId)
+		try container.encode(member, forKey: .member)
+		try container.encode(rev, forKey: .rev)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case convoId = "convoId"
+		case member = "member"
 		case rev = "rev"
 	}
 }
@@ -504,6 +1020,178 @@ public struct ChatBskyConvoDefsLogLeaveConvo: Codable, Sendable, Equatable {
 }
 
 
+public struct ChatBskyConvoDefsLogLockConvo: Codable, Sendable, Equatable {
+	public let convoId: String
+	public let message: ChatBskyConvoDefsSystemMessageView
+	public let relatedProfiles: [ChatBskyActorDefsProfileViewBasic]
+	public let rev: String
+
+	public init(
+		convoId: String,
+		message: ChatBskyConvoDefsSystemMessageView,
+		relatedProfiles: [ChatBskyActorDefsProfileViewBasic],
+		rev: String
+	) {
+		self.convoId = convoId
+		self.message = message
+		self.relatedProfiles = relatedProfiles
+		self.rev = rev
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		convoId = try container.decode(String.self, forKey: .convoId)
+		message = try container.decode(ChatBskyConvoDefsSystemMessageView.self, forKey: .message)
+		relatedProfiles = try container.decode([ChatBskyActorDefsProfileViewBasic].self, forKey: .relatedProfiles)
+		rev = try container.decode(String.self, forKey: .rev)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(convoId, forKey: .convoId)
+		try container.encode(message, forKey: .message)
+		try container.encode(relatedProfiles, forKey: .relatedProfiles)
+		try container.encode(rev, forKey: .rev)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case convoId = "convoId"
+		case message = "message"
+		case relatedProfiles = "relatedProfiles"
+		case rev = "rev"
+	}
+}
+
+
+public struct ChatBskyConvoDefsLogLockConvoPermanently: Codable, Sendable, Equatable {
+	public let convoId: String
+	public let message: ChatBskyConvoDefsSystemMessageView
+	public let relatedProfiles: [ChatBskyActorDefsProfileViewBasic]
+	public let rev: String
+
+	public init(
+		convoId: String,
+		message: ChatBskyConvoDefsSystemMessageView,
+		relatedProfiles: [ChatBskyActorDefsProfileViewBasic],
+		rev: String
+	) {
+		self.convoId = convoId
+		self.message = message
+		self.relatedProfiles = relatedProfiles
+		self.rev = rev
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		convoId = try container.decode(String.self, forKey: .convoId)
+		message = try container.decode(ChatBskyConvoDefsSystemMessageView.self, forKey: .message)
+		relatedProfiles = try container.decode([ChatBskyActorDefsProfileViewBasic].self, forKey: .relatedProfiles)
+		rev = try container.decode(String.self, forKey: .rev)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(convoId, forKey: .convoId)
+		try container.encode(message, forKey: .message)
+		try container.encode(relatedProfiles, forKey: .relatedProfiles)
+		try container.encode(rev, forKey: .rev)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case convoId = "convoId"
+		case message = "message"
+		case relatedProfiles = "relatedProfiles"
+		case rev = "rev"
+	}
+}
+
+
+public struct ChatBskyConvoDefsLogMemberJoin: Codable, Sendable, Equatable {
+	public let convoId: String
+	public let message: ChatBskyConvoDefsSystemMessageView
+	public let relatedProfiles: [ChatBskyActorDefsProfileViewBasic]
+	public let rev: String
+
+	public init(
+		convoId: String,
+		message: ChatBskyConvoDefsSystemMessageView,
+		relatedProfiles: [ChatBskyActorDefsProfileViewBasic],
+		rev: String
+	) {
+		self.convoId = convoId
+		self.message = message
+		self.relatedProfiles = relatedProfiles
+		self.rev = rev
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		convoId = try container.decode(String.self, forKey: .convoId)
+		message = try container.decode(ChatBskyConvoDefsSystemMessageView.self, forKey: .message)
+		relatedProfiles = try container.decode([ChatBskyActorDefsProfileViewBasic].self, forKey: .relatedProfiles)
+		rev = try container.decode(String.self, forKey: .rev)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(convoId, forKey: .convoId)
+		try container.encode(message, forKey: .message)
+		try container.encode(relatedProfiles, forKey: .relatedProfiles)
+		try container.encode(rev, forKey: .rev)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case convoId = "convoId"
+		case message = "message"
+		case relatedProfiles = "relatedProfiles"
+		case rev = "rev"
+	}
+}
+
+
+public struct ChatBskyConvoDefsLogMemberLeave: Codable, Sendable, Equatable {
+	public let convoId: String
+	public let message: ChatBskyConvoDefsSystemMessageView
+	public let relatedProfiles: [ChatBskyActorDefsProfileViewBasic]
+	public let rev: String
+
+	public init(
+		convoId: String,
+		message: ChatBskyConvoDefsSystemMessageView,
+		relatedProfiles: [ChatBskyActorDefsProfileViewBasic],
+		rev: String
+	) {
+		self.convoId = convoId
+		self.message = message
+		self.relatedProfiles = relatedProfiles
+		self.rev = rev
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		convoId = try container.decode(String.self, forKey: .convoId)
+		message = try container.decode(ChatBskyConvoDefsSystemMessageView.self, forKey: .message)
+		relatedProfiles = try container.decode([ChatBskyActorDefsProfileViewBasic].self, forKey: .relatedProfiles)
+		rev = try container.decode(String.self, forKey: .rev)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(convoId, forKey: .convoId)
+		try container.encode(message, forKey: .message)
+		try container.encode(relatedProfiles, forKey: .relatedProfiles)
+		try container.encode(rev, forKey: .rev)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case convoId = "convoId"
+		case message = "message"
+		case relatedProfiles = "relatedProfiles"
+		case rev = "rev"
+	}
+}
+
+
 public struct ChatBskyConvoDefsLogMuteConvo: Codable, Sendable, Equatable {
 	public let convoId: String
 	public let rev: String
@@ -530,6 +1218,74 @@ public struct ChatBskyConvoDefsLogMuteConvo: Codable, Sendable, Equatable {
 
 	private enum CodingKeys: String, CodingKey {
 		case convoId = "convoId"
+		case rev = "rev"
+	}
+}
+
+
+public struct ChatBskyConvoDefsLogOutgoingJoinRequest: Codable, Sendable, Equatable {
+	public let convoId: String
+	public let rev: String
+
+	public init(
+		convoId: String,
+		rev: String
+	) {
+		self.convoId = convoId
+		self.rev = rev
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		convoId = try container.decode(String.self, forKey: .convoId)
+		rev = try container.decode(String.self, forKey: .rev)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(convoId, forKey: .convoId)
+		try container.encode(rev, forKey: .rev)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case convoId = "convoId"
+		case rev = "rev"
+	}
+}
+
+
+public struct ChatBskyConvoDefsLogReadConvo: Codable, Sendable, Equatable {
+	public let convoId: String
+	public let message: ChatBskyConvoDefsConvoViewLastMessage
+	public let rev: String
+
+	public init(
+		convoId: String,
+		message: ChatBskyConvoDefsConvoViewLastMessage,
+		rev: String
+	) {
+		self.convoId = convoId
+		self.message = message
+		self.rev = rev
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		convoId = try container.decode(String.self, forKey: .convoId)
+		message = try container.decode(ChatBskyConvoDefsConvoViewLastMessage.self, forKey: .message)
+		rev = try container.decode(String.self, forKey: .rev)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(convoId, forKey: .convoId)
+		try container.encode(message, forKey: .message)
+		try container.encode(rev, forKey: .rev)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case convoId = "convoId"
+		case message = "message"
 		case rev = "rev"
 	}
 }
@@ -572,29 +1328,113 @@ public struct ChatBskyConvoDefsLogReadMessage: Codable, Sendable, Equatable {
 }
 
 
-public struct ChatBskyConvoDefsLogRemoveReaction: Codable, Sendable, Equatable {
+public struct ChatBskyConvoDefsLogRejectJoinRequest: Codable, Sendable, Equatable {
 	public let convoId: String
-	public let message: ChatBskyConvoDefsConvoViewLastMessage
-	public let reaction: ChatBskyConvoDefsReactionView
+	public let member: ChatBskyActorDefsProfileViewBasic
 	public let rev: String
 
 	public init(
 		convoId: String,
-		message: ChatBskyConvoDefsConvoViewLastMessage,
-		reaction: ChatBskyConvoDefsReactionView,
+		member: ChatBskyActorDefsProfileViewBasic,
 		rev: String
 	) {
 		self.convoId = convoId
-		self.message = message
-		self.reaction = reaction
+		self.member = member
 		self.rev = rev
 	}
 
 	public init(from decoder: Decoder) throws {
 		let container = try decoder.container(keyedBy: CodingKeys.self)
 		convoId = try container.decode(String.self, forKey: .convoId)
-		message = try container.decode(ChatBskyConvoDefsConvoViewLastMessage.self, forKey: .message)
+		member = try container.decode(ChatBskyActorDefsProfileViewBasic.self, forKey: .member)
+		rev = try container.decode(String.self, forKey: .rev)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(convoId, forKey: .convoId)
+		try container.encode(member, forKey: .member)
+		try container.encode(rev, forKey: .rev)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case convoId = "convoId"
+		case member = "member"
+		case rev = "rev"
+	}
+}
+
+
+public struct ChatBskyConvoDefsLogRemoveMember: Codable, Sendable, Equatable {
+	public let convoId: String
+	public let message: ChatBskyConvoDefsSystemMessageView
+	public let relatedProfiles: [ChatBskyActorDefsProfileViewBasic]
+	public let rev: String
+
+	public init(
+		convoId: String,
+		message: ChatBskyConvoDefsSystemMessageView,
+		relatedProfiles: [ChatBskyActorDefsProfileViewBasic],
+		rev: String
+	) {
+		self.convoId = convoId
+		self.message = message
+		self.relatedProfiles = relatedProfiles
+		self.rev = rev
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		convoId = try container.decode(String.self, forKey: .convoId)
+		message = try container.decode(ChatBskyConvoDefsSystemMessageView.self, forKey: .message)
+		relatedProfiles = try container.decode([ChatBskyActorDefsProfileViewBasic].self, forKey: .relatedProfiles)
+		rev = try container.decode(String.self, forKey: .rev)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(convoId, forKey: .convoId)
+		try container.encode(message, forKey: .message)
+		try container.encode(relatedProfiles, forKey: .relatedProfiles)
+		try container.encode(rev, forKey: .rev)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case convoId = "convoId"
+		case message = "message"
+		case relatedProfiles = "relatedProfiles"
+		case rev = "rev"
+	}
+}
+
+
+public struct ChatBskyConvoDefsLogRemoveReaction: Codable, Sendable, Equatable {
+	public let convoId: String
+	public let message: ChatBskyConvoDefsLogAddReactionMessage
+	public let reaction: ChatBskyConvoDefsReactionView
+	public let relatedProfiles: [ChatBskyActorDefsProfileViewBasic]?
+	public let rev: String
+
+	public init(
+		convoId: String,
+		message: ChatBskyConvoDefsLogAddReactionMessage,
+		reaction: ChatBskyConvoDefsReactionView,
+		relatedProfiles: [ChatBskyActorDefsProfileViewBasic]? = nil,
+		rev: String
+	) {
+		self.convoId = convoId
+		self.message = message
+		self.reaction = reaction
+		self.relatedProfiles = relatedProfiles
+		self.rev = rev
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		convoId = try container.decode(String.self, forKey: .convoId)
+		message = try container.decode(ChatBskyConvoDefsLogAddReactionMessage.self, forKey: .message)
 		reaction = try container.decode(ChatBskyConvoDefsReactionView.self, forKey: .reaction)
+		relatedProfiles = try container.decodeIfPresent([ChatBskyActorDefsProfileViewBasic].self, forKey: .relatedProfiles)
 		rev = try container.decode(String.self, forKey: .rev)
 	}
 
@@ -603,6 +1443,7 @@ public struct ChatBskyConvoDefsLogRemoveReaction: Codable, Sendable, Equatable {
 		try container.encode(convoId, forKey: .convoId)
 		try container.encode(message, forKey: .message)
 		try container.encode(reaction, forKey: .reaction)
+		try container.encodeIfPresent(relatedProfiles, forKey: .relatedProfiles)
 		try container.encode(rev, forKey: .rev)
 	}
 
@@ -610,6 +1451,50 @@ public struct ChatBskyConvoDefsLogRemoveReaction: Codable, Sendable, Equatable {
 		case convoId = "convoId"
 		case message = "message"
 		case reaction = "reaction"
+		case relatedProfiles = "relatedProfiles"
+		case rev = "rev"
+	}
+}
+
+
+public struct ChatBskyConvoDefsLogUnlockConvo: Codable, Sendable, Equatable {
+	public let convoId: String
+	public let message: ChatBskyConvoDefsSystemMessageView
+	public let relatedProfiles: [ChatBskyActorDefsProfileViewBasic]
+	public let rev: String
+
+	public init(
+		convoId: String,
+		message: ChatBskyConvoDefsSystemMessageView,
+		relatedProfiles: [ChatBskyActorDefsProfileViewBasic],
+		rev: String
+	) {
+		self.convoId = convoId
+		self.message = message
+		self.relatedProfiles = relatedProfiles
+		self.rev = rev
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		convoId = try container.decode(String.self, forKey: .convoId)
+		message = try container.decode(ChatBskyConvoDefsSystemMessageView.self, forKey: .message)
+		relatedProfiles = try container.decode([ChatBskyActorDefsProfileViewBasic].self, forKey: .relatedProfiles)
+		rev = try container.decode(String.self, forKey: .rev)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(convoId, forKey: .convoId)
+		try container.encode(message, forKey: .message)
+		try container.encode(relatedProfiles, forKey: .relatedProfiles)
+		try container.encode(rev, forKey: .rev)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case convoId = "convoId"
+		case message = "message"
+		case relatedProfiles = "relatedProfiles"
 		case rev = "rev"
 	}
 }
@@ -947,6 +1832,481 @@ public struct ChatBskyConvoDefsReactionViewSender: Codable, Sendable, Equatable 
 }
 
 
+public struct ChatBskyConvoDefsSystemMessageDataAddMember: Codable, Sendable, Equatable {
+	public let addedBy: ChatBskyConvoDefsSystemMessageReferredUser
+	public let member: ChatBskyConvoDefsSystemMessageReferredUser
+	public let role: ChatBskyActorDefsMemberRole
+
+	public init(
+		addedBy: ChatBskyConvoDefsSystemMessageReferredUser,
+		member: ChatBskyConvoDefsSystemMessageReferredUser,
+		role: ChatBskyActorDefsMemberRole
+	) {
+		self.addedBy = addedBy
+		self.member = member
+		self.role = role
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		addedBy = try container.decode(ChatBskyConvoDefsSystemMessageReferredUser.self, forKey: .addedBy)
+		member = try container.decode(ChatBskyConvoDefsSystemMessageReferredUser.self, forKey: .member)
+		role = try container.decode(ChatBskyActorDefsMemberRole.self, forKey: .role)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(addedBy, forKey: .addedBy)
+		try container.encode(member, forKey: .member)
+		try container.encode(role, forKey: .role)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case addedBy = "addedBy"
+		case member = "member"
+		case role = "role"
+	}
+}
+
+
+public struct ChatBskyConvoDefsSystemMessageDataCreateJoinLink: Codable, Sendable, Equatable {
+
+	public init() {}
+
+	public init(from decoder: Decoder) throws {
+		_ = try decoder.container(keyedBy: CodingKeys.self)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		_ = encoder.container(keyedBy: CodingKeys.self)
+	}
+
+	private struct CodingKeys: CodingKey {
+		let stringValue = ""
+		init?(stringValue: String) {
+			return nil
+		}
+
+		let intValue: Int? = nil
+		init?(intValue: Int) {
+			return nil
+		}
+	}
+}
+
+
+public struct ChatBskyConvoDefsSystemMessageDataDisableJoinLink: Codable, Sendable, Equatable {
+
+	public init() {}
+
+	public init(from decoder: Decoder) throws {
+		_ = try decoder.container(keyedBy: CodingKeys.self)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		_ = encoder.container(keyedBy: CodingKeys.self)
+	}
+
+	private struct CodingKeys: CodingKey {
+		let stringValue = ""
+		init?(stringValue: String) {
+			return nil
+		}
+
+		let intValue: Int? = nil
+		init?(intValue: Int) {
+			return nil
+		}
+	}
+}
+
+
+public struct ChatBskyConvoDefsSystemMessageDataEditGroup: Codable, Sendable, Equatable {
+	public let newName: String?
+	public let oldName: String?
+
+	public init(
+		newName: String? = nil,
+		oldName: String? = nil
+	) {
+		self.newName = newName
+		self.oldName = oldName
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		newName = try container.decodeIfPresent(String.self, forKey: .newName)
+		oldName = try container.decodeIfPresent(String.self, forKey: .oldName)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(newName, forKey: .newName)
+		try container.encodeIfPresent(oldName, forKey: .oldName)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case newName = "newName"
+		case oldName = "oldName"
+	}
+}
+
+
+public struct ChatBskyConvoDefsSystemMessageDataEditJoinLink: Codable, Sendable, Equatable {
+
+	public init() {}
+
+	public init(from decoder: Decoder) throws {
+		_ = try decoder.container(keyedBy: CodingKeys.self)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		_ = encoder.container(keyedBy: CodingKeys.self)
+	}
+
+	private struct CodingKeys: CodingKey {
+		let stringValue = ""
+		init?(stringValue: String) {
+			return nil
+		}
+
+		let intValue: Int? = nil
+		init?(intValue: Int) {
+			return nil
+		}
+	}
+}
+
+
+public struct ChatBskyConvoDefsSystemMessageDataEnableJoinLink: Codable, Sendable, Equatable {
+
+	public init() {}
+
+	public init(from decoder: Decoder) throws {
+		_ = try decoder.container(keyedBy: CodingKeys.self)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		_ = encoder.container(keyedBy: CodingKeys.self)
+	}
+
+	private struct CodingKeys: CodingKey {
+		let stringValue = ""
+		init?(stringValue: String) {
+			return nil
+		}
+
+		let intValue: Int? = nil
+		init?(intValue: Int) {
+			return nil
+		}
+	}
+}
+
+
+public struct ChatBskyConvoDefsSystemMessageDataLockConvo: Codable, Sendable, Equatable {
+	public let lockedBy: ChatBskyConvoDefsSystemMessageReferredUser
+
+	public init(
+		lockedBy: ChatBskyConvoDefsSystemMessageReferredUser
+	) {
+		self.lockedBy = lockedBy
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		lockedBy = try container.decode(ChatBskyConvoDefsSystemMessageReferredUser.self, forKey: .lockedBy)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(lockedBy, forKey: .lockedBy)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case lockedBy = "lockedBy"
+	}
+}
+
+
+public struct ChatBskyConvoDefsSystemMessageDataLockConvoPermanently: Codable, Sendable, Equatable {
+	public let lockedBy: ChatBskyConvoDefsSystemMessageReferredUser
+
+	public init(
+		lockedBy: ChatBskyConvoDefsSystemMessageReferredUser
+	) {
+		self.lockedBy = lockedBy
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		lockedBy = try container.decode(ChatBskyConvoDefsSystemMessageReferredUser.self, forKey: .lockedBy)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(lockedBy, forKey: .lockedBy)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case lockedBy = "lockedBy"
+	}
+}
+
+
+public struct ChatBskyConvoDefsSystemMessageDataMemberJoin: Codable, Sendable, Equatable {
+	public let approvedBy: ChatBskyConvoDefsSystemMessageReferredUser?
+	public let member: ChatBskyConvoDefsSystemMessageReferredUser
+	public let role: ChatBskyActorDefsMemberRole
+
+	public init(
+		approvedBy: ChatBskyConvoDefsSystemMessageReferredUser? = nil,
+		member: ChatBskyConvoDefsSystemMessageReferredUser,
+		role: ChatBskyActorDefsMemberRole
+	) {
+		self.approvedBy = approvedBy
+		self.member = member
+		self.role = role
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		approvedBy = try container.decodeIfPresent(ChatBskyConvoDefsSystemMessageReferredUser.self, forKey: .approvedBy)
+		member = try container.decode(ChatBskyConvoDefsSystemMessageReferredUser.self, forKey: .member)
+		role = try container.decode(ChatBskyActorDefsMemberRole.self, forKey: .role)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(approvedBy, forKey: .approvedBy)
+		try container.encode(member, forKey: .member)
+		try container.encode(role, forKey: .role)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case approvedBy = "approvedBy"
+		case member = "member"
+		case role = "role"
+	}
+}
+
+
+public struct ChatBskyConvoDefsSystemMessageDataMemberLeave: Codable, Sendable, Equatable {
+	public let member: ChatBskyConvoDefsSystemMessageReferredUser
+
+	public init(
+		member: ChatBskyConvoDefsSystemMessageReferredUser
+	) {
+		self.member = member
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		member = try container.decode(ChatBskyConvoDefsSystemMessageReferredUser.self, forKey: .member)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(member, forKey: .member)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case member = "member"
+	}
+}
+
+
+public struct ChatBskyConvoDefsSystemMessageDataRemoveMember: Codable, Sendable, Equatable {
+	public let member: ChatBskyConvoDefsSystemMessageReferredUser
+	public let removedBy: ChatBskyConvoDefsSystemMessageReferredUser
+
+	public init(
+		member: ChatBskyConvoDefsSystemMessageReferredUser,
+		removedBy: ChatBskyConvoDefsSystemMessageReferredUser
+	) {
+		self.member = member
+		self.removedBy = removedBy
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		member = try container.decode(ChatBskyConvoDefsSystemMessageReferredUser.self, forKey: .member)
+		removedBy = try container.decode(ChatBskyConvoDefsSystemMessageReferredUser.self, forKey: .removedBy)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(member, forKey: .member)
+		try container.encode(removedBy, forKey: .removedBy)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case member = "member"
+		case removedBy = "removedBy"
+	}
+}
+
+
+public struct ChatBskyConvoDefsSystemMessageDataUnlockConvo: Codable, Sendable, Equatable {
+	public let unlockedBy: ChatBskyConvoDefsSystemMessageReferredUser
+
+	public init(
+		unlockedBy: ChatBskyConvoDefsSystemMessageReferredUser
+	) {
+		self.unlockedBy = unlockedBy
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		unlockedBy = try container.decode(ChatBskyConvoDefsSystemMessageReferredUser.self, forKey: .unlockedBy)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(unlockedBy, forKey: .unlockedBy)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case unlockedBy = "unlockedBy"
+	}
+}
+
+
+public struct ChatBskyConvoDefsSystemMessageReferredUser: Codable, Sendable, Equatable {
+	public let did: DID
+
+	public init(
+		did: DID
+	) {
+		self.did = did
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		did = try container.decode(DID.self, forKey: .did)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(did, forKey: .did)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case did = "did"
+	}
+}
+
+
+public struct ChatBskyConvoDefsSystemMessageView: Codable, Sendable, Equatable {
+	public let data: ChatBskyConvoDefsSystemMessageViewData
+	public let id: String
+	public let rev: String
+	public let sentAt: ATProtocolDate
+
+	public init(
+		data: ChatBskyConvoDefsSystemMessageViewData,
+		id: String,
+		rev: String,
+		sentAt: ATProtocolDate
+	) {
+		self.data = data
+		self.id = id
+		self.rev = rev
+		self.sentAt = sentAt
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		data = try container.decode(ChatBskyConvoDefsSystemMessageViewData.self, forKey: .data)
+		id = try container.decode(String.self, forKey: .id)
+		rev = try container.decode(String.self, forKey: .rev)
+		sentAt = try container.decode(ATProtocolDate.self, forKey: .sentAt)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(data, forKey: .data)
+		try container.encode(id, forKey: .id)
+		try container.encode(rev, forKey: .rev)
+		try container.encode(sentAt, forKey: .sentAt)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case data = "data"
+		case id = "id"
+		case rev = "rev"
+		case sentAt = "sentAt"
+	}
+}
+
+
+public indirect enum ChatBskyConvoDefsSystemMessageViewData: Codable, Sendable, Equatable {
+	case systemMessageDataAddMember(ChatBskyConvoDefsSystemMessageDataAddMember)
+	case systemMessageDataRemoveMember(ChatBskyConvoDefsSystemMessageDataRemoveMember)
+	case systemMessageDataMemberJoin(ChatBskyConvoDefsSystemMessageDataMemberJoin)
+	case systemMessageDataMemberLeave(ChatBskyConvoDefsSystemMessageDataMemberLeave)
+	case systemMessageDataLockConvo(ChatBskyConvoDefsSystemMessageDataLockConvo)
+	case systemMessageDataUnlockConvo(ChatBskyConvoDefsSystemMessageDataUnlockConvo)
+	case systemMessageDataLockConvoPermanently(ChatBskyConvoDefsSystemMessageDataLockConvoPermanently)
+	case systemMessageDataEditGroup(ChatBskyConvoDefsSystemMessageDataEditGroup)
+	case systemMessageDataCreateJoinLink(ChatBskyConvoDefsSystemMessageDataCreateJoinLink)
+	case systemMessageDataEditJoinLink(ChatBskyConvoDefsSystemMessageDataEditJoinLink)
+	case systemMessageDataEnableJoinLink(ChatBskyConvoDefsSystemMessageDataEnableJoinLink)
+	case systemMessageDataDisableJoinLink(ChatBskyConvoDefsSystemMessageDataDisableJoinLink)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "chat.bsky.convo.defs#systemMessageDataAddMember": self = .systemMessageDataAddMember(try ChatBskyConvoDefsSystemMessageDataAddMember(from: decoder))
+		case "chat.bsky.convo.defs#systemMessageDataRemoveMember": self = .systemMessageDataRemoveMember(try ChatBskyConvoDefsSystemMessageDataRemoveMember(from: decoder))
+		case "chat.bsky.convo.defs#systemMessageDataMemberJoin": self = .systemMessageDataMemberJoin(try ChatBskyConvoDefsSystemMessageDataMemberJoin(from: decoder))
+		case "chat.bsky.convo.defs#systemMessageDataMemberLeave": self = .systemMessageDataMemberLeave(try ChatBskyConvoDefsSystemMessageDataMemberLeave(from: decoder))
+		case "chat.bsky.convo.defs#systemMessageDataLockConvo": self = .systemMessageDataLockConvo(try ChatBskyConvoDefsSystemMessageDataLockConvo(from: decoder))
+		case "chat.bsky.convo.defs#systemMessageDataUnlockConvo": self = .systemMessageDataUnlockConvo(try ChatBskyConvoDefsSystemMessageDataUnlockConvo(from: decoder))
+		case "chat.bsky.convo.defs#systemMessageDataLockConvoPermanently": self = .systemMessageDataLockConvoPermanently(try ChatBskyConvoDefsSystemMessageDataLockConvoPermanently(from: decoder))
+		case "chat.bsky.convo.defs#systemMessageDataEditGroup": self = .systemMessageDataEditGroup(try ChatBskyConvoDefsSystemMessageDataEditGroup(from: decoder))
+		case "chat.bsky.convo.defs#systemMessageDataCreateJoinLink": self = .systemMessageDataCreateJoinLink(try ChatBskyConvoDefsSystemMessageDataCreateJoinLink(from: decoder))
+		case "chat.bsky.convo.defs#systemMessageDataEditJoinLink": self = .systemMessageDataEditJoinLink(try ChatBskyConvoDefsSystemMessageDataEditJoinLink(from: decoder))
+		case "chat.bsky.convo.defs#systemMessageDataEnableJoinLink": self = .systemMessageDataEnableJoinLink(try ChatBskyConvoDefsSystemMessageDataEnableJoinLink(from: decoder))
+		case "chat.bsky.convo.defs#systemMessageDataDisableJoinLink": self = .systemMessageDataDisableJoinLink(try ChatBskyConvoDefsSystemMessageDataDisableJoinLink(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .systemMessageDataAddMember(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#systemMessageDataAddMember", to: encoder)
+		case .systemMessageDataRemoveMember(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#systemMessageDataRemoveMember", to: encoder)
+		case .systemMessageDataMemberJoin(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#systemMessageDataMemberJoin", to: encoder)
+		case .systemMessageDataMemberLeave(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#systemMessageDataMemberLeave", to: encoder)
+		case .systemMessageDataLockConvo(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#systemMessageDataLockConvo", to: encoder)
+		case .systemMessageDataUnlockConvo(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#systemMessageDataUnlockConvo", to: encoder)
+		case .systemMessageDataLockConvoPermanently(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#systemMessageDataLockConvoPermanently", to: encoder)
+		case .systemMessageDataEditGroup(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#systemMessageDataEditGroup", to: encoder)
+		case .systemMessageDataCreateJoinLink(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#systemMessageDataCreateJoinLink", to: encoder)
+		case .systemMessageDataEditJoinLink(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#systemMessageDataEditJoinLink", to: encoder)
+		case .systemMessageDataEnableJoinLink(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#systemMessageDataEnableJoinLink", to: encoder)
+		case .systemMessageDataDisableJoinLink(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#systemMessageDataDisableJoinLink", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
+public enum ChatBskyConvoDeleteMessageForSelfError: String, Swift.Error, CaseIterable, Sendable {
+	case invalidConvo = "InvalidConvo"
+	case messageDeleteNotAllowed = "MessageDeleteNotAllowed"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
 public struct ChatBskyConvoDeleteMessageForSelfInput: Codable, Sendable, Equatable {
 	public let convoId: String
 	public let messageId: String
@@ -1043,6 +2403,34 @@ public struct ChatBskyConvoGetConvoAvailabilityParameters: Codable, Sendable, Eq
 }
 
 
+public enum ChatBskyConvoGetConvoError: String, Swift.Error, CaseIterable, Sendable {
+	case invalidConvo = "InvalidConvo"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public enum ChatBskyConvoGetConvoForMembersError: String, Swift.Error, CaseIterable, Sendable {
+	case accountSuspended = "AccountSuspended"
+	case blockedActor = "BlockedActor"
+	case messagesDisabled = "MessagesDisabled"
+	case notFollowedBySender = "NotFollowedBySender"
+	case recipientNotFound = "RecipientNotFound"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
 public struct ChatBskyConvoGetConvoForMembersOutput: Codable, Sendable, Equatable {
 	public let convo: ChatBskyConvoDefsConvoView
 
@@ -1095,6 +2483,98 @@ public struct ChatBskyConvoGetConvoForMembersParameters: Codable, Sendable, Equa
 
 	private enum CodingKeys: String, CodingKey {
 		case members = "members"
+	}
+}
+
+
+public enum ChatBskyConvoGetConvoMembersError: String, Swift.Error, CaseIterable, Sendable {
+	case invalidConvo = "InvalidConvo"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ChatBskyConvoGetConvoMembersOutput: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let members: [ChatBskyActorDefsProfileViewBasic]
+
+	public init(
+		cursor: String? = nil,
+		members: [ChatBskyActorDefsProfileViewBasic]
+	) {
+		self.cursor = cursor
+		self.members = members
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		members = try container.decode([ChatBskyActorDefsProfileViewBasic].self, forKey: .members)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encode(members, forKey: .members)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case members = "members"
+	}
+}
+
+
+public struct ChatBskyConvoGetConvoMembersParameters: Codable, Sendable, Equatable {
+	public let convoId: String
+	public let cursor: String?
+	public let limit: Int?
+
+	public init(
+		convoId: String,
+		cursor: String? = nil,
+		limit: Int? = nil
+	) {
+		self.convoId = convoId
+		self.cursor = cursor
+		self.limit = limit
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		convoId = try container.decode(String.self, forKey: .convoId)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		limit = try container.decodeIfPresent(Int.self, forKey: .limit)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(convoId, forKey: .convoId)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encodeIfPresent(limit, forKey: .limit)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		convoId.appendQueryItems(named: "convoId", to: &items)
+		if let value = cursor {
+			value.appendQueryItems(named: "cursor", to: &items)
+		}
+		if let value = limit {
+			value.appendQueryItems(named: "limit", to: &items)
+		}
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case convoId = "convoId"
+		case cursor = "cursor"
+		case limit = "limit"
 	}
 }
 
@@ -1197,6 +2677,23 @@ public indirect enum ChatBskyConvoGetLogOutputLogsItem: Codable, Sendable, Equat
 	case logReadMessage(ChatBskyConvoDefsLogReadMessage)
 	case logAddReaction(ChatBskyConvoDefsLogAddReaction)
 	case logRemoveReaction(ChatBskyConvoDefsLogRemoveReaction)
+	case logReadConvo(ChatBskyConvoDefsLogReadConvo)
+	case logAddMember(ChatBskyConvoDefsLogAddMember)
+	case logRemoveMember(ChatBskyConvoDefsLogRemoveMember)
+	case logMemberJoin(ChatBskyConvoDefsLogMemberJoin)
+	case logMemberLeave(ChatBskyConvoDefsLogMemberLeave)
+	case logLockConvo(ChatBskyConvoDefsLogLockConvo)
+	case logUnlockConvo(ChatBskyConvoDefsLogUnlockConvo)
+	case logLockConvoPermanently(ChatBskyConvoDefsLogLockConvoPermanently)
+	case logEditGroup(ChatBskyConvoDefsLogEditGroup)
+	case logCreateJoinLink(ChatBskyConvoDefsLogCreateJoinLink)
+	case logEditJoinLink(ChatBskyConvoDefsLogEditJoinLink)
+	case logEnableJoinLink(ChatBskyConvoDefsLogEnableJoinLink)
+	case logDisableJoinLink(ChatBskyConvoDefsLogDisableJoinLink)
+	case logIncomingJoinRequest(ChatBskyConvoDefsLogIncomingJoinRequest)
+	case logApproveJoinRequest(ChatBskyConvoDefsLogApproveJoinRequest)
+	case logRejectJoinRequest(ChatBskyConvoDefsLogRejectJoinRequest)
+	case logOutgoingJoinRequest(ChatBskyConvoDefsLogOutgoingJoinRequest)
 	case unexpected(ATProtocolValueContainer)
 
 	public init(from decoder: Decoder) throws {
@@ -1212,6 +2709,23 @@ public indirect enum ChatBskyConvoGetLogOutputLogsItem: Codable, Sendable, Equat
 		case "chat.bsky.convo.defs#logReadMessage": self = .logReadMessage(try ChatBskyConvoDefsLogReadMessage(from: decoder))
 		case "chat.bsky.convo.defs#logAddReaction": self = .logAddReaction(try ChatBskyConvoDefsLogAddReaction(from: decoder))
 		case "chat.bsky.convo.defs#logRemoveReaction": self = .logRemoveReaction(try ChatBskyConvoDefsLogRemoveReaction(from: decoder))
+		case "chat.bsky.convo.defs#logReadConvo": self = .logReadConvo(try ChatBskyConvoDefsLogReadConvo(from: decoder))
+		case "chat.bsky.convo.defs#logAddMember": self = .logAddMember(try ChatBskyConvoDefsLogAddMember(from: decoder))
+		case "chat.bsky.convo.defs#logRemoveMember": self = .logRemoveMember(try ChatBskyConvoDefsLogRemoveMember(from: decoder))
+		case "chat.bsky.convo.defs#logMemberJoin": self = .logMemberJoin(try ChatBskyConvoDefsLogMemberJoin(from: decoder))
+		case "chat.bsky.convo.defs#logMemberLeave": self = .logMemberLeave(try ChatBskyConvoDefsLogMemberLeave(from: decoder))
+		case "chat.bsky.convo.defs#logLockConvo": self = .logLockConvo(try ChatBskyConvoDefsLogLockConvo(from: decoder))
+		case "chat.bsky.convo.defs#logUnlockConvo": self = .logUnlockConvo(try ChatBskyConvoDefsLogUnlockConvo(from: decoder))
+		case "chat.bsky.convo.defs#logLockConvoPermanently": self = .logLockConvoPermanently(try ChatBskyConvoDefsLogLockConvoPermanently(from: decoder))
+		case "chat.bsky.convo.defs#logEditGroup": self = .logEditGroup(try ChatBskyConvoDefsLogEditGroup(from: decoder))
+		case "chat.bsky.convo.defs#logCreateJoinLink": self = .logCreateJoinLink(try ChatBskyConvoDefsLogCreateJoinLink(from: decoder))
+		case "chat.bsky.convo.defs#logEditJoinLink": self = .logEditJoinLink(try ChatBskyConvoDefsLogEditJoinLink(from: decoder))
+		case "chat.bsky.convo.defs#logEnableJoinLink": self = .logEnableJoinLink(try ChatBskyConvoDefsLogEnableJoinLink(from: decoder))
+		case "chat.bsky.convo.defs#logDisableJoinLink": self = .logDisableJoinLink(try ChatBskyConvoDefsLogDisableJoinLink(from: decoder))
+		case "chat.bsky.convo.defs#logIncomingJoinRequest": self = .logIncomingJoinRequest(try ChatBskyConvoDefsLogIncomingJoinRequest(from: decoder))
+		case "chat.bsky.convo.defs#logApproveJoinRequest": self = .logApproveJoinRequest(try ChatBskyConvoDefsLogApproveJoinRequest(from: decoder))
+		case "chat.bsky.convo.defs#logRejectJoinRequest": self = .logRejectJoinRequest(try ChatBskyConvoDefsLogRejectJoinRequest(from: decoder))
+		case "chat.bsky.convo.defs#logOutgoingJoinRequest": self = .logOutgoingJoinRequest(try ChatBskyConvoDefsLogOutgoingJoinRequest(from: decoder))
 		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
 		}
 	}
@@ -1228,6 +2742,23 @@ public indirect enum ChatBskyConvoGetLogOutputLogsItem: Codable, Sendable, Equat
 		case .logReadMessage(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#logReadMessage", to: encoder)
 		case .logAddReaction(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#logAddReaction", to: encoder)
 		case .logRemoveReaction(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#logRemoveReaction", to: encoder)
+		case .logReadConvo(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#logReadConvo", to: encoder)
+		case .logAddMember(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#logAddMember", to: encoder)
+		case .logRemoveMember(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#logRemoveMember", to: encoder)
+		case .logMemberJoin(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#logMemberJoin", to: encoder)
+		case .logMemberLeave(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#logMemberLeave", to: encoder)
+		case .logLockConvo(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#logLockConvo", to: encoder)
+		case .logUnlockConvo(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#logUnlockConvo", to: encoder)
+		case .logLockConvoPermanently(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#logLockConvoPermanently", to: encoder)
+		case .logEditGroup(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#logEditGroup", to: encoder)
+		case .logCreateJoinLink(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#logCreateJoinLink", to: encoder)
+		case .logEditJoinLink(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#logEditJoinLink", to: encoder)
+		case .logEnableJoinLink(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#logEnableJoinLink", to: encoder)
+		case .logDisableJoinLink(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#logDisableJoinLink", to: encoder)
+		case .logIncomingJoinRequest(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#logIncomingJoinRequest", to: encoder)
+		case .logApproveJoinRequest(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#logApproveJoinRequest", to: encoder)
+		case .logRejectJoinRequest(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#logRejectJoinRequest", to: encoder)
+		case .logOutgoingJoinRequest(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#logOutgoingJoinRequest", to: encoder)
 		case .unexpected(let value): try value.encode(to: encoder)
 		}
 	}
@@ -1267,33 +2798,51 @@ public struct ChatBskyConvoGetLogParameters: Codable, Sendable, Equatable {
 }
 
 
+public enum ChatBskyConvoGetMessagesError: String, Swift.Error, CaseIterable, Sendable {
+	case invalidConvo = "InvalidConvo"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
 public struct ChatBskyConvoGetMessagesOutput: Codable, Sendable, Equatable {
 	public let cursor: String?
 	public let messages: [ChatBskyConvoDefsConvoViewLastMessage]
+	public let relatedProfiles: [ChatBskyActorDefsProfileViewBasic]?
 
 	public init(
 		cursor: String? = nil,
-		messages: [ChatBskyConvoDefsConvoViewLastMessage]
+		messages: [ChatBskyConvoDefsConvoViewLastMessage],
+		relatedProfiles: [ChatBskyActorDefsProfileViewBasic]? = nil
 	) {
 		self.cursor = cursor
 		self.messages = messages
+		self.relatedProfiles = relatedProfiles
 	}
 
 	public init(from decoder: Decoder) throws {
 		let container = try decoder.container(keyedBy: CodingKeys.self)
 		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
 		messages = try container.decode([ChatBskyConvoDefsConvoViewLastMessage].self, forKey: .messages)
+		relatedProfiles = try container.decodeIfPresent([ChatBskyActorDefsProfileViewBasic].self, forKey: .relatedProfiles)
 	}
 
 	public func encode(to encoder: Encoder) throws {
 		var container = encoder.container(keyedBy: CodingKeys.self)
 		try container.encodeIfPresent(cursor, forKey: .cursor)
 		try container.encode(messages, forKey: .messages)
+		try container.encodeIfPresent(relatedProfiles, forKey: .relatedProfiles)
 	}
 
 	private enum CodingKeys: String, CodingKey {
 		case cursor = "cursor"
 		case messages = "messages"
+		case relatedProfiles = "relatedProfiles"
 	}
 }
 
@@ -1343,6 +2892,19 @@ public struct ChatBskyConvoGetMessagesParameters: Codable, Sendable, Equatable {
 		case convoId = "convoId"
 		case cursor = "cursor"
 		case limit = "limit"
+	}
+}
+
+
+public enum ChatBskyConvoLeaveConvoError: String, Swift.Error, CaseIterable, Sendable {
+	case invalidConvo = "InvalidConvo"
+	case ownerCannotLeave = "OwnerCannotLeave"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
 	}
 }
 
@@ -1403,6 +2965,103 @@ public struct ChatBskyConvoLeaveConvoOutput: Codable, Sendable, Equatable {
 }
 
 
+public struct ChatBskyConvoListConvoRequestsOutput: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let requests: [ChatBskyConvoListConvoRequestsOutputRequestsItem]
+
+	public init(
+		cursor: String? = nil,
+		requests: [ChatBskyConvoListConvoRequestsOutputRequestsItem]
+	) {
+		self.cursor = cursor
+		self.requests = requests
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		requests = try container.decode([ChatBskyConvoListConvoRequestsOutputRequestsItem].self, forKey: .requests)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encode(requests, forKey: .requests)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case requests = "requests"
+	}
+}
+
+
+public indirect enum ChatBskyConvoListConvoRequestsOutputRequestsItem: Codable, Sendable, Equatable {
+	case convoView(ChatBskyConvoDefsConvoView)
+	case joinRequestConvoView(ChatBskyGroupDefsJoinRequestConvoView)
+	case unexpected(ATProtocolValueContainer)
+
+	public init(from decoder: Decoder) throws {
+		let typeIdentifier = try ATProtocolDecoder.decodeTypeIdentifier(from: decoder)
+		switch typeIdentifier {
+		case "chat.bsky.convo.defs#convoView": self = .convoView(try ChatBskyConvoDefsConvoView(from: decoder))
+		case "chat.bsky.group.defs#joinRequestConvoView": self = .joinRequestConvoView(try ChatBskyGroupDefsJoinRequestConvoView(from: decoder))
+		default: self = .unexpected(try ATProtocolValueContainer(from: decoder))
+		}
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		switch self {
+		case .convoView(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.convo.defs#convoView", to: encoder)
+		case .joinRequestConvoView(let value): try ATProtocolEncoder.encodeTagged(value, typeIdentifier: "chat.bsky.group.defs#joinRequestConvoView", to: encoder)
+		case .unexpected(let value): try value.encode(to: encoder)
+		}
+	}
+}
+
+
+public struct ChatBskyConvoListConvoRequestsParameters: Codable, Sendable, Equatable {
+	public let cursor: String?
+	public let limit: Int?
+
+	public init(
+		cursor: String? = nil,
+		limit: Int? = nil
+	) {
+		self.cursor = cursor
+		self.limit = limit
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		limit = try container.decodeIfPresent(Int.self, forKey: .limit)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encodeIfPresent(limit, forKey: .limit)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		if let value = cursor {
+			value.appendQueryItems(named: "cursor", to: &items)
+		}
+		if let value = limit {
+			value.appendQueryItems(named: "limit", to: &items)
+		}
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case cursor = "cursor"
+		case limit = "limit"
+	}
+}
+
+
 public struct ChatBskyConvoListConvosOutput: Codable, Sendable, Equatable {
 	public let convos: [ChatBskyConvoDefsConvoView]
 	public let cursor: String?
@@ -1436,18 +3095,24 @@ public struct ChatBskyConvoListConvosOutput: Codable, Sendable, Equatable {
 
 public struct ChatBskyConvoListConvosParameters: Codable, Sendable, Equatable {
 	public let cursor: String?
+	public let kind: ChatBskyConvoListConvosParametersKind?
 	public let limit: Int?
+	public let lockStatus: ChatBskyConvoListConvosParametersLockStatus?
 	public let readState: ChatBskyConvoListConvosParametersReadState?
-	public let status: ChatBskyConvoDefsConvoViewStatus?
+	public let status: ChatBskyConvoListConvosParametersStatus?
 
 	public init(
 		cursor: String? = nil,
+		kind: ChatBskyConvoListConvosParametersKind? = nil,
 		limit: Int? = nil,
+		lockStatus: ChatBskyConvoListConvosParametersLockStatus? = nil,
 		readState: ChatBskyConvoListConvosParametersReadState? = nil,
-		status: ChatBskyConvoDefsConvoViewStatus? = nil
+		status: ChatBskyConvoListConvosParametersStatus? = nil
 	) {
 		self.cursor = cursor
+		self.kind = kind
 		self.limit = limit
+		self.lockStatus = lockStatus
 		self.readState = readState
 		self.status = status
 	}
@@ -1455,15 +3120,19 @@ public struct ChatBskyConvoListConvosParameters: Codable, Sendable, Equatable {
 	public init(from decoder: Decoder) throws {
 		let container = try decoder.container(keyedBy: CodingKeys.self)
 		cursor = try container.decodeIfPresent(String.self, forKey: .cursor)
+		kind = try container.decodeIfPresent(ChatBskyConvoListConvosParametersKind.self, forKey: .kind)
 		limit = try container.decodeIfPresent(Int.self, forKey: .limit)
+		lockStatus = try container.decodeIfPresent(ChatBskyConvoListConvosParametersLockStatus.self, forKey: .lockStatus)
 		readState = try container.decodeIfPresent(ChatBskyConvoListConvosParametersReadState.self, forKey: .readState)
-		status = try container.decodeIfPresent(ChatBskyConvoDefsConvoViewStatus.self, forKey: .status)
+		status = try container.decodeIfPresent(ChatBskyConvoListConvosParametersStatus.self, forKey: .status)
 	}
 
 	public func encode(to encoder: Encoder) throws {
 		var container = encoder.container(keyedBy: CodingKeys.self)
 		try container.encodeIfPresent(cursor, forKey: .cursor)
+		try container.encodeIfPresent(kind, forKey: .kind)
 		try container.encodeIfPresent(limit, forKey: .limit)
+		try container.encodeIfPresent(lockStatus, forKey: .lockStatus)
 		try container.encodeIfPresent(readState, forKey: .readState)
 		try container.encodeIfPresent(status, forKey: .status)
 	}
@@ -1473,8 +3142,14 @@ public struct ChatBskyConvoListConvosParameters: Codable, Sendable, Equatable {
 		if let value = cursor {
 			value.appendQueryItems(named: "cursor", to: &items)
 		}
+		if let value = kind {
+			value.appendQueryItems(named: "kind", to: &items)
+		}
 		if let value = limit {
 			value.appendQueryItems(named: "limit", to: &items)
+		}
+		if let value = lockStatus {
+			value.appendQueryItems(named: "lockStatus", to: &items)
 		}
 		if let value = readState {
 			value.appendQueryItems(named: "readState", to: &items)
@@ -1487,15 +3162,112 @@ public struct ChatBskyConvoListConvosParameters: Codable, Sendable, Equatable {
 
 	private enum CodingKeys: String, CodingKey {
 		case cursor = "cursor"
+		case kind = "kind"
 		case limit = "limit"
+		case lockStatus = "lockStatus"
 		case readState = "readState"
 		case status = "status"
 	}
 }
 
 
+public enum ChatBskyConvoListConvosParametersKind: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case direct = "direct"
+	case group = "group"
+}
+
+
+public enum ChatBskyConvoListConvosParametersLockStatus: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case unlocked = "unlocked"
+	case locked = "locked"
+	case lockedPermanently = "locked-permanently"
+}
+
+
 public enum ChatBskyConvoListConvosParametersReadState: String, Codable, CaseIterable, QueryParameterValue, Sendable {
 	case unread = "unread"
+}
+
+
+public enum ChatBskyConvoListConvosParametersStatus: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+	case request = "request"
+	case accepted = "accepted"
+}
+
+
+public enum ChatBskyConvoLockConvoError: String, Swift.Error, CaseIterable, Sendable {
+	case convoLocked = "ConvoLocked"
+	case insufficientRole = "InsufficientRole"
+	case invalidConvo = "InvalidConvo"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ChatBskyConvoLockConvoInput: Codable, Sendable, Equatable {
+	public let convoId: String
+
+	public init(
+		convoId: String
+	) {
+		self.convoId = convoId
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		convoId = try container.decode(String.self, forKey: .convoId)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(convoId, forKey: .convoId)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case convoId = "convoId"
+	}
+}
+
+
+public struct ChatBskyConvoLockConvoOutput: Codable, Sendable, Equatable {
+	public let convo: ChatBskyConvoDefsConvoView
+
+	public init(
+		convo: ChatBskyConvoDefsConvoView
+	) {
+		self.convo = convo
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		convo = try container.decode(ChatBskyConvoDefsConvoView.self, forKey: .convo)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(convo, forKey: .convo)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case convo = "convo"
+	}
+}
+
+
+public enum ChatBskyConvoMuteConvoError: String, Swift.Error, CaseIterable, Sendable {
+	case invalidConvo = "InvalidConvo"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
 }
 
 
@@ -1550,8 +3322,10 @@ public struct ChatBskyConvoMuteConvoOutput: Codable, Sendable, Equatable {
 
 
 public enum ChatBskyConvoRemoveReactionError: String, Swift.Error, CaseIterable, Sendable {
+	case invalidConvo = "InvalidConvo"
 	case reactionInvalidValue = "ReactionInvalidValue"
 	case reactionMessageDeleted = "ReactionMessageDeleted"
+	case reactionNotAllowed = "ReactionNotAllowed"
 
 	public init?(transportError: XRPCTransportError) {
 		guard let rawValue = transportError.payload?.error else {
@@ -1655,6 +3429,19 @@ public struct ChatBskyConvoSendMessageBatchBatchItem: Codable, Sendable, Equatab
 }
 
 
+public enum ChatBskyConvoSendMessageBatchError: String, Swift.Error, CaseIterable, Sendable {
+	case convoLocked = "ConvoLocked"
+	case invalidConvo = "InvalidConvo"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
 public struct ChatBskyConvoSendMessageBatchInput: Codable, Sendable, Equatable {
 	public let items: [ChatBskyConvoSendMessageBatchBatchItem]
 
@@ -1705,6 +3492,19 @@ public struct ChatBskyConvoSendMessageBatchOutput: Codable, Sendable, Equatable 
 }
 
 
+public enum ChatBskyConvoSendMessageError: String, Swift.Error, CaseIterable, Sendable {
+	case convoLocked = "ConvoLocked"
+	case invalidConvo = "InvalidConvo"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
 public struct ChatBskyConvoSendMessageInput: Codable, Sendable, Equatable {
 	public let convoId: String
 	public let message: ChatBskyConvoDefsMessageInput
@@ -1737,6 +3537,81 @@ public struct ChatBskyConvoSendMessageInput: Codable, Sendable, Equatable {
 
 
 public typealias ChatBskyConvoSendMessageOutput = ChatBskyConvoDefsMessageView
+
+
+public enum ChatBskyConvoUnlockConvoError: String, Swift.Error, CaseIterable, Sendable {
+	case insufficientRole = "InsufficientRole"
+	case invalidConvo = "InvalidConvo"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
+
+
+public struct ChatBskyConvoUnlockConvoInput: Codable, Sendable, Equatable {
+	public let convoId: String
+
+	public init(
+		convoId: String
+	) {
+		self.convoId = convoId
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		convoId = try container.decode(String.self, forKey: .convoId)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(convoId, forKey: .convoId)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case convoId = "convoId"
+	}
+}
+
+
+public struct ChatBskyConvoUnlockConvoOutput: Codable, Sendable, Equatable {
+	public let convo: ChatBskyConvoDefsConvoView
+
+	public init(
+		convo: ChatBskyConvoDefsConvoView
+	) {
+		self.convo = convo
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		convo = try container.decode(ChatBskyConvoDefsConvoView.self, forKey: .convo)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(convo, forKey: .convo)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case convo = "convo"
+	}
+}
+
+
+public enum ChatBskyConvoUnmuteConvoError: String, Swift.Error, CaseIterable, Sendable {
+	case invalidConvo = "InvalidConvo"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
+	}
+}
 
 
 public struct ChatBskyConvoUnmuteConvoInput: Codable, Sendable, Equatable {
@@ -1790,17 +3665,17 @@ public struct ChatBskyConvoUnmuteConvoOutput: Codable, Sendable, Equatable {
 
 
 public struct ChatBskyConvoUpdateAllReadInput: Codable, Sendable, Equatable {
-	public let status: ChatBskyConvoDefsConvoViewStatus?
+	public let status: ChatBskyConvoListConvosParametersStatus?
 
 	public init(
-		status: ChatBskyConvoDefsConvoViewStatus? = nil
+		status: ChatBskyConvoListConvosParametersStatus? = nil
 	) {
 		self.status = status
 	}
 
 	public init(from decoder: Decoder) throws {
 		let container = try decoder.container(keyedBy: CodingKeys.self)
-		status = try container.decodeIfPresent(ChatBskyConvoDefsConvoViewStatus.self, forKey: .status)
+		status = try container.decodeIfPresent(ChatBskyConvoListConvosParametersStatus.self, forKey: .status)
 	}
 
 	public func encode(to encoder: Encoder) throws {
@@ -1835,6 +3710,18 @@ public struct ChatBskyConvoUpdateAllReadOutput: Codable, Sendable, Equatable {
 
 	private enum CodingKeys: String, CodingKey {
 		case updatedCount = "updatedCount"
+	}
+}
+
+
+public enum ChatBskyConvoUpdateReadError: String, Swift.Error, CaseIterable, Sendable {
+	case invalidConvo = "InvalidConvo"
+
+	public init?(transportError: XRPCTransportError) {
+		guard let rawValue = transportError.payload?.error else {
+			return nil
+		}
+		self.init(rawValue: rawValue)
 	}
 }
 

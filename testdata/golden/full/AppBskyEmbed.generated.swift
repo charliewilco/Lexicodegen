@@ -63,18 +63,58 @@ public struct AppBskyEmbedExternal: Codable, Sendable, Equatable {
 }
 
 
+public struct AppBskyEmbedExternalColorRGB: Codable, Sendable, Equatable {
+	public let b: Int
+	public let g: Int
+	public let r: Int
+
+	public init(
+		b: Int,
+		g: Int,
+		r: Int
+	) {
+		self.b = b
+		self.g = g
+		self.r = r
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		b = try container.decode(Int.self, forKey: .b)
+		g = try container.decode(Int.self, forKey: .g)
+		r = try container.decode(Int.self, forKey: .r)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(b, forKey: .b)
+		try container.encode(g, forKey: .g)
+		try container.encode(r, forKey: .r)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case b = "b"
+		case g = "g"
+		case r = "r"
+	}
+}
+
+
 public struct AppBskyEmbedExternalExternal: Codable, Sendable, Equatable {
+	public let associatedRefs: [ComAtprotoRepoStrongRef]?
 	public let description: String
 	public let thumb: Blob?
 	public let title: String
 	public let uri: String
 
 	public init(
+		associatedRefs: [ComAtprotoRepoStrongRef]? = nil,
 		description: String,
 		thumb: Blob? = nil,
 		title: String,
 		uri: String
 	) {
+		self.associatedRefs = associatedRefs
 		self.description = description
 		self.thumb = thumb
 		self.title = title
@@ -83,6 +123,7 @@ public struct AppBskyEmbedExternalExternal: Codable, Sendable, Equatable {
 
 	public init(from decoder: Decoder) throws {
 		let container = try decoder.container(keyedBy: CodingKeys.self)
+		associatedRefs = try container.decodeIfPresent([ComAtprotoRepoStrongRef].self, forKey: .associatedRefs)
 		description = try container.decode(String.self, forKey: .description)
 		thumb = try container.decodeIfPresent(Blob.self, forKey: .thumb)
 		title = try container.decode(String.self, forKey: .title)
@@ -91,6 +132,7 @@ public struct AppBskyEmbedExternalExternal: Codable, Sendable, Equatable {
 
 	public func encode(to encoder: Encoder) throws {
 		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(associatedRefs, forKey: .associatedRefs)
 		try container.encode(description, forKey: .description)
 		try container.encodeIfPresent(thumb, forKey: .thumb)
 		try container.encode(title, forKey: .title)
@@ -98,6 +140,7 @@ public struct AppBskyEmbedExternalExternal: Codable, Sendable, Equatable {
 	}
 
 	private enum CodingKeys: String, CodingKey {
+		case associatedRefs = "associatedRefs"
 		case description = "description"
 		case thumb = "thumb"
 		case title = "title"
@@ -132,44 +175,253 @@ public struct AppBskyEmbedExternalView: Codable, Sendable, Equatable {
 
 
 public struct AppBskyEmbedExternalViewExternal: Codable, Sendable, Equatable {
+	public let associatedProfiles: [AppBskyActorDefsProfileViewBasic]?
+	public let associatedRefs: [ComAtprotoRepoStrongRef]?
+	public let createdAt: ATProtocolDate?
 	public let description: String
+	public let labels: [ComAtprotoLabelDefsLabel]?
+	public let readingTime: Int?
+	public let source: AppBskyEmbedExternalViewExternalSource?
 	public let thumb: String?
+	public let title: String
+	public let updatedAt: ATProtocolDate?
+	public let uri: String
+
+	public init(
+		associatedProfiles: [AppBskyActorDefsProfileViewBasic]? = nil,
+		associatedRefs: [ComAtprotoRepoStrongRef]? = nil,
+		createdAt: ATProtocolDate? = nil,
+		description: String,
+		labels: [ComAtprotoLabelDefsLabel]? = nil,
+		readingTime: Int? = nil,
+		source: AppBskyEmbedExternalViewExternalSource? = nil,
+		thumb: String? = nil,
+		title: String,
+		updatedAt: ATProtocolDate? = nil,
+		uri: String
+	) {
+		self.associatedProfiles = associatedProfiles
+		self.associatedRefs = associatedRefs
+		self.createdAt = createdAt
+		self.description = description
+		self.labels = labels
+		self.readingTime = readingTime
+		self.source = source
+		self.thumb = thumb
+		self.title = title
+		self.updatedAt = updatedAt
+		self.uri = uri
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		associatedProfiles = try container.decodeIfPresent([AppBskyActorDefsProfileViewBasic].self, forKey: .associatedProfiles)
+		associatedRefs = try container.decodeIfPresent([ComAtprotoRepoStrongRef].self, forKey: .associatedRefs)
+		createdAt = try container.decodeIfPresent(ATProtocolDate.self, forKey: .createdAt)
+		description = try container.decode(String.self, forKey: .description)
+		labels = try container.decodeIfPresent([ComAtprotoLabelDefsLabel].self, forKey: .labels)
+		readingTime = try container.decodeIfPresent(Int.self, forKey: .readingTime)
+		source = try container.decodeIfPresent(AppBskyEmbedExternalViewExternalSource.self, forKey: .source)
+		thumb = try container.decodeIfPresent(String.self, forKey: .thumb)
+		title = try container.decode(String.self, forKey: .title)
+		updatedAt = try container.decodeIfPresent(ATProtocolDate.self, forKey: .updatedAt)
+		uri = try container.decode(String.self, forKey: .uri)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(associatedProfiles, forKey: .associatedProfiles)
+		try container.encodeIfPresent(associatedRefs, forKey: .associatedRefs)
+		try container.encodeIfPresent(createdAt, forKey: .createdAt)
+		try container.encode(description, forKey: .description)
+		try container.encodeIfPresent(labels, forKey: .labels)
+		try container.encodeIfPresent(readingTime, forKey: .readingTime)
+		try container.encodeIfPresent(source, forKey: .source)
+		try container.encodeIfPresent(thumb, forKey: .thumb)
+		try container.encode(title, forKey: .title)
+		try container.encodeIfPresent(updatedAt, forKey: .updatedAt)
+		try container.encode(uri, forKey: .uri)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case associatedProfiles = "associatedProfiles"
+		case associatedRefs = "associatedRefs"
+		case createdAt = "createdAt"
+		case description = "description"
+		case labels = "labels"
+		case readingTime = "readingTime"
+		case source = "source"
+		case thumb = "thumb"
+		case title = "title"
+		case updatedAt = "updatedAt"
+		case uri = "uri"
+	}
+}
+
+
+public struct AppBskyEmbedExternalViewExternalSource: Codable, Sendable, Equatable {
+	public let description: String?
+	public let icon: String?
+	public let theme: AppBskyEmbedExternalViewExternalSourceTheme?
 	public let title: String
 	public let uri: String
 
 	public init(
-		description: String,
-		thumb: String? = nil,
+		description: String? = nil,
+		icon: String? = nil,
+		theme: AppBskyEmbedExternalViewExternalSourceTheme? = nil,
 		title: String,
 		uri: String
 	) {
 		self.description = description
-		self.thumb = thumb
+		self.icon = icon
+		self.theme = theme
 		self.title = title
 		self.uri = uri
 	}
 
 	public init(from decoder: Decoder) throws {
 		let container = try decoder.container(keyedBy: CodingKeys.self)
-		description = try container.decode(String.self, forKey: .description)
-		thumb = try container.decodeIfPresent(String.self, forKey: .thumb)
+		description = try container.decodeIfPresent(String.self, forKey: .description)
+		icon = try container.decodeIfPresent(String.self, forKey: .icon)
+		theme = try container.decodeIfPresent(AppBskyEmbedExternalViewExternalSourceTheme.self, forKey: .theme)
 		title = try container.decode(String.self, forKey: .title)
 		uri = try container.decode(String.self, forKey: .uri)
 	}
 
 	public func encode(to encoder: Encoder) throws {
 		var container = encoder.container(keyedBy: CodingKeys.self)
-		try container.encode(description, forKey: .description)
-		try container.encodeIfPresent(thumb, forKey: .thumb)
+		try container.encodeIfPresent(description, forKey: .description)
+		try container.encodeIfPresent(icon, forKey: .icon)
+		try container.encodeIfPresent(theme, forKey: .theme)
 		try container.encode(title, forKey: .title)
 		try container.encode(uri, forKey: .uri)
 	}
 
 	private enum CodingKeys: String, CodingKey {
 		case description = "description"
-		case thumb = "thumb"
+		case icon = "icon"
+		case theme = "theme"
 		case title = "title"
 		case uri = "uri"
+	}
+}
+
+
+public struct AppBskyEmbedExternalViewExternalSourceTheme: Codable, Sendable, Equatable {
+	public let accentForegroundRgb: AppBskyEmbedExternalColorRGB?
+	public let accentRgb: AppBskyEmbedExternalColorRGB?
+	public let backgroundRgb: AppBskyEmbedExternalColorRGB?
+	public let foregroundRgb: AppBskyEmbedExternalColorRGB?
+
+	public init(
+		accentForegroundRgb: AppBskyEmbedExternalColorRGB? = nil,
+		accentRgb: AppBskyEmbedExternalColorRGB? = nil,
+		backgroundRgb: AppBskyEmbedExternalColorRGB? = nil,
+		foregroundRgb: AppBskyEmbedExternalColorRGB? = nil
+	) {
+		self.accentForegroundRgb = accentForegroundRgb
+		self.accentRgb = accentRgb
+		self.backgroundRgb = backgroundRgb
+		self.foregroundRgb = foregroundRgb
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		accentForegroundRgb = try container.decodeIfPresent(AppBskyEmbedExternalColorRGB.self, forKey: .accentForegroundRgb)
+		accentRgb = try container.decodeIfPresent(AppBskyEmbedExternalColorRGB.self, forKey: .accentRgb)
+		backgroundRgb = try container.decodeIfPresent(AppBskyEmbedExternalColorRGB.self, forKey: .backgroundRgb)
+		foregroundRgb = try container.decodeIfPresent(AppBskyEmbedExternalColorRGB.self, forKey: .foregroundRgb)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(accentForegroundRgb, forKey: .accentForegroundRgb)
+		try container.encodeIfPresent(accentRgb, forKey: .accentRgb)
+		try container.encodeIfPresent(backgroundRgb, forKey: .backgroundRgb)
+		try container.encodeIfPresent(foregroundRgb, forKey: .foregroundRgb)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case accentForegroundRgb = "accentForegroundRGB"
+		case accentRgb = "accentRGB"
+		case backgroundRgb = "backgroundRGB"
+		case foregroundRgb = "foregroundRGB"
+	}
+}
+
+
+public struct AppBskyEmbedGetEmbedExternalViewOutput: Codable, Sendable, Equatable {
+	public let associatedRecords: [ATProtocolValueContainer]?
+	public let associatedRefs: [ComAtprotoRepoStrongRef]?
+	public let view: AppBskyEmbedExternalView?
+
+	public init(
+		associatedRecords: [ATProtocolValueContainer]? = nil,
+		associatedRefs: [ComAtprotoRepoStrongRef]? = nil,
+		view: AppBskyEmbedExternalView? = nil
+	) {
+		self.associatedRecords = associatedRecords
+		self.associatedRefs = associatedRefs
+		self.view = view
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		associatedRecords = try container.decodeIfPresent([ATProtocolValueContainer].self, forKey: .associatedRecords)
+		associatedRefs = try container.decodeIfPresent([ComAtprotoRepoStrongRef].self, forKey: .associatedRefs)
+		view = try container.decodeIfPresent(AppBskyEmbedExternalView.self, forKey: .view)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(associatedRecords, forKey: .associatedRecords)
+		try container.encodeIfPresent(associatedRefs, forKey: .associatedRefs)
+		try container.encodeIfPresent(view, forKey: .view)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case associatedRecords = "associatedRecords"
+		case associatedRefs = "associatedRefs"
+		case view = "view"
+	}
+}
+
+
+public struct AppBskyEmbedGetEmbedExternalViewParameters: Codable, Sendable, Equatable {
+	public let uris: [ATURI]
+	public let url: String
+
+	public init(
+		uris: [ATURI],
+		url: String
+	) {
+		self.uris = uris
+		self.url = url
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		uris = try container.decode([ATURI].self, forKey: .uris)
+		url = try container.decode(String.self, forKey: .url)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encode(uris, forKey: .uris)
+		try container.encode(url, forKey: .url)
+	}
+
+	public func asQueryItems() -> [URLQueryItem] {
+		var items: [URLQueryItem] = []
+		uris.appendQueryItems(named: "uris", to: &items)
+		url.appendQueryItems(named: "url", to: &items)
+		return items
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case uris = "uris"
+		case url = "url"
 	}
 }
 

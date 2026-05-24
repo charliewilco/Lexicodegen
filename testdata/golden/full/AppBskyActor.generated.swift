@@ -792,31 +792,37 @@ public enum AppBskyActorDefsProfileAssociatedActivitySubscriptionAllowSubscripti
 
 
 public struct AppBskyActorDefsProfileAssociatedChat: Codable, Sendable, Equatable {
-	public let allowIncoming: AppBskyActorDefsProfileAssociatedChatAllowIncoming
+	public let allowGroupInvites: AppBskyActorDefsProfileAssociatedChatAllowGroupInvites?
+	public let allowIncoming: AppBskyActorDefsProfileAssociatedChatAllowGroupInvites
 
 	public init(
-		allowIncoming: AppBskyActorDefsProfileAssociatedChatAllowIncoming
+		allowGroupInvites: AppBskyActorDefsProfileAssociatedChatAllowGroupInvites? = nil,
+		allowIncoming: AppBskyActorDefsProfileAssociatedChatAllowGroupInvites
 	) {
+		self.allowGroupInvites = allowGroupInvites
 		self.allowIncoming = allowIncoming
 	}
 
 	public init(from decoder: Decoder) throws {
 		let container = try decoder.container(keyedBy: CodingKeys.self)
-		allowIncoming = try container.decode(AppBskyActorDefsProfileAssociatedChatAllowIncoming.self, forKey: .allowIncoming)
+		allowGroupInvites = try container.decodeIfPresent(AppBskyActorDefsProfileAssociatedChatAllowGroupInvites.self, forKey: .allowGroupInvites)
+		allowIncoming = try container.decode(AppBskyActorDefsProfileAssociatedChatAllowGroupInvites.self, forKey: .allowIncoming)
 	}
 
 	public func encode(to encoder: Encoder) throws {
 		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(allowGroupInvites, forKey: .allowGroupInvites)
 		try container.encode(allowIncoming, forKey: .allowIncoming)
 	}
 
 	private enum CodingKeys: String, CodingKey {
+		case allowGroupInvites = "allowGroupInvites"
 		case allowIncoming = "allowIncoming"
 	}
 }
 
 
-public enum AppBskyActorDefsProfileAssociatedChatAllowIncoming: String, Codable, CaseIterable, QueryParameterValue, Sendable {
+public enum AppBskyActorDefsProfileAssociatedChatAllowGroupInvites: String, Codable, CaseIterable, QueryParameterValue, Sendable {
 	case all = "all"
 	case none = "none"
 	case following = "following"
@@ -1317,6 +1323,7 @@ public struct AppBskyActorDefsStatusView: Codable, Sendable, Equatable {
 	public let expiresAt: ATProtocolDate?
 	public let isActive: Bool?
 	public let isDisabled: Bool?
+	public let labels: [ComAtprotoLabelDefsLabel]?
 	public let record: ATProtocolValueContainer
 	public let status: AppBskyActorDefsStatusViewStatus
 	public let uri: ATURI?
@@ -1327,6 +1334,7 @@ public struct AppBskyActorDefsStatusView: Codable, Sendable, Equatable {
 		expiresAt: ATProtocolDate? = nil,
 		isActive: Bool? = nil,
 		isDisabled: Bool? = nil,
+		labels: [ComAtprotoLabelDefsLabel]? = nil,
 		record: ATProtocolValueContainer,
 		status: AppBskyActorDefsStatusViewStatus,
 		uri: ATURI? = nil
@@ -1336,6 +1344,7 @@ public struct AppBskyActorDefsStatusView: Codable, Sendable, Equatable {
 		self.expiresAt = expiresAt
 		self.isActive = isActive
 		self.isDisabled = isDisabled
+		self.labels = labels
 		self.record = record
 		self.status = status
 		self.uri = uri
@@ -1348,6 +1357,7 @@ public struct AppBskyActorDefsStatusView: Codable, Sendable, Equatable {
 		expiresAt = try container.decodeIfPresent(ATProtocolDate.self, forKey: .expiresAt)
 		isActive = try container.decodeIfPresent(Bool.self, forKey: .isActive)
 		isDisabled = try container.decodeIfPresent(Bool.self, forKey: .isDisabled)
+		labels = try container.decodeIfPresent([ComAtprotoLabelDefsLabel].self, forKey: .labels)
 		record = try container.decode(ATProtocolValueContainer.self, forKey: .record)
 		status = try container.decode(AppBskyActorDefsStatusViewStatus.self, forKey: .status)
 		uri = try container.decodeIfPresent(ATURI.self, forKey: .uri)
@@ -1360,6 +1370,7 @@ public struct AppBskyActorDefsStatusView: Codable, Sendable, Equatable {
 		try container.encodeIfPresent(expiresAt, forKey: .expiresAt)
 		try container.encodeIfPresent(isActive, forKey: .isActive)
 		try container.encodeIfPresent(isDisabled, forKey: .isDisabled)
+		try container.encodeIfPresent(labels, forKey: .labels)
 		try container.encode(record, forKey: .record)
 		try container.encode(status, forKey: .status)
 		try container.encodeIfPresent(uri, forKey: .uri)
@@ -1371,6 +1382,7 @@ public struct AppBskyActorDefsStatusView: Codable, Sendable, Equatable {
 		case expiresAt = "expiresAt"
 		case isActive = "isActive"
 		case isDisabled = "isDisabled"
+		case labels = "labels"
 		case record = "record"
 		case status = "status"
 		case uri = "uri"

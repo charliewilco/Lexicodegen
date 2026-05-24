@@ -10,7 +10,7 @@ import Foundation
 public struct ChatBskyAuthFullChatClient: Codable, Sendable, Equatable {
 	public static let title: String? = "Full Chat Client (All Conversations)"
 	public static let detail: String? = "Control of all chat conversations and configuration management."
-	public static let knownMethods: [ChatBskyAuthFullChatClientMethod] = [.chatBskyActorDeleteAccount, .chatBskyActorExportAccountData, .chatBskyConvoAcceptConvo, .chatBskyConvoAddReaction, .chatBskyConvoDeleteMessageForSelf, .chatBskyConvoGetConvo, .chatBskyConvoGetConvoAvailability, .chatBskyConvoGetConvoForMembers, .chatBskyConvoGetLog, .chatBskyConvoGetMessages, .chatBskyConvoLeaveConvo, .chatBskyConvoListConvos, .chatBskyConvoMuteConvo, .chatBskyConvoRemoveReaction, .chatBskyConvoSendMessage, .chatBskyConvoSendMessageBatch, .chatBskyConvoUnmuteConvo, .chatBskyConvoUpdateAllRead, .chatBskyConvoUpdateRead]
+	public static let knownMethods: [ChatBskyAuthFullChatClientMethod] = [.chatBskyActorDeleteAccount, .chatBskyActorGetStatus, .chatBskyConvoAcceptConvo, .chatBskyConvoAddReaction, .chatBskyConvoDeleteMessageForSelf, .chatBskyConvoExportAccountData, .chatBskyConvoGetConvo, .chatBskyConvoGetConvoAvailability, .chatBskyConvoGetConvoForMembers, .chatBskyConvoGetConvoMembers, .chatBskyConvoGetLog, .chatBskyConvoGetMessages, .chatBskyConvoLeaveConvo, .chatBskyConvoListConvoRequests, .chatBskyConvoListConvos, .chatBskyConvoLockConvo, .chatBskyConvoMuteConvo, .chatBskyConvoRemoveReaction, .chatBskyConvoSendMessage, .chatBskyConvoSendMessageBatch, .chatBskyConvoUnlockConvo, .chatBskyConvoUnmuteConvo, .chatBskyConvoUpdateAllRead, .chatBskyConvoUpdateRead, .chatBskyGroupAddMembers, .chatBskyGroupApproveJoinRequest, .chatBskyGroupCreateGroup, .chatBskyGroupCreateJoinLink, .chatBskyGroupDisableJoinLink, .chatBskyGroupEditGroup, .chatBskyGroupEditJoinLink, .chatBskyGroupEnableJoinLink, .chatBskyGroupGetJoinLinkPreviews, .chatBskyGroupListJoinRequests, .chatBskyGroupListMutualGroups, .chatBskyGroupRejectJoinRequest, .chatBskyGroupRemoveMembers, .chatBskyGroupRequestJoin]
 
 	public let grantedMethods: [ChatBskyAuthFullChatClientMethod]
 
@@ -44,24 +44,43 @@ public struct ChatBskyAuthFullChatClientMethod: RawRepresentable, Codable, Hasha
 	}
 
 	public static let chatBskyActorDeleteAccount = Self(rawValue: "chat.bsky.actor.deleteAccount")
-	public static let chatBskyActorExportAccountData = Self(rawValue: "chat.bsky.actor.exportAccountData")
+	public static let chatBskyActorGetStatus = Self(rawValue: "chat.bsky.actor.getStatus")
 	public static let chatBskyConvoAcceptConvo = Self(rawValue: "chat.bsky.convo.acceptConvo")
 	public static let chatBskyConvoAddReaction = Self(rawValue: "chat.bsky.convo.addReaction")
 	public static let chatBskyConvoDeleteMessageForSelf = Self(rawValue: "chat.bsky.convo.deleteMessageForSelf")
+	public static let chatBskyConvoExportAccountData = Self(rawValue: "chat.bsky.convo.exportAccountData")
 	public static let chatBskyConvoGetConvo = Self(rawValue: "chat.bsky.convo.getConvo")
 	public static let chatBskyConvoGetConvoAvailability = Self(rawValue: "chat.bsky.convo.getConvoAvailability")
 	public static let chatBskyConvoGetConvoForMembers = Self(rawValue: "chat.bsky.convo.getConvoForMembers")
+	public static let chatBskyConvoGetConvoMembers = Self(rawValue: "chat.bsky.convo.getConvoMembers")
 	public static let chatBskyConvoGetLog = Self(rawValue: "chat.bsky.convo.getLog")
 	public static let chatBskyConvoGetMessages = Self(rawValue: "chat.bsky.convo.getMessages")
 	public static let chatBskyConvoLeaveConvo = Self(rawValue: "chat.bsky.convo.leaveConvo")
+	public static let chatBskyConvoListConvoRequests = Self(rawValue: "chat.bsky.convo.listConvoRequests")
 	public static let chatBskyConvoListConvos = Self(rawValue: "chat.bsky.convo.listConvos")
+	public static let chatBskyConvoLockConvo = Self(rawValue: "chat.bsky.convo.lockConvo")
 	public static let chatBskyConvoMuteConvo = Self(rawValue: "chat.bsky.convo.muteConvo")
 	public static let chatBskyConvoRemoveReaction = Self(rawValue: "chat.bsky.convo.removeReaction")
 	public static let chatBskyConvoSendMessage = Self(rawValue: "chat.bsky.convo.sendMessage")
 	public static let chatBskyConvoSendMessageBatch = Self(rawValue: "chat.bsky.convo.sendMessageBatch")
+	public static let chatBskyConvoUnlockConvo = Self(rawValue: "chat.bsky.convo.unlockConvo")
 	public static let chatBskyConvoUnmuteConvo = Self(rawValue: "chat.bsky.convo.unmuteConvo")
 	public static let chatBskyConvoUpdateAllRead = Self(rawValue: "chat.bsky.convo.updateAllRead")
 	public static let chatBskyConvoUpdateRead = Self(rawValue: "chat.bsky.convo.updateRead")
+	public static let chatBskyGroupAddMembers = Self(rawValue: "chat.bsky.group.addMembers")
+	public static let chatBskyGroupApproveJoinRequest = Self(rawValue: "chat.bsky.group.approveJoinRequest")
+	public static let chatBskyGroupCreateGroup = Self(rawValue: "chat.bsky.group.createGroup")
+	public static let chatBskyGroupCreateJoinLink = Self(rawValue: "chat.bsky.group.createJoinLink")
+	public static let chatBskyGroupDisableJoinLink = Self(rawValue: "chat.bsky.group.disableJoinLink")
+	public static let chatBskyGroupEditGroup = Self(rawValue: "chat.bsky.group.editGroup")
+	public static let chatBskyGroupEditJoinLink = Self(rawValue: "chat.bsky.group.editJoinLink")
+	public static let chatBskyGroupEnableJoinLink = Self(rawValue: "chat.bsky.group.enableJoinLink")
+	public static let chatBskyGroupGetJoinLinkPreviews = Self(rawValue: "chat.bsky.group.getJoinLinkPreviews")
+	public static let chatBskyGroupListJoinRequests = Self(rawValue: "chat.bsky.group.listJoinRequests")
+	public static let chatBskyGroupListMutualGroups = Self(rawValue: "chat.bsky.group.listMutualGroups")
+	public static let chatBskyGroupRejectJoinRequest = Self(rawValue: "chat.bsky.group.rejectJoinRequest")
+	public static let chatBskyGroupRemoveMembers = Self(rawValue: "chat.bsky.group.removeMembers")
+	public static let chatBskyGroupRequestJoin = Self(rawValue: "chat.bsky.group.requestJoin")
 }
 
 

@@ -1054,12 +1054,12 @@ public struct ComAtprotoServerGetServiceAuthOutput: Codable, Sendable, Equatable
 
 
 public struct ComAtprotoServerGetServiceAuthParameters: Codable, Sendable, Equatable {
-	public let aud: DID
+	public let aud: String
 	public let exp: Int?
 	public let lxm: NSID?
 
 	public init(
-		aud: DID,
+		aud: String,
 		exp: Int? = nil,
 		lxm: NSID? = nil
 	) {
@@ -1070,7 +1070,7 @@ public struct ComAtprotoServerGetServiceAuthParameters: Codable, Sendable, Equat
 
 	public init(from decoder: Decoder) throws {
 		let container = try decoder.container(keyedBy: CodingKeys.self)
-		aud = try container.decode(DID.self, forKey: .aud)
+		aud = try container.decode(String.self, forKey: .aud)
 		exp = try container.decodeIfPresent(Int.self, forKey: .exp)
 		lxm = try container.decodeIfPresent(NSID.self, forKey: .lxm)
 	}

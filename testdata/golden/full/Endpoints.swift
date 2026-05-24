@@ -60,6 +60,10 @@ public struct AppBskyNamespace {
 		AppBskyDraftNamespace(client: client)
 	}
 
+	public var embed: AppBskyEmbedNamespace {
+		AppBskyEmbedNamespace(client: client)
+	}
+
 	public var feed: AppBskyFeedNamespace {
 		AppBskyFeedNamespace(client: client)
 	}
@@ -299,6 +303,18 @@ public struct AppBskyDraftNamespace {
 
 	public func updateDraft(input: AppBskyDraftUpdateDraftInput) async throws -> EmptyResponse {
 		return try await client.requestJSON(method: "POST", path: "/xrpc/app.bsky.draft.updateDraft", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: EmptyResponse.self)
+	}
+}
+
+public struct AppBskyEmbedNamespace {
+	fileprivate let client: ATProtoClient
+
+	fileprivate init(client: ATProtoClient) {
+		self.client = client
+	}
+
+	public func getEmbedExternalView(input: AppBskyEmbedGetEmbedExternalViewParameters) async throws -> AppBskyEmbedGetEmbedExternalViewOutput {
+		return try await client.requestJSON(method: "GET", path: "/xrpc/app.bsky.embed.getEmbedExternalView", queryItems: input.asQueryItems(), responseType: AppBskyEmbedGetEmbedExternalViewOutput.self)
 	}
 }
 
@@ -661,6 +677,30 @@ public struct AppBskyUnspeccedNamespace {
 		return try await client.requestJSON(method: "GET", path: "/xrpc/app.bsky.unspecced.getSuggestedUsers", queryItems: input.asQueryItems(), responseType: AppBskyUnspeccedGetSuggestedUsersOutput.self)
 	}
 
+	public func getSuggestedUsersForDiscover(input: AppBskyUnspeccedGetSuggestedUsersForDiscoverParameters) async throws -> AppBskyUnspeccedGetSuggestedUsersForDiscoverOutput {
+		return try await client.requestJSON(method: "GET", path: "/xrpc/app.bsky.unspecced.getSuggestedUsersForDiscover", queryItems: input.asQueryItems(), responseType: AppBskyUnspeccedGetSuggestedUsersForDiscoverOutput.self)
+	}
+
+	public func getSuggestedUsersForDiscoverSkeleton(input: AppBskyUnspeccedGetSuggestedUsersForDiscoverSkeletonParameters) async throws -> AppBskyUnspeccedGetSuggestedUsersForDiscoverSkeletonOutput {
+		return try await client.requestJSON(method: "GET", path: "/xrpc/app.bsky.unspecced.getSuggestedUsersForDiscoverSkeleton", queryItems: input.asQueryItems(), responseType: AppBskyUnspeccedGetSuggestedUsersForDiscoverSkeletonOutput.self)
+	}
+
+	public func getSuggestedUsersForExplore(input: AppBskyUnspeccedGetSuggestedUsersForExploreParameters) async throws -> AppBskyUnspeccedGetSuggestedUsersForExploreOutput {
+		return try await client.requestJSON(method: "GET", path: "/xrpc/app.bsky.unspecced.getSuggestedUsersForExplore", queryItems: input.asQueryItems(), responseType: AppBskyUnspeccedGetSuggestedUsersForExploreOutput.self)
+	}
+
+	public func getSuggestedUsersForExploreSkeleton(input: AppBskyUnspeccedGetSuggestedUsersForExploreSkeletonParameters) async throws -> AppBskyUnspeccedGetSuggestedUsersForExploreSkeletonOutput {
+		return try await client.requestJSON(method: "GET", path: "/xrpc/app.bsky.unspecced.getSuggestedUsersForExploreSkeleton", queryItems: input.asQueryItems(), responseType: AppBskyUnspeccedGetSuggestedUsersForExploreSkeletonOutput.self)
+	}
+
+	public func getSuggestedUsersForSeeMore(input: AppBskyUnspeccedGetSuggestedUsersForSeeMoreParameters) async throws -> AppBskyUnspeccedGetSuggestedUsersForSeeMoreOutput {
+		return try await client.requestJSON(method: "GET", path: "/xrpc/app.bsky.unspecced.getSuggestedUsersForSeeMore", queryItems: input.asQueryItems(), responseType: AppBskyUnspeccedGetSuggestedUsersForSeeMoreOutput.self)
+	}
+
+	public func getSuggestedUsersForSeeMoreSkeleton(input: AppBskyUnspeccedGetSuggestedUsersForSeeMoreSkeletonParameters) async throws -> AppBskyUnspeccedGetSuggestedUsersForSeeMoreSkeletonOutput {
+		return try await client.requestJSON(method: "GET", path: "/xrpc/app.bsky.unspecced.getSuggestedUsersForSeeMoreSkeleton", queryItems: input.asQueryItems(), responseType: AppBskyUnspeccedGetSuggestedUsersForSeeMoreSkeletonOutput.self)
+	}
+
 	public func getSuggestedUsersSkeleton(input: AppBskyUnspeccedGetSuggestedUsersSkeletonParameters) async throws -> AppBskyUnspeccedGetSuggestedUsersSkeletonOutput {
 		return try await client.requestJSON(method: "GET", path: "/xrpc/app.bsky.unspecced.getSuggestedUsersSkeleton", queryItems: input.asQueryItems(), responseType: AppBskyUnspeccedGetSuggestedUsersSkeletonOutput.self)
 	}
@@ -777,6 +817,10 @@ public struct ChatBskyNamespace {
 		ChatBskyConvoNamespace(client: client)
 	}
 
+	public var group: ChatBskyGroupNamespace {
+		ChatBskyGroupNamespace(client: client)
+	}
+
 	public var moderation: ChatBskyModerationNamespace {
 		ChatBskyModerationNamespace(client: client)
 	}
@@ -796,6 +840,10 @@ public struct ChatBskyActorNamespace {
 	public func exportAccountData() async throws -> Data {
 		return try await client.requestData(method: "GET", path: "/xrpc/chat.bsky.actor.exportAccountData", queryItems: [], responseKind: .jsonl)
 	}
+
+	public func getStatus() async throws -> ChatBskyActorGetStatusOutput {
+		return try await client.requestJSON(method: "GET", path: "/xrpc/chat.bsky.actor.getStatus", queryItems: [], responseType: ChatBskyActorGetStatusOutput.self)
+	}
 }
 
 public struct ChatBskyConvoNamespace {
@@ -806,7 +854,14 @@ public struct ChatBskyConvoNamespace {
 	}
 
 	public func acceptConvo(input: ChatBskyConvoAcceptConvoInput) async throws -> ChatBskyConvoAcceptConvoOutput {
-		return try await client.requestJSON(method: "POST", path: "/xrpc/chat.bsky.convo.acceptConvo", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ChatBskyConvoAcceptConvoOutput.self)
+		do {
+			return try await client.requestJSON(method: "POST", path: "/xrpc/chat.bsky.convo.acceptConvo", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ChatBskyConvoAcceptConvoOutput.self)
+		} catch let error as XRPCTransportError {
+			if let typedError = ChatBskyConvoAcceptConvoError(transportError: error) {
+				throw typedError
+			}
+			throw error
+		}
 	}
 
 	public func addReaction(input: ChatBskyConvoAddReactionInput) async throws -> ChatBskyConvoAddReactionOutput {
@@ -821,11 +876,25 @@ public struct ChatBskyConvoNamespace {
 	}
 
 	public func deleteMessageForSelf(input: ChatBskyConvoDeleteMessageForSelfInput) async throws -> ChatBskyConvoDeleteMessageForSelfOutput {
-		return try await client.requestJSON(method: "POST", path: "/xrpc/chat.bsky.convo.deleteMessageForSelf", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ChatBskyConvoDeleteMessageForSelfOutput.self)
+		do {
+			return try await client.requestJSON(method: "POST", path: "/xrpc/chat.bsky.convo.deleteMessageForSelf", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ChatBskyConvoDeleteMessageForSelfOutput.self)
+		} catch let error as XRPCTransportError {
+			if let typedError = ChatBskyConvoDeleteMessageForSelfError(transportError: error) {
+				throw typedError
+			}
+			throw error
+		}
 	}
 
 	public func getConvo(input: ChatBskyConvoGetConvoParameters) async throws -> ChatBskyConvoGetConvoOutput {
-		return try await client.requestJSON(method: "GET", path: "/xrpc/chat.bsky.convo.getConvo", queryItems: input.asQueryItems(), responseType: ChatBskyConvoGetConvoOutput.self)
+		do {
+			return try await client.requestJSON(method: "GET", path: "/xrpc/chat.bsky.convo.getConvo", queryItems: input.asQueryItems(), responseType: ChatBskyConvoGetConvoOutput.self)
+		} catch let error as XRPCTransportError {
+			if let typedError = ChatBskyConvoGetConvoError(transportError: error) {
+				throw typedError
+			}
+			throw error
+		}
 	}
 
 	public func getConvoAvailability(input: ChatBskyConvoGetConvoAvailabilityParameters) async throws -> ChatBskyConvoGetConvoAvailabilityOutput {
@@ -833,7 +902,25 @@ public struct ChatBskyConvoNamespace {
 	}
 
 	public func getConvoForMembers(input: ChatBskyConvoGetConvoForMembersParameters) async throws -> ChatBskyConvoGetConvoForMembersOutput {
-		return try await client.requestJSON(method: "GET", path: "/xrpc/chat.bsky.convo.getConvoForMembers", queryItems: input.asQueryItems(), responseType: ChatBskyConvoGetConvoForMembersOutput.self)
+		do {
+			return try await client.requestJSON(method: "GET", path: "/xrpc/chat.bsky.convo.getConvoForMembers", queryItems: input.asQueryItems(), responseType: ChatBskyConvoGetConvoForMembersOutput.self)
+		} catch let error as XRPCTransportError {
+			if let typedError = ChatBskyConvoGetConvoForMembersError(transportError: error) {
+				throw typedError
+			}
+			throw error
+		}
+	}
+
+	public func getConvoMembers(input: ChatBskyConvoGetConvoMembersParameters) async throws -> ChatBskyConvoGetConvoMembersOutput {
+		do {
+			return try await client.requestJSON(method: "GET", path: "/xrpc/chat.bsky.convo.getConvoMembers", queryItems: input.asQueryItems(), responseType: ChatBskyConvoGetConvoMembersOutput.self)
+		} catch let error as XRPCTransportError {
+			if let typedError = ChatBskyConvoGetConvoMembersError(transportError: error) {
+				throw typedError
+			}
+			throw error
+		}
 	}
 
 	public func getLog(input: ChatBskyConvoGetLogParameters) async throws -> ChatBskyConvoGetLogOutput {
@@ -841,19 +928,55 @@ public struct ChatBskyConvoNamespace {
 	}
 
 	public func getMessages(input: ChatBskyConvoGetMessagesParameters) async throws -> ChatBskyConvoGetMessagesOutput {
-		return try await client.requestJSON(method: "GET", path: "/xrpc/chat.bsky.convo.getMessages", queryItems: input.asQueryItems(), responseType: ChatBskyConvoGetMessagesOutput.self)
+		do {
+			return try await client.requestJSON(method: "GET", path: "/xrpc/chat.bsky.convo.getMessages", queryItems: input.asQueryItems(), responseType: ChatBskyConvoGetMessagesOutput.self)
+		} catch let error as XRPCTransportError {
+			if let typedError = ChatBskyConvoGetMessagesError(transportError: error) {
+				throw typedError
+			}
+			throw error
+		}
 	}
 
 	public func leaveConvo(input: ChatBskyConvoLeaveConvoInput) async throws -> ChatBskyConvoLeaveConvoOutput {
-		return try await client.requestJSON(method: "POST", path: "/xrpc/chat.bsky.convo.leaveConvo", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ChatBskyConvoLeaveConvoOutput.self)
+		do {
+			return try await client.requestJSON(method: "POST", path: "/xrpc/chat.bsky.convo.leaveConvo", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ChatBskyConvoLeaveConvoOutput.self)
+		} catch let error as XRPCTransportError {
+			if let typedError = ChatBskyConvoLeaveConvoError(transportError: error) {
+				throw typedError
+			}
+			throw error
+		}
+	}
+
+	public func listConvoRequests(input: ChatBskyConvoListConvoRequestsParameters) async throws -> ChatBskyConvoListConvoRequestsOutput {
+		return try await client.requestJSON(method: "GET", path: "/xrpc/chat.bsky.convo.listConvoRequests", queryItems: input.asQueryItems(), responseType: ChatBskyConvoListConvoRequestsOutput.self)
 	}
 
 	public func listConvos(input: ChatBskyConvoListConvosParameters) async throws -> ChatBskyConvoListConvosOutput {
 		return try await client.requestJSON(method: "GET", path: "/xrpc/chat.bsky.convo.listConvos", queryItems: input.asQueryItems(), responseType: ChatBskyConvoListConvosOutput.self)
 	}
 
+	public func lockConvo(input: ChatBskyConvoLockConvoInput) async throws -> ChatBskyConvoLockConvoOutput {
+		do {
+			return try await client.requestJSON(method: "POST", path: "/xrpc/chat.bsky.convo.lockConvo", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ChatBskyConvoLockConvoOutput.self)
+		} catch let error as XRPCTransportError {
+			if let typedError = ChatBskyConvoLockConvoError(transportError: error) {
+				throw typedError
+			}
+			throw error
+		}
+	}
+
 	public func muteConvo(input: ChatBskyConvoMuteConvoInput) async throws -> ChatBskyConvoMuteConvoOutput {
-		return try await client.requestJSON(method: "POST", path: "/xrpc/chat.bsky.convo.muteConvo", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ChatBskyConvoMuteConvoOutput.self)
+		do {
+			return try await client.requestJSON(method: "POST", path: "/xrpc/chat.bsky.convo.muteConvo", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ChatBskyConvoMuteConvoOutput.self)
+		} catch let error as XRPCTransportError {
+			if let typedError = ChatBskyConvoMuteConvoError(transportError: error) {
+				throw typedError
+			}
+			throw error
+		}
 	}
 
 	public func removeReaction(input: ChatBskyConvoRemoveReactionInput) async throws -> ChatBskyConvoRemoveReactionOutput {
@@ -868,15 +991,47 @@ public struct ChatBskyConvoNamespace {
 	}
 
 	public func sendMessage(input: ChatBskyConvoSendMessageInput) async throws -> ChatBskyConvoSendMessageOutput {
-		return try await client.requestJSON(method: "POST", path: "/xrpc/chat.bsky.convo.sendMessage", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ChatBskyConvoSendMessageOutput.self)
+		do {
+			return try await client.requestJSON(method: "POST", path: "/xrpc/chat.bsky.convo.sendMessage", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ChatBskyConvoSendMessageOutput.self)
+		} catch let error as XRPCTransportError {
+			if let typedError = ChatBskyConvoSendMessageError(transportError: error) {
+				throw typedError
+			}
+			throw error
+		}
 	}
 
 	public func sendMessageBatch(input: ChatBskyConvoSendMessageBatchInput) async throws -> ChatBskyConvoSendMessageBatchOutput {
-		return try await client.requestJSON(method: "POST", path: "/xrpc/chat.bsky.convo.sendMessageBatch", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ChatBskyConvoSendMessageBatchOutput.self)
+		do {
+			return try await client.requestJSON(method: "POST", path: "/xrpc/chat.bsky.convo.sendMessageBatch", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ChatBskyConvoSendMessageBatchOutput.self)
+		} catch let error as XRPCTransportError {
+			if let typedError = ChatBskyConvoSendMessageBatchError(transportError: error) {
+				throw typedError
+			}
+			throw error
+		}
+	}
+
+	public func unlockConvo(input: ChatBskyConvoUnlockConvoInput) async throws -> ChatBskyConvoUnlockConvoOutput {
+		do {
+			return try await client.requestJSON(method: "POST", path: "/xrpc/chat.bsky.convo.unlockConvo", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ChatBskyConvoUnlockConvoOutput.self)
+		} catch let error as XRPCTransportError {
+			if let typedError = ChatBskyConvoUnlockConvoError(transportError: error) {
+				throw typedError
+			}
+			throw error
+		}
 	}
 
 	public func unmuteConvo(input: ChatBskyConvoUnmuteConvoInput) async throws -> ChatBskyConvoUnmuteConvoOutput {
-		return try await client.requestJSON(method: "POST", path: "/xrpc/chat.bsky.convo.unmuteConvo", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ChatBskyConvoUnmuteConvoOutput.self)
+		do {
+			return try await client.requestJSON(method: "POST", path: "/xrpc/chat.bsky.convo.unmuteConvo", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ChatBskyConvoUnmuteConvoOutput.self)
+		} catch let error as XRPCTransportError {
+			if let typedError = ChatBskyConvoUnmuteConvoError(transportError: error) {
+				throw typedError
+			}
+			throw error
+		}
 	}
 
 	public func updateAllRead(input: ChatBskyConvoUpdateAllReadInput) async throws -> ChatBskyConvoUpdateAllReadOutput {
@@ -884,7 +1039,162 @@ public struct ChatBskyConvoNamespace {
 	}
 
 	public func updateRead(input: ChatBskyConvoUpdateReadInput) async throws -> ChatBskyConvoUpdateReadOutput {
-		return try await client.requestJSON(method: "POST", path: "/xrpc/chat.bsky.convo.updateRead", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ChatBskyConvoUpdateReadOutput.self)
+		do {
+			return try await client.requestJSON(method: "POST", path: "/xrpc/chat.bsky.convo.updateRead", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ChatBskyConvoUpdateReadOutput.self)
+		} catch let error as XRPCTransportError {
+			if let typedError = ChatBskyConvoUpdateReadError(transportError: error) {
+				throw typedError
+			}
+			throw error
+		}
+	}
+}
+
+public struct ChatBskyGroupNamespace {
+	fileprivate let client: ATProtoClient
+
+	fileprivate init(client: ATProtoClient) {
+		self.client = client
+	}
+
+	public func addMembers(input: ChatBskyGroupAddMembersInput) async throws -> ChatBskyGroupAddMembersOutput {
+		do {
+			return try await client.requestJSON(method: "POST", path: "/xrpc/chat.bsky.group.addMembers", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ChatBskyGroupAddMembersOutput.self)
+		} catch let error as XRPCTransportError {
+			if let typedError = ChatBskyGroupAddMembersError(transportError: error) {
+				throw typedError
+			}
+			throw error
+		}
+	}
+
+	public func approveJoinRequest(input: ChatBskyGroupApproveJoinRequestInput) async throws -> ChatBskyGroupApproveJoinRequestOutput {
+		do {
+			return try await client.requestJSON(method: "POST", path: "/xrpc/chat.bsky.group.approveJoinRequest", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ChatBskyGroupApproveJoinRequestOutput.self)
+		} catch let error as XRPCTransportError {
+			if let typedError = ChatBskyGroupApproveJoinRequestError(transportError: error) {
+				throw typedError
+			}
+			throw error
+		}
+	}
+
+	public func createGroup(input: ChatBskyGroupCreateGroupInput) async throws -> ChatBskyGroupCreateGroupOutput {
+		do {
+			return try await client.requestJSON(method: "POST", path: "/xrpc/chat.bsky.group.createGroup", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ChatBskyGroupCreateGroupOutput.self)
+		} catch let error as XRPCTransportError {
+			if let typedError = ChatBskyGroupCreateGroupError(transportError: error) {
+				throw typedError
+			}
+			throw error
+		}
+	}
+
+	public func createJoinLink(input: ChatBskyGroupCreateJoinLinkInput) async throws -> ChatBskyGroupCreateJoinLinkOutput {
+		do {
+			return try await client.requestJSON(method: "POST", path: "/xrpc/chat.bsky.group.createJoinLink", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ChatBskyGroupCreateJoinLinkOutput.self)
+		} catch let error as XRPCTransportError {
+			if let typedError = ChatBskyGroupCreateJoinLinkError(transportError: error) {
+				throw typedError
+			}
+			throw error
+		}
+	}
+
+	public func disableJoinLink(input: ChatBskyGroupDisableJoinLinkInput) async throws -> ChatBskyGroupDisableJoinLinkOutput {
+		do {
+			return try await client.requestJSON(method: "POST", path: "/xrpc/chat.bsky.group.disableJoinLink", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ChatBskyGroupDisableJoinLinkOutput.self)
+		} catch let error as XRPCTransportError {
+			if let typedError = ChatBskyGroupDisableJoinLinkError(transportError: error) {
+				throw typedError
+			}
+			throw error
+		}
+	}
+
+	public func editGroup(input: ChatBskyGroupEditGroupInput) async throws -> ChatBskyGroupEditGroupOutput {
+		do {
+			return try await client.requestJSON(method: "POST", path: "/xrpc/chat.bsky.group.editGroup", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ChatBskyGroupEditGroupOutput.self)
+		} catch let error as XRPCTransportError {
+			if let typedError = ChatBskyGroupEditGroupError(transportError: error) {
+				throw typedError
+			}
+			throw error
+		}
+	}
+
+	public func editJoinLink(input: ChatBskyGroupEditJoinLinkInput) async throws -> ChatBskyGroupEditJoinLinkOutput {
+		do {
+			return try await client.requestJSON(method: "POST", path: "/xrpc/chat.bsky.group.editJoinLink", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ChatBskyGroupEditJoinLinkOutput.self)
+		} catch let error as XRPCTransportError {
+			if let typedError = ChatBskyGroupEditJoinLinkError(transportError: error) {
+				throw typedError
+			}
+			throw error
+		}
+	}
+
+	public func enableJoinLink(input: ChatBskyGroupEnableJoinLinkInput) async throws -> ChatBskyGroupEnableJoinLinkOutput {
+		do {
+			return try await client.requestJSON(method: "POST", path: "/xrpc/chat.bsky.group.enableJoinLink", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ChatBskyGroupEnableJoinLinkOutput.self)
+		} catch let error as XRPCTransportError {
+			if let typedError = ChatBskyGroupEnableJoinLinkError(transportError: error) {
+				throw typedError
+			}
+			throw error
+		}
+	}
+
+	public func getJoinLinkPreviews(input: ChatBskyGroupGetJoinLinkPreviewsParameters) async throws -> ChatBskyGroupGetJoinLinkPreviewsOutput {
+		return try await client.requestJSON(method: "GET", path: "/xrpc/chat.bsky.group.getJoinLinkPreviews", queryItems: input.asQueryItems(), responseType: ChatBskyGroupGetJoinLinkPreviewsOutput.self)
+	}
+
+	public func listJoinRequests(input: ChatBskyGroupListJoinRequestsParameters) async throws -> ChatBskyGroupListJoinRequestsOutput {
+		do {
+			return try await client.requestJSON(method: "GET", path: "/xrpc/chat.bsky.group.listJoinRequests", queryItems: input.asQueryItems(), responseType: ChatBskyGroupListJoinRequestsOutput.self)
+		} catch let error as XRPCTransportError {
+			if let typedError = ChatBskyGroupListJoinRequestsError(transportError: error) {
+				throw typedError
+			}
+			throw error
+		}
+	}
+
+	public func listMutualGroups(input: ChatBskyGroupListMutualGroupsParameters) async throws -> ChatBskyGroupListMutualGroupsOutput {
+		return try await client.requestJSON(method: "GET", path: "/xrpc/chat.bsky.group.listMutualGroups", queryItems: input.asQueryItems(), responseType: ChatBskyGroupListMutualGroupsOutput.self)
+	}
+
+	public func rejectJoinRequest(input: ChatBskyGroupRejectJoinRequestInput) async throws -> ChatBskyGroupRejectJoinRequestOutput {
+		do {
+			return try await client.requestJSON(method: "POST", path: "/xrpc/chat.bsky.group.rejectJoinRequest", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ChatBskyGroupRejectJoinRequestOutput.self)
+		} catch let error as XRPCTransportError {
+			if let typedError = ChatBskyGroupRejectJoinRequestError(transportError: error) {
+				throw typedError
+			}
+			throw error
+		}
+	}
+
+	public func removeMembers(input: ChatBskyGroupRemoveMembersInput) async throws -> ChatBskyGroupRemoveMembersOutput {
+		do {
+			return try await client.requestJSON(method: "POST", path: "/xrpc/chat.bsky.group.removeMembers", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ChatBskyGroupRemoveMembersOutput.self)
+		} catch let error as XRPCTransportError {
+			if let typedError = ChatBskyGroupRemoveMembersError(transportError: error) {
+				throw typedError
+			}
+			throw error
+		}
+	}
+
+	public func requestJoin(input: ChatBskyGroupRequestJoinInput) async throws -> ChatBskyGroupRequestJoinOutput {
+		do {
+			return try await client.requestJSON(method: "POST", path: "/xrpc/chat.bsky.group.requestJoin", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ChatBskyGroupRequestJoinOutput.self)
+		} catch let error as XRPCTransportError {
+			if let typedError = ChatBskyGroupRequestJoinError(transportError: error) {
+				throw typedError
+			}
+			throw error
+		}
 	}
 }
 
@@ -901,6 +1211,10 @@ public struct ChatBskyModerationNamespace {
 
 	public func getMessageContext(input: ChatBskyModerationGetMessageContextParameters) async throws -> ChatBskyModerationGetMessageContextOutput {
 		return try await client.requestJSON(method: "GET", path: "/xrpc/chat.bsky.moderation.getMessageContext", queryItems: input.asQueryItems(), responseType: ChatBskyModerationGetMessageContextOutput.self)
+	}
+
+	public func subscribeModEvents(input: ChatBskyModerationSubscribeModEventsParameters) -> AsyncThrowingStream<XRPCSubscriptionEvent<ChatBskyModerationSubscribeModEventsMessage>, Error> {
+		client.subscribe(path: "/xrpc/chat.bsky.moderation.subscribeModEvents", queryItems: input.asQueryItems(), responseType: ChatBskyModerationSubscribeModEventsMessage.self)
 	}
 
 	public func updateActorAccess(input: ChatBskyModerationUpdateActorAccessInput) async throws -> EmptyResponse {
@@ -1649,6 +1963,14 @@ public struct ToolsOzoneNamespace {
 		ToolsOzoneModerationNamespace(client: client)
 	}
 
+	public var queue: ToolsOzoneQueueNamespace {
+		ToolsOzoneQueueNamespace(client: client)
+	}
+
+	public var report: ToolsOzoneReportNamespace {
+		ToolsOzoneReportNamespace(client: client)
+	}
+
 	public var safelink: ToolsOzoneSafelinkNamespace {
 		ToolsOzoneSafelinkNamespace(client: client)
 	}
@@ -1821,6 +2143,172 @@ public struct ToolsOzoneModerationNamespace {
 
 	public func searchRepos(input: ToolsOzoneModerationSearchReposParameters) async throws -> ToolsOzoneModerationSearchReposOutput {
 		return try await client.requestJSON(method: "GET", path: "/xrpc/tools.ozone.moderation.searchRepos", queryItems: input.asQueryItems(), responseType: ToolsOzoneModerationSearchReposOutput.self)
+	}
+}
+
+public struct ToolsOzoneQueueNamespace {
+	fileprivate let client: ATProtoClient
+
+	fileprivate init(client: ATProtoClient) {
+		self.client = client
+	}
+
+	public func assignModerator(input: ToolsOzoneQueueAssignModeratorInput) async throws -> ToolsOzoneQueueAssignModeratorOutput {
+		do {
+			return try await client.requestJSON(method: "POST", path: "/xrpc/tools.ozone.queue.assignModerator", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ToolsOzoneQueueAssignModeratorOutput.self)
+		} catch let error as XRPCTransportError {
+			if let typedError = ToolsOzoneQueueAssignModeratorError(transportError: error) {
+				throw typedError
+			}
+			throw error
+		}
+	}
+
+	public func createQueue(input: ToolsOzoneQueueCreateQueueInput) async throws -> ToolsOzoneQueueCreateQueueOutput {
+		do {
+			return try await client.requestJSON(method: "POST", path: "/xrpc/tools.ozone.queue.createQueue", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ToolsOzoneQueueCreateQueueOutput.self)
+		} catch let error as XRPCTransportError {
+			if let typedError = ToolsOzoneQueueCreateQueueError(transportError: error) {
+				throw typedError
+			}
+			throw error
+		}
+	}
+
+	public func deleteQueue(input: ToolsOzoneQueueDeleteQueueInput) async throws -> ToolsOzoneQueueDeleteQueueOutput {
+		return try await client.requestJSON(method: "POST", path: "/xrpc/tools.ozone.queue.deleteQueue", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ToolsOzoneQueueDeleteQueueOutput.self)
+	}
+
+	public func getAssignments(input: ToolsOzoneQueueGetAssignmentsParameters) async throws -> ToolsOzoneQueueGetAssignmentsOutput {
+		return try await client.requestJSON(method: "GET", path: "/xrpc/tools.ozone.queue.getAssignments", queryItems: input.asQueryItems(), responseType: ToolsOzoneQueueGetAssignmentsOutput.self)
+	}
+
+	public func listQueues(input: ToolsOzoneQueueListQueuesParameters) async throws -> ToolsOzoneQueueListQueuesOutput {
+		return try await client.requestJSON(method: "GET", path: "/xrpc/tools.ozone.queue.listQueues", queryItems: input.asQueryItems(), responseType: ToolsOzoneQueueListQueuesOutput.self)
+	}
+
+	public func routeReports(input: ToolsOzoneQueueRouteReportsInput) async throws -> ToolsOzoneQueueRouteReportsOutput {
+		do {
+			return try await client.requestJSON(method: "POST", path: "/xrpc/tools.ozone.queue.routeReports", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ToolsOzoneQueueRouteReportsOutput.self)
+		} catch let error as XRPCTransportError {
+			if let typedError = ToolsOzoneQueueRouteReportsError(transportError: error) {
+				throw typedError
+			}
+			throw error
+		}
+	}
+
+	public func unassignModerator(input: ToolsOzoneQueueUnassignModeratorInput) async throws -> EmptyResponse {
+		do {
+			return try await client.requestJSON(method: "POST", path: "/xrpc/tools.ozone.queue.unassignModerator", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: EmptyResponse.self)
+		} catch let error as XRPCTransportError {
+			if let typedError = ToolsOzoneQueueUnassignModeratorError(transportError: error) {
+				throw typedError
+			}
+			throw error
+		}
+	}
+
+	public func updateQueue(input: ToolsOzoneQueueUpdateQueueInput) async throws -> ToolsOzoneQueueUpdateQueueOutput {
+		return try await client.requestJSON(method: "POST", path: "/xrpc/tools.ozone.queue.updateQueue", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ToolsOzoneQueueUpdateQueueOutput.self)
+	}
+}
+
+public struct ToolsOzoneReportNamespace {
+	fileprivate let client: ATProtoClient
+
+	fileprivate init(client: ATProtoClient) {
+		self.client = client
+	}
+
+	public func assignModerator(input: ToolsOzoneReportAssignModeratorInput) async throws -> ToolsOzoneReportAssignModeratorOutput {
+		do {
+			return try await client.requestJSON(method: "POST", path: "/xrpc/tools.ozone.report.assignModerator", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ToolsOzoneReportAssignModeratorOutput.self)
+		} catch let error as XRPCTransportError {
+			if let typedError = ToolsOzoneReportAssignModeratorError(transportError: error) {
+				throw typedError
+			}
+			throw error
+		}
+	}
+
+	public func createActivity(input: ToolsOzoneReportCreateActivityInput) async throws -> ToolsOzoneReportCreateActivityOutput {
+		do {
+			return try await client.requestJSON(method: "POST", path: "/xrpc/tools.ozone.report.createActivity", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ToolsOzoneReportCreateActivityOutput.self)
+		} catch let error as XRPCTransportError {
+			if let typedError = ToolsOzoneReportCreateActivityError(transportError: error) {
+				throw typedError
+			}
+			throw error
+		}
+	}
+
+	public func getAssignments(input: ToolsOzoneReportGetAssignmentsParameters) async throws -> ToolsOzoneReportGetAssignmentsOutput {
+		return try await client.requestJSON(method: "GET", path: "/xrpc/tools.ozone.report.getAssignments", queryItems: input.asQueryItems(), responseType: ToolsOzoneReportGetAssignmentsOutput.self)
+	}
+
+	public func getHistoricalStats(input: ToolsOzoneReportGetHistoricalStatsParameters) async throws -> ToolsOzoneReportGetHistoricalStatsOutput {
+		return try await client.requestJSON(method: "GET", path: "/xrpc/tools.ozone.report.getHistoricalStats", queryItems: input.asQueryItems(), responseType: ToolsOzoneReportGetHistoricalStatsOutput.self)
+	}
+
+	public func getLatestReport(input: ToolsOzoneReportGetLatestReportParameters) async throws -> ToolsOzoneReportGetLatestReportOutput {
+		do {
+			return try await client.requestJSON(method: "GET", path: "/xrpc/tools.ozone.report.getLatestReport", queryItems: input.asQueryItems(), responseType: ToolsOzoneReportGetLatestReportOutput.self)
+		} catch let error as XRPCTransportError {
+			if let typedError = ToolsOzoneReportGetLatestReportError(transportError: error) {
+				throw typedError
+			}
+			throw error
+		}
+	}
+
+	public func getLiveStats(input: ToolsOzoneReportGetLiveStatsParameters) async throws -> ToolsOzoneReportGetLiveStatsOutput {
+		return try await client.requestJSON(method: "GET", path: "/xrpc/tools.ozone.report.getLiveStats", queryItems: input.asQueryItems(), responseType: ToolsOzoneReportGetLiveStatsOutput.self)
+	}
+
+	public func getReport(input: ToolsOzoneReportGetReportParameters) async throws -> ToolsOzoneReportGetReportOutput {
+		do {
+			return try await client.requestJSON(method: "GET", path: "/xrpc/tools.ozone.report.getReport", queryItems: input.asQueryItems(), responseType: ToolsOzoneReportGetReportOutput.self)
+		} catch let error as XRPCTransportError {
+			if let typedError = ToolsOzoneReportGetReportError(transportError: error) {
+				throw typedError
+			}
+			throw error
+		}
+	}
+
+	public func listActivities(input: ToolsOzoneReportListActivitiesParameters) async throws -> ToolsOzoneReportListActivitiesOutput {
+		return try await client.requestJSON(method: "GET", path: "/xrpc/tools.ozone.report.listActivities", queryItems: input.asQueryItems(), responseType: ToolsOzoneReportListActivitiesOutput.self)
+	}
+
+	public func queryReports(input: ToolsOzoneReportQueryReportsParameters) async throws -> ToolsOzoneReportQueryReportsOutput {
+		return try await client.requestJSON(method: "GET", path: "/xrpc/tools.ozone.report.queryReports", queryItems: input.asQueryItems(), responseType: ToolsOzoneReportQueryReportsOutput.self)
+	}
+
+	public func reassignQueue(input: ToolsOzoneReportReassignQueueInput) async throws -> ToolsOzoneReportReassignQueueOutput {
+		do {
+			return try await client.requestJSON(method: "POST", path: "/xrpc/tools.ozone.report.reassignQueue", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ToolsOzoneReportReassignQueueOutput.self)
+		} catch let error as XRPCTransportError {
+			if let typedError = ToolsOzoneReportReassignQueueError(transportError: error) {
+				throw typedError
+			}
+			throw error
+		}
+	}
+
+	public func refreshStats(input: ToolsOzoneReportRefreshStatsInput) async throws -> ToolsOzoneReportRefreshStatsOutput {
+		return try await client.requestJSON(method: "POST", path: "/xrpc/tools.ozone.report.refreshStats", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ToolsOzoneReportRefreshStatsOutput.self)
+	}
+
+	public func unassignModerator(input: ToolsOzoneReportUnassignModeratorInput) async throws -> ToolsOzoneReportUnassignModeratorOutput {
+		do {
+			return try await client.requestJSON(method: "POST", path: "/xrpc/tools.ozone.report.unassignModerator", body: try client.encodedBody(input), queryItems: [], headers: ["Content-Type": "application/json"], responseType: ToolsOzoneReportUnassignModeratorOutput.self)
+		} catch let error as XRPCTransportError {
+			if let typedError = ToolsOzoneReportUnassignModeratorError(transportError: error) {
+				throw typedError
+			}
+			throw error
+		}
 	}
 }
 

@@ -1130,15 +1130,18 @@ public struct ToolsOzoneModerationDefsModEventReverseTakedown: Codable, Sendable
 public struct ToolsOzoneModerationDefsModEventTag: Codable, Sendable, Equatable {
 	public let add: [String]
 	public let comment: String?
+	public let durationInHours: Int?
 	public let remove: [String]
 
 	public init(
 		add: [String],
 		comment: String? = nil,
+		durationInHours: Int? = nil,
 		remove: [String]
 	) {
 		self.add = add
 		self.comment = comment
+		self.durationInHours = durationInHours
 		self.remove = remove
 	}
 
@@ -1146,6 +1149,7 @@ public struct ToolsOzoneModerationDefsModEventTag: Codable, Sendable, Equatable 
 		let container = try decoder.container(keyedBy: CodingKeys.self)
 		add = try container.decode([String].self, forKey: .add)
 		comment = try container.decodeIfPresent(String.self, forKey: .comment)
+		durationInHours = try container.decodeIfPresent(Int.self, forKey: .durationInHours)
 		remove = try container.decode([String].self, forKey: .remove)
 	}
 
@@ -1153,12 +1157,14 @@ public struct ToolsOzoneModerationDefsModEventTag: Codable, Sendable, Equatable 
 		var container = encoder.container(keyedBy: CodingKeys.self)
 		try container.encode(add, forKey: .add)
 		try container.encodeIfPresent(comment, forKey: .comment)
+		try container.encodeIfPresent(durationInHours, forKey: .durationInHours)
 		try container.encode(remove, forKey: .remove)
 	}
 
 	private enum CodingKeys: String, CodingKey {
 		case add = "add"
 		case comment = "comment"
+		case durationInHours = "durationInHours"
 		case remove = "remove"
 	}
 }
@@ -2747,6 +2753,7 @@ public struct ToolsOzoneModerationEmitEventInput: Codable, Sendable, Equatable {
 	public let event: ToolsOzoneModerationEmitEventInputEvent
 	public let externalId: String?
 	public let modTool: ToolsOzoneModerationDefsModTool?
+	public let reportAction: ToolsOzoneModerationEmitEventReportAction?
 	public let subject: ToolsOzoneModerationEmitEventInputSubject
 	public let subjectBlobCids: [CID]?
 
@@ -2755,6 +2762,7 @@ public struct ToolsOzoneModerationEmitEventInput: Codable, Sendable, Equatable {
 		event: ToolsOzoneModerationEmitEventInputEvent,
 		externalId: String? = nil,
 		modTool: ToolsOzoneModerationDefsModTool? = nil,
+		reportAction: ToolsOzoneModerationEmitEventReportAction? = nil,
 		subject: ToolsOzoneModerationEmitEventInputSubject,
 		subjectBlobCids: [CID]? = nil
 	) {
@@ -2762,6 +2770,7 @@ public struct ToolsOzoneModerationEmitEventInput: Codable, Sendable, Equatable {
 		self.event = event
 		self.externalId = externalId
 		self.modTool = modTool
+		self.reportAction = reportAction
 		self.subject = subject
 		self.subjectBlobCids = subjectBlobCids
 	}
@@ -2772,6 +2781,7 @@ public struct ToolsOzoneModerationEmitEventInput: Codable, Sendable, Equatable {
 		event = try container.decode(ToolsOzoneModerationEmitEventInputEvent.self, forKey: .event)
 		externalId = try container.decodeIfPresent(String.self, forKey: .externalId)
 		modTool = try container.decodeIfPresent(ToolsOzoneModerationDefsModTool.self, forKey: .modTool)
+		reportAction = try container.decodeIfPresent(ToolsOzoneModerationEmitEventReportAction.self, forKey: .reportAction)
 		subject = try container.decode(ToolsOzoneModerationEmitEventInputSubject.self, forKey: .subject)
 		subjectBlobCids = try container.decodeIfPresent([CID].self, forKey: .subjectBlobCids)
 	}
@@ -2782,6 +2792,7 @@ public struct ToolsOzoneModerationEmitEventInput: Codable, Sendable, Equatable {
 		try container.encode(event, forKey: .event)
 		try container.encodeIfPresent(externalId, forKey: .externalId)
 		try container.encodeIfPresent(modTool, forKey: .modTool)
+		try container.encodeIfPresent(reportAction, forKey: .reportAction)
 		try container.encode(subject, forKey: .subject)
 		try container.encodeIfPresent(subjectBlobCids, forKey: .subjectBlobCids)
 	}
@@ -2791,6 +2802,7 @@ public struct ToolsOzoneModerationEmitEventInput: Codable, Sendable, Equatable {
 		case event = "event"
 		case externalId = "externalId"
 		case modTool = "modTool"
+		case reportAction = "reportAction"
 		case subject = "subject"
 		case subjectBlobCids = "subjectBlobCids"
 	}
@@ -2915,6 +2927,49 @@ public indirect enum ToolsOzoneModerationEmitEventInputSubject: Codable, Sendabl
 
 
 public typealias ToolsOzoneModerationEmitEventOutput = ToolsOzoneModerationDefsModEventView
+
+
+public struct ToolsOzoneModerationEmitEventReportAction: Codable, Sendable, Equatable {
+	public let all: Bool?
+	public let ids: [Int]?
+	public let note: String?
+	public let types: [String]?
+
+	public init(
+		all: Bool? = nil,
+		ids: [Int]? = nil,
+		note: String? = nil,
+		types: [String]? = nil
+	) {
+		self.all = all
+		self.ids = ids
+		self.note = note
+		self.types = types
+	}
+
+	public init(from decoder: Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		all = try container.decodeIfPresent(Bool.self, forKey: .all)
+		ids = try container.decodeIfPresent([Int].self, forKey: .ids)
+		note = try container.decodeIfPresent(String.self, forKey: .note)
+		types = try container.decodeIfPresent([String].self, forKey: .types)
+	}
+
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+		try container.encodeIfPresent(all, forKey: .all)
+		try container.encodeIfPresent(ids, forKey: .ids)
+		try container.encodeIfPresent(note, forKey: .note)
+		try container.encodeIfPresent(types, forKey: .types)
+	}
+
+	private enum CodingKeys: String, CodingKey {
+		case all = "all"
+		case ids = "ids"
+		case note = "note"
+		case types = "types"
+	}
+}
 
 
 public enum ToolsOzoneModerationGetAccountTimelineError: String, Swift.Error, CaseIterable, Sendable {
