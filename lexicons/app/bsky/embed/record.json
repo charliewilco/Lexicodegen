@@ -45,7 +45,10 @@
 				},
 				"labels": {
 					"type": "array",
-					"items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+					"items": {
+						"type": "ref",
+						"ref": "com.atproto.label.defs#label"
+					}
 				},
 				"replyCount": { "type": "integer" },
 				"repostCount": { "type": "integer" },
@@ -81,7 +84,10 @@
 			"properties": {
 				"uri": { "type": "string", "format": "at-uri" },
 				"blocked": { "type": "boolean", "const": true },
-				"author": { "type": "ref", "ref": "app.bsky.feed.defs#blockedAuthor" }
+				"author": {
+					"type": "ref",
+					"ref": "app.bsky.feed.defs#blockedAuthor"
+				}
 			}
 		},
 		"viewDetached": {

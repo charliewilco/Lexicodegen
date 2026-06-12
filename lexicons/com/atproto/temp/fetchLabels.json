@@ -25,7 +25,10 @@
 					"properties": {
 						"labels": {
 							"type": "array",
-							"items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+							"items": {
+								"type": "ref",
+								"ref": "com.atproto.label.defs#label"
+							}
 						}
 					}
 				}

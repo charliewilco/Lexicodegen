@@ -32,7 +32,10 @@
 				"viewer": { "type": "ref", "ref": "#viewerState" },
 				"labels": {
 					"type": "array",
-					"items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+					"items": {
+						"type": "ref",
+						"ref": "com.atproto.label.defs#label"
+					}
 				},
 				"threadgate": { "type": "ref", "ref": "#threadgateView" },
 				"debug": {
@@ -67,7 +70,10 @@
 			"properties": {
 				"post": { "type": "ref", "ref": "#postView" },
 				"reply": { "type": "ref", "ref": "#replyRef" },
-				"reason": { "type": "union", "refs": ["#reasonRepost", "#reasonPin"] },
+				"reason": {
+					"type": "union",
+					"refs": ["#reasonRepost", "#reasonPin"]
+				},
 				"feedContext": {
 					"type": "string",
 					"description": "Context provided by feed generator that may be passed back alongside interactions.",
@@ -103,7 +109,10 @@
 			"type": "object",
 			"required": ["by", "indexedAt"],
 			"properties": {
-				"by": { "type": "ref", "ref": "app.bsky.actor.defs#profileViewBasic" },
+				"by": {
+					"type": "ref",
+					"ref": "app.bsky.actor.defs#profileViewBasic"
+				},
 				"uri": { "type": "string", "format": "at-uri" },
 				"cid": { "type": "string", "format": "cid" },
 				"indexedAt": { "type": "string", "format": "datetime" }
@@ -126,7 +135,11 @@
 					"type": "array",
 					"items": {
 						"type": "union",
-						"refs": ["#threadViewPost", "#notFoundPost", "#blockedPost"]
+						"refs": [
+							"#threadViewPost",
+							"#notFoundPost",
+							"#blockedPost"
+						]
 					}
 				},
 				"threadContext": { "type": "ref", "ref": "#threadContext" }
@@ -154,17 +167,30 @@
 			"required": ["did"],
 			"properties": {
 				"did": { "type": "string", "format": "did" },
-				"viewer": { "type": "ref", "ref": "app.bsky.actor.defs#viewerState" }
+				"viewer": {
+					"type": "ref",
+					"ref": "app.bsky.actor.defs#viewerState"
+				}
 			}
 		},
 		"generatorView": {
 			"type": "object",
-			"required": ["uri", "cid", "did", "creator", "displayName", "indexedAt"],
+			"required": [
+				"uri",
+				"cid",
+				"did",
+				"creator",
+				"displayName",
+				"indexedAt"
+			],
 			"properties": {
 				"uri": { "type": "string", "format": "at-uri" },
 				"cid": { "type": "string", "format": "cid" },
 				"did": { "type": "string", "format": "did" },
-				"creator": { "type": "ref", "ref": "app.bsky.actor.defs#profileView" },
+				"creator": {
+					"type": "ref",
+					"ref": "app.bsky.actor.defs#profileView"
+				},
 				"displayName": { "type": "string" },
 				"description": {
 					"type": "string",
@@ -180,7 +206,10 @@
 				"acceptsInteractions": { "type": "boolean" },
 				"labels": {
 					"type": "array",
-					"items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+					"items": {
+						"type": "ref",
+						"ref": "com.atproto.label.defs#label"
+					}
 				},
 				"viewer": { "type": "ref", "ref": "#generatorViewerState" },
 				"contentMode": {
@@ -234,7 +263,10 @@
 				"record": { "type": "unknown" },
 				"lists": {
 					"type": "array",
-					"items": { "type": "ref", "ref": "app.bsky.graph.defs#listViewBasic" }
+					"items": {
+						"type": "ref",
+						"ref": "app.bsky.graph.defs#listViewBasic"
+					}
 				}
 			}
 		},

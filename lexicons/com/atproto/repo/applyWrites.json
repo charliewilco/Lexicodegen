@@ -50,7 +50,11 @@
 							"type": "array",
 							"items": {
 								"type": "union",
-								"refs": ["#createResult", "#updateResult", "#deleteResult"],
+								"refs": [
+									"#createResult",
+									"#updateResult",
+									"#deleteResult"
+								],
 								"closed": true
 							}
 						}

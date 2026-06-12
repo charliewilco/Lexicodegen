@@ -58,7 +58,10 @@
 			"properties": {
 				"uri": { "type": "string", "format": "at-uri" },
 				"cid": { "type": "string", "format": "cid" },
-				"author": { "type": "ref", "ref": "app.bsky.actor.defs#profileView" },
+				"author": {
+					"type": "ref",
+					"ref": "app.bsky.actor.defs#profileView"
+				},
 				"reason": {
 					"type": "string",
 					"description": "The reason why this notification was delivered - e.g. your post was liked, or you received a new follower.",
@@ -84,7 +87,10 @@
 				"indexedAt": { "type": "string", "format": "datetime" },
 				"labels": {
 					"type": "array",
-					"items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+					"items": {
+						"type": "ref",
+						"ref": "com.atproto.label.defs#label"
+					}
 				}
 			}
 		}

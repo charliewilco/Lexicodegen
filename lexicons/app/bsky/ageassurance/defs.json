@@ -200,7 +200,13 @@
 		"event": {
 			"type": "object",
 			"description": "Object used to store Age Assurance data in stash.",
-			"required": ["createdAt", "status", "access", "attemptId", "countryCode"],
+			"required": [
+				"createdAt",
+				"status",
+				"access",
+				"attemptId",
+				"countryCode"
+			],
 			"properties": {
 				"createdAt": {
 					"type": "string",

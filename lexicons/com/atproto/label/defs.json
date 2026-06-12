@@ -108,7 +108,10 @@
 				},
 				"locales": {
 					"type": "array",
-					"items": { "type": "ref", "ref": "#labelValueDefinitionStrings" }
+					"items": {
+						"type": "ref",
+						"ref": "#labelValueDefinitionStrings"
+					}
 				}
 			}
 		},
@@ -140,16 +143,13 @@
 			"type": "string",
 			"knownValues": [
 				"!hide",
-				"!no-promote",
 				"!warn",
 				"!no-unauthenticated",
-				"dmca-violation",
-				"doxxing",
 				"porn",
 				"sexual",
 				"nudity",
-				"nsfl",
-				"gore"
+				"graphic-media",
+				"bot"
 			]
 		}
 	}

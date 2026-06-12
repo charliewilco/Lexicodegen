@@ -9,7 +9,12 @@
 				"encoding": "application/json",
 				"schema": {
 					"type": "object",
-					"required": ["action", "subjects", "createdBy", "scheduling"],
+					"required": [
+						"action",
+						"subjects",
+						"createdBy",
+						"scheduling"
+					],
 					"properties": {
 						"action": {
 							"type": "union",

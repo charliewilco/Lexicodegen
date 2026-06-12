@@ -28,7 +28,10 @@
 					"type": "permission",
 					"resource": "repo",
 					"action": ["create", "update", "delete"],
-					"collection": ["app.bsky.graph.block", "app.bsky.graph.listblock"]
+					"collection": [
+						"app.bsky.graph.block",
+						"app.bsky.graph.listblock"
+					]
 				}
 			]
 		}

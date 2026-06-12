@@ -25,7 +25,10 @@
 					"properties": {
 						"posts": {
 							"type": "array",
-							"items": { "type": "ref", "ref": "app.bsky.feed.defs#postView" }
+							"items": {
+								"type": "ref",
+								"ref": "app.bsky.feed.defs#postView"
+							}
 						}
 					}
 				}

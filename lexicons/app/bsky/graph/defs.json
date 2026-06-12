@@ -14,7 +14,10 @@
 				"listItemCount": { "type": "integer", "minimum": 0 },
 				"labels": {
 					"type": "array",
-					"items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+					"items": {
+						"type": "ref",
+						"ref": "com.atproto.label.defs#label"
+					}
 				},
 				"viewer": { "type": "ref", "ref": "#listViewerState" },
 				"indexedAt": { "type": "string", "format": "datetime" }
@@ -22,11 +25,21 @@
 		},
 		"listView": {
 			"type": "object",
-			"required": ["uri", "cid", "creator", "name", "purpose", "indexedAt"],
+			"required": [
+				"uri",
+				"cid",
+				"creator",
+				"name",
+				"purpose",
+				"indexedAt"
+			],
 			"properties": {
 				"uri": { "type": "string", "format": "at-uri" },
 				"cid": { "type": "string", "format": "cid" },
-				"creator": { "type": "ref", "ref": "app.bsky.actor.defs#profileView" },
+				"creator": {
+					"type": "ref",
+					"ref": "app.bsky.actor.defs#profileView"
+				},
 				"name": { "type": "string", "maxLength": 64, "minLength": 1 },
 				"purpose": { "type": "ref", "ref": "#listPurpose" },
 				"description": {
@@ -42,7 +55,10 @@
 				"listItemCount": { "type": "integer", "minimum": 0 },
 				"labels": {
 					"type": "array",
-					"items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+					"items": {
+						"type": "ref",
+						"ref": "com.atproto.label.defs#label"
+					}
 				},
 				"viewer": { "type": "ref", "ref": "#listViewerState" },
 				"indexedAt": { "type": "string", "format": "datetime" }
@@ -53,7 +69,10 @@
 			"required": ["uri", "subject"],
 			"properties": {
 				"uri": { "type": "string", "format": "at-uri" },
-				"subject": { "type": "ref", "ref": "app.bsky.actor.defs#profileView" }
+				"subject": {
+					"type": "ref",
+					"ref": "app.bsky.actor.defs#profileView"
+				}
 			}
 		},
 		"starterPackView": {
@@ -76,13 +95,19 @@
 				"feeds": {
 					"type": "array",
 					"maxLength": 3,
-					"items": { "type": "ref", "ref": "app.bsky.feed.defs#generatorView" }
+					"items": {
+						"type": "ref",
+						"ref": "app.bsky.feed.defs#generatorView"
+					}
 				},
 				"joinedWeekCount": { "type": "integer", "minimum": 0 },
 				"joinedAllTimeCount": { "type": "integer", "minimum": 0 },
 				"labels": {
 					"type": "array",
-					"items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+					"items": {
+						"type": "ref",
+						"ref": "com.atproto.label.defs#label"
+					}
 				},
 				"indexedAt": { "type": "string", "format": "datetime" }
 			}
@@ -103,7 +128,10 @@
 				"joinedAllTimeCount": { "type": "integer", "minimum": 0 },
 				"labels": {
 					"type": "array",
-					"items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+					"items": {
+						"type": "ref",
+						"ref": "com.atproto.label.defs#label"
+					}
 				},
 				"indexedAt": { "type": "string", "format": "datetime" }
 			}
