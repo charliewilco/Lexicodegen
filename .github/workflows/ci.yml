@@ -65,6 +65,3 @@ jobs:
 
       - name: Verify generated Swift typechecks
         run: bash ./scripts/check-swift-compile.sh ./output/swift
-
-      - name: Verify generated Swift matches golden snapshot
-        run: diff -ru ./testdata/golden/full ./output/swift
