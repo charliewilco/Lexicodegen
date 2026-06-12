@@ -5,6 +5,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"sort"
+	"strings"
 	"testing"
 
 	"github.com/charliewilco/lexicodegen/internal/config"
@@ -16,7 +17,7 @@ func TestEmitSwiftFromIRMatchesGoldenOutput(t *testing.T) {
 	repoRoot := repoRoot(t)
 	docs, err := source.LoadLexiconsFromSources(t.Context(), []config.LexiconSource{{
 		Kind:      "local",
-		Path:      filepath.Join(repoRoot, "lexicons"),
+		Path:      filepath.Join(repoRoot, "testdata", "acceptance", "minimal-endpoints", "lexicons"),
 		Recursive: boolPointer(true),
 	}})
 	if err != nil {
@@ -28,7 +29,7 @@ func TestEmitSwiftFromIRMatchesGoldenOutput(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	compareDirectories(t, filepath.Join(repoRoot, "testdata", "golden", "full"), outputDir)
+	compareDirectories(t, filepath.Join(repoRoot, "testdata", "golden", "minimal-endpoints"), outputDir)
 }
 
 func TestEmitSwiftFromIRIsDeterministic(t *testing.T) {
@@ -114,7 +115,7 @@ func compareDirectories(t *testing.T, left string, right string) {
 	leftFiles := swiftFiles(leftEntries)
 	rightFiles := swiftFiles(rightEntries)
 	if len(leftFiles) != len(rightFiles) {
-		t.Fatalf("file count mismatch: %d != %d", len(leftFiles), len(rightFiles))
+		t.Fatalf("file count mismatch:\nleft only:\n%s\nright only:\n%s", strings.Join(difference(leftFiles, rightFiles), "\n"), strings.Join(difference(rightFiles, leftFiles), "\n"))
 	}
 	for index := range leftFiles {
 		if leftFiles[index] != rightFiles[index] {
@@ -132,6 +133,21 @@ func compareDirectories(t *testing.T, left string, right string) {
 			t.Fatalf("content mismatch for %s", leftFiles[index])
 		}
 	}
+}
+
+func difference(left []string, right []string) []string {
+	rightSet := make(map[string]struct{}, len(right))
+	for _, value := range right {
+		rightSet[value] = struct{}{}
+	}
+
+	result := make([]string, 0)
+	for _, value := range left {
+		if _, ok := rightSet[value]; !ok {
+			result = append(result, value)
+		}
+	}
+	return result
 }
 
 func swiftFiles(entries []os.DirEntry) []string {

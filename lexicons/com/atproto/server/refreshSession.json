@@ -23,7 +23,11 @@
 						"status": {
 							"type": "string",
 							"description": "Hosting status of the account. If not specified, then assume 'active'.",
-							"knownValues": ["takendown", "suspended", "deactivated"]
+							"knownValues": [
+								"takendown",
+								"suspended",
+								"deactivated"
+							]
 						}
 					}
 				}
