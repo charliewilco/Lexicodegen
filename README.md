@@ -28,7 +28,7 @@ Implementation notes:
 - `internal/ir`: generator IR for Swift emission
 - `internal/swiftgen`: Swift-specific code generation
 - `lexicons/`: checked-in lexicon JSON input
-- `testdata/golden/full/`: parity snapshot for generated Swift output
+- `testdata/golden/minimal-endpoints/`: pinned parity snapshot for focused generated Swift output
 - `scripts/get-lexicons.sh`: refreshes lexicon snapshots from upstream
 - `scripts/check-swift-compile.sh`: typechecks generated Swift with `swiftc`
 - `docs/`: focused documentation for CLI usage and TOML configuration
@@ -94,7 +94,7 @@ The test suite is organized around generator regression safety:
 - unit tests cover config, source loading, schema parsing, IR construction, and small utility behavior
 - emitter behavior tests assert focused Swift snippets for generator contracts that should be easy to diagnose
 - acceptance tests under `testdata/acceptance` run small lexicon suites through the CLI path, verify stable generated files and API snippets, and typecheck tiny Swift usage fixtures when `swiftc` is available
-- the full golden snapshot under `testdata/golden/full` remains a broad regression alarm for current upstream lexicons
+- the pinned golden snapshot under `testdata/golden/minimal-endpoints` catches generated-output drift against a stable fixture
 - the generated Swift compile check verifies the full generated surface with `swiftc`
 
 Run the default suite with:
