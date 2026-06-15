@@ -31,7 +31,7 @@ Implementation notes:
 - `testdata/golden/minimal-endpoints/`: pinned parity snapshot for focused generated Swift output
 - `scripts/get-lexicons.sh`: refreshes lexicon snapshots from upstream
 - `scripts/check-swift-compile.sh`: typechecks generated Swift with `swiftc`
-- `docs/`: focused documentation for CLI usage and TOML configuration
+- `docs/`: focused documentation for CLI usage, GitHub Actions usage, and TOML configuration
 
 ## Installation
 
@@ -65,6 +65,32 @@ Or run it directly from a checkout:
 ```bash
 go run ./cmd/lexicodegen ./lexicons --output ./output/swift
 ```
+
+## GitHub Actions
+
+Use [`charliewilco/action-lexicodegen`](https://github.com/charliewilco/action-lexicodegen) when another repository needs Lexicodegen in CI.
+
+Install the CLI and run it in a later step:
+
+```yaml
+- uses: charliewilco/action-lexicodegen@v1
+  with:
+    version: v0.1.0
+
+- run: lexicodegen ./lexicons --output ./output/swift
+```
+
+Or install and run Lexicodegen in one step:
+
+```yaml
+- uses: charliewilco/action-lexicodegen/run@v1
+  with:
+    version: v0.1.0
+    sources: ./lexicons
+    output: ./output/swift
+```
+
+Pin the `version` input to an explicit Lexicodegen release tag so generated Swift changes are tied to an intentional generator upgrade. See [docs/github-actions.md](docs/github-actions.md) for more examples.
 
 ## Git Hooks
 
