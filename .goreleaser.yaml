@@ -43,5 +43,6 @@ brews:
       name: homebrew-lexicodegen
       branch: main
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    skip_upload: '{{ if index .Env "HOMEBREW_TAP_GITHUB_TOKEN" }}false{{ else }}true{{ end }}'
     test: |
       assert_match "unsupported target: invalid", shell_output("#{bin}/lexicodegen --target invalid", 1)

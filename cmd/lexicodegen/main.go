@@ -36,7 +36,7 @@ func runWithOutput(ctx context.Context, argv []string, output io.Writer) error {
 		_, err := fmt.Fprint(output, helpText())
 		return err
 	case wantsVersion(argv):
-		_, err := fmt.Fprintf(output, "lexicodegen %s (%s, %s)\n", version, commit, date)
+		_, err := fmt.Fprintln(output, versionText())
 		return err
 	}
 
@@ -81,6 +81,10 @@ func wantsHelp(argv []string) bool {
 
 func wantsVersion(argv []string) bool {
 	return len(argv) == 1 && (argv[0] == "--version" || argv[0] == "version")
+}
+
+func versionText() string {
+	return fmt.Sprintf("lexicodegen %s (%s, %s)", version, commit, date)
 }
 
 func joinTargets(targets []config.Target) string {

@@ -94,12 +94,49 @@ func TestRunPrintsHelp(t *testing.T) {
 }
 
 func TestRunPrintsVersion(t *testing.T) {
-	var output bytes.Buffer
-	if err := runWithOutput(context.Background(), []string{"--version"}, &output); err != nil {
-		t.Fatal(err)
+	tests := []struct {
+		name string
+		arg  string
+	}{
+		{
+			name: "flag",
+			arg:  "--version",
+		},
+		{
+			name: "command",
+			arg:  "version",
+		},
 	}
 
-	if got, want := output.String(), "lexicodegen dev (none, unknown)\n"; got != want {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var output bytes.Buffer
+			if err := runWithOutput(context.Background(), []string{test.arg}, &output); err != nil {
+				t.Fatal(err)
+			}
+
+			if got, want := output.String(), "lexicodegen dev (none, unknown)\n"; got != want {
+				t.Fatalf("version output mismatch: %q != %q", got, want)
+			}
+		})
+	}
+}
+
+func TestVersionTextUsesInjectedReleaseMetadata(t *testing.T) {
+	originalVersion := version
+	originalCommit := commit
+	originalDate := date
+	t.Cleanup(func() {
+		version = originalVersion
+		commit = originalCommit
+		date = originalDate
+	})
+
+	version = "v0.1.0"
+	commit = "abc1234"
+	date = "2026-06-15T12:34:56Z"
+
+	if got, want := versionText(), "lexicodegen v0.1.0 (abc1234, 2026-06-15T12:34:56Z)"; got != want {
 		t.Fatalf("version output mismatch: %q != %q", got, want)
 	}
 }

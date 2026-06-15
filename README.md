@@ -51,7 +51,7 @@ The Homebrew shorthand above expects a `charliewilco/homebrew-lexicodegen` tap r
 Install with Go:
 
 ```bash
-go install github.com/charliewilco/lexicodegen/cmd/lexicodegen@latest
+go install github.com/charliewilco/lexicodegen/cmd/lexicodegen@v0.1.0
 ```
 
 Build the CLI from source:
@@ -301,19 +301,34 @@ Primary verification flow:
 
 Tagged releases are published with GoReleaser via `.github/workflows/release.yml`.
 
+Release tags are the installable version contract for downstream automation such as GitHub Actions. Prefer pinned SemVer tags such as `v0.1.0` over `latest` when another repository needs reproducible generation.
+
 Release flow:
 
 - create and push a semver tag such as `v0.1.0`
 - GitHub Actions runs GoReleaser
 - GoReleaser uploads release archives to GitHub Releases
-- GoReleaser updates `Formula/lexicodegen.rb` in the `charliewilco/homebrew-lexicodegen` tap repository
+- GoReleaser updates `Formula/lexicodegen.rb` in the `charliewilco/homebrew-lexicodegen` tap repository when `HOMEBREW_TAP_GITHUB_TOKEN` is configured
+
+First release:
+
+```bash
+git tag -a v0.1.0 -m "Release v0.1.0"
+git push origin v0.1.0
+```
+
+After the release workflow completes, verify the published binary:
+
+```bash
+lexicodegen --version
+```
 
 One-time setup:
 
 - create the `charliewilco/homebrew-lexicodegen` tap repository with a `main` branch
-- add a `HOMEBREW_TAP_GITHUB_TOKEN` repository secret that can write to the tap repository
+- add a `HOMEBREW_TAP_GITHUB_TOKEN` repository secret that can write to the tap repository if Homebrew publishing should happen during release
 - the release workflow uses the default `GITHUB_TOKEN` to publish this repository's GitHub Release
-- GoReleaser uses `HOMEBREW_TAP_GITHUB_TOKEN` to publish the Homebrew formula to the tap repository
+- GoReleaser uses `HOMEBREW_TAP_GITHUB_TOKEN` to publish the Homebrew formula to the tap repository; without that secret, the formula is generated locally in `dist/` and the tap upload is skipped
 
 Local release validation:
 
