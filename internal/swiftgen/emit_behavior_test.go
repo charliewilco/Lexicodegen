@@ -308,6 +308,59 @@ func TestEmitSwiftFromIRPrefixesGeneratedFileNames(t *testing.T) {
 	}
 }
 
+func TestEmitSwiftFromIRKnownValuesOpenEnum(t *testing.T) {
+	t.Parallel()
+
+	namedTypes := []ir.NamedType{
+		{
+			ID:       "com.atproto.label.defs",
+			Name:     "labelValueDefinitionDefaultSetting",
+			FullName: "com.atproto.label.defs.labelValueDefinitionDefaultSetting",
+			Definition: schema.Schema{
+				Type:        "string",
+				KnownValues: []string{"ignore", "warn", "hide"},
+			},
+			Source: "com.atproto.label.defs",
+			Tag:    "com.atproto.label",
+			Type:   "string",
+		},
+	}
+
+	data := ir.LexiconIR{
+		NamedTypes: namedTypes,
+		DefinitionIndex: map[string]ir.NamedType{
+			namedTypes[0].FullName: namedTypes[0],
+		},
+	}
+
+	outputDir := t.TempDir()
+	if err := EmitSwiftFromIR(data, outputDir); err != nil {
+		t.Fatal(err)
+	}
+
+	generated := readFile(t, filepath.Join(outputDir, "ComAtprotoLabel.generated.swift"))
+
+	// knownValues is an open set, so it is emitted as a String newtype struct
+	if strings.Contains(generated, ": String, Codable, CaseIterable") {
+		t.Fatalf("knownValues should not be a closed String-backed enum:\n%s", generated)
+	}
+	if strings.Contains(generated, "case unexpected") {
+		t.Fatalf("knownValues should be open by construction, not an enum fallback case:\n%s", generated)
+	}
+
+	for _, snippet := range []string{
+		"public struct ComAtprotoLabelDefsLabelValueDefinitionDefaultSetting: RawRepresentable, Codable, Hashable, Sendable, QueryParameterValue {",
+		"public let rawValue: String",
+		"public static let ignore = ComAtprotoLabelDefsLabelValueDefinitionDefaultSetting(rawValue: \"ignore\")",
+		"public static let hide = ComAtprotoLabelDefsLabelValueDefinitionDefaultSetting(rawValue: \"hide\")",
+		"public static let allKnownValues: [ComAtprotoLabelDefsLabelValueDefinitionDefaultSetting] = [.ignore, .warn, .hide]",
+	} {
+		if !strings.Contains(generated, snippet) {
+			t.Fatalf("open string struct output missing %q:\n%s", snippet, generated)
+		}
+	}
+}
+
 func readFile(t *testing.T, path string) string {
 	t.Helper()
 	content, err := os.ReadFile(path)
