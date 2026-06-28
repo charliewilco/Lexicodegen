@@ -533,7 +533,9 @@ func mapSchemaToSwiftType(schemaData *schema.Schema, fullName string, referenceB
 	return primitiveSwiftType(*schemaData)
 }
 
-// buildKnownValueEnum deduplicates repeated known-value sets into one Swift enum per file group.
+// buildKnownValueEnum deduplicates repeated known-value sets into one Swift type per file group.
+//
+// knownValues is an OPEN set per the AT Protocol Lexicon spec
 func buildKnownValueEnum(fullName string, values []string, group string, context *generatedContext, canonicalKey string) string {
 	if canonicalKey != "" {
 		if existing, ok := context.KnownValueEnums[canonicalKey]; ok {
@@ -543,11 +545,26 @@ func buildKnownValueEnum(fullName string, values []string, group string, context
 
 	name := modelName(fullName)
 	uniqueValues := uniqueStrings(values)
-	lines := []string{"public enum " + name + ": String, Codable, CaseIterable, QueryParameterValue, Sendable {"}
-	for _, entry := range uniqueValues {
-		lines = append(lines, "\tcase "+toSwiftSafeIdentifier(toCamelCase(entry))+" = "+strconv.Quote(entry))
+
+	constants := make([]string, len(uniqueValues))
+	knownList := make([]string, len(uniqueValues))
+	for index, entry := range uniqueValues {
+		caseName := toSwiftSafeIdentifier(toCamelCase(entry))
+		constants[index] = "\tpublic static let " + caseName + " = " + name + "(rawValue: " + strconv.Quote(entry) + ")"
+		knownList[index] = "." + caseName
 	}
-	lines = append(lines, "}")
+
+	lines := []string{
+		"public struct " + name + ": RawRepresentable, Codable, Hashable, Sendable, QueryParameterValue {",
+		"\tpublic let rawValue: String",
+		"",
+		"\tpublic init(rawValue: String) {",
+		"\t\tself.rawValue = rawValue",
+		"\t}",
+		"",
+	}
+	lines = append(lines, constants...)
+	lines = append(lines, "", "\tpublic static let allKnownValues: ["+name+"] = ["+strings.Join(knownList, ", ")+"]", "}")
 
 	resolvedName := ensureModel(context.Models, name, strings.Join(lines, "\n"), group)
 	if canonicalKey != "" {
