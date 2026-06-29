@@ -97,7 +97,18 @@ var swiftReservedWords = map[string]struct{}{
 	"associatedtype": {}, "class": {}, "deinit": {}, "enum": {}, "extension": {}, "func": {}, "import": {}, "init": {},
 	"let": {}, "protocol": {}, "struct": {}, "subscript": {}, "typealias": {}, "var": {}, "break": {}, "case": {},
 	"catch": {}, "continue": {}, "default": {}, "defer": {}, "do": {}, "else": {}, "fallthrough": {}, "for": {},
-	"if": {}, "in": {}, "repeat": {}, "return": {}, "throw": {}, "where": {}, "while": {},
+	"if": {}, "in": {}, "repeat": {}, "return": {}, "throw": {}, "where": {}, "while": {}, "any": {}, "as": {},
+	"await": {}, "false": {}, "is": {}, "nil": {}, "rethrows": {}, "self": {}, "Self": {},
+	"super": {}, "throws": {}, "true": {}, "try": {}, "associativity": {}, "convenience": {},
+	"didSet": {}, "dynamic": {}, "fileprivate": {}, "final": {}, "get": {}, "indirect": {}, "infix": {},
+	"inout": {}, "internal": {}, "lazy": {}, "left": {}, "mutating": {}, "none": {}, "nonmutating": {},
+	"open": {}, "operator": {}, "optional": {}, "override": {}, "postfix": {}, "precedence": {}, "prefix": {},
+	"private": {}, "Protocol": {}, "public": {}, "required": {}, "right": {}, "set": {}, "some": {},
+	"static": {}, "Type": {}, "unowned": {}, "weak": {}, "willSet": {},
+}
+
+type swiftIdentifierAllocator struct {
+	used map[string]struct{}
 }
 
 // EmitSwiftFromIR renders runtime helpers, namespace-grouped models, and endpoint namespaces.
@@ -207,6 +218,14 @@ func EmitSwiftFromIR(data ir.LexiconIR, outputDir string, options ...EmitOptions
 }
 
 func toSwiftSafeIdentifier(input string) string {
+	replaced := normalizedSwiftIdentifier(input)
+	if _, ok := swiftReservedWords[replaced]; ok {
+		return "`" + replaced + "`"
+	}
+	return replaced
+}
+
+func normalizedSwiftIdentifier(input string) string {
 	var builder strings.Builder
 	for _, r := range input {
 		switch {
@@ -222,9 +241,6 @@ func toSwiftSafeIdentifier(input string) string {
 	}
 	if first := rune(replaced[0]); unicode.IsDigit(first) {
 		replaced = "_" + replaced
-	}
-	if _, ok := swiftReservedWords[replaced]; ok {
-		return "`" + replaced + "`"
 	}
 	return replaced
 }
@@ -265,6 +281,10 @@ func toPascalCase(input string) string {
 }
 
 func toCamelCase(input string) string {
+	return toSwiftSafeIdentifier(toCamelCaseIdentifier(input))
+}
+
+func toCamelCaseIdentifier(input string) string {
 	parts := splitWords(input)
 	if len(parts) == 0 {
 		return "item"
@@ -282,7 +302,7 @@ func toCamelCase(input string) string {
 			builder.WriteString(part[1:])
 		}
 	}
-	return toSwiftSafeIdentifier(builder.String())
+	return normalizedSwiftIdentifier(builder.String())
 }
 
 func modelName(fullName string) string {
@@ -343,13 +363,6 @@ func ensureModel(models map[string]swiftModel, name string, body string, group s
 		models[name] = swiftModel{Name: name, Body: body, Group: group}
 	}
 	return name
-}
-
-func propertySwiftName(key string) string {
-	if key == "$type" {
-		return "typeIdentifier"
-	}
-	return toCamelCase(key)
 }
 
 func isRequired(schemaData schema.Schema, key string) bool {
@@ -466,25 +479,42 @@ func quotedSwiftString(value string) string {
 	return strconv.Quote(value)
 }
 
-func permissionMethodName(value string) string {
-	return toSwiftSafeIdentifier(toCamelCase(value))
+func newSwiftIdentifierAllocator(seed ...string) *swiftIdentifierAllocator {
+	allocator := &swiftIdentifierAllocator{used: map[string]struct{}{}}
+	for _, value := range seed {
+		allocator.reserve(value)
+	}
+	return allocator
 }
 
-func uniqueCaseName(existing map[string]struct{}, input string) string {
-	candidate := toCamelCase(input)
-	if _, ok := existing[candidate]; !ok {
-		existing[candidate] = struct{}{}
-		return candidate
+func (allocator *swiftIdentifierAllocator) reserve(value string) {
+	allocator.used[normalizedSwiftIdentifier(value)] = struct{}{}
+}
+
+func (allocator *swiftIdentifierAllocator) allocateCamel(input string) string {
+	return allocator.allocateBase(toCamelCaseIdentifier(input))
+}
+
+func (allocator *swiftIdentifierAllocator) allocateBase(base string) string {
+	candidate := normalizedSwiftIdentifier(base)
+	if _, ok := allocator.used[candidate]; !ok {
+		allocator.used[candidate] = struct{}{}
+		return toSwiftSafeIdentifier(candidate)
 	}
+
 	index := 2
 	for {
 		next := candidate + strconv.Itoa(index)
-		if _, ok := existing[next]; !ok {
-			existing[next] = struct{}{}
-			return next
+		if _, ok := allocator.used[next]; !ok {
+			allocator.used[next] = struct{}{}
+			return toSwiftSafeIdentifier(next)
 		}
 		index++
 	}
+}
+
+func uniqueCaseName(allocator *swiftIdentifierAllocator, input string) string {
+	return allocator.allocateCamel(input)
 }
 
 // mapSchemaToSwiftType is the recursive bridge from Lexicon schema shapes to Swift types.
@@ -526,6 +556,10 @@ func mapSchemaToSwiftType(schemaData *schema.Schema, fullName string, referenceB
 		})
 	}
 
+	if schemaData.Type == "string" && len(schemaData.Enum) > 0 {
+		return buildClosedStringEnum(fullName, schemaData.Enum, group, context)
+	}
+
 	if schemaData.Type == "string" && len(schemaData.KnownValues) > 0 {
 		return buildKnownValueEnum(fullName, schemaData.KnownValues, group, context, knownValueEnumKey(group, schemaData.KnownValues))
 	}
@@ -545,11 +579,12 @@ func buildKnownValueEnum(fullName string, values []string, group string, context
 
 	name := modelName(fullName)
 	uniqueValues := uniqueStrings(values)
+	allocator := newSwiftIdentifierAllocator("rawValue", "allKnownValues", "init")
 
 	constants := make([]string, len(uniqueValues))
 	knownList := make([]string, len(uniqueValues))
 	for index, entry := range uniqueValues {
-		caseName := toSwiftSafeIdentifier(toCamelCase(entry))
+		caseName := allocator.allocateCamel(entry)
 		constants[index] = "\tpublic static let " + caseName + " = " + name + "(rawValue: " + strconv.Quote(entry) + ")"
 		knownList[index] = "." + caseName
 	}
@@ -573,6 +608,22 @@ func buildKnownValueEnum(fullName string, values []string, group string, context
 	return resolvedName
 }
 
+func buildClosedStringEnum(fullName string, values []string, group string, context *generatedContext) string {
+	name := modelName(fullName)
+	if _, ok := context.Models[name]; ok {
+		return name
+	}
+
+	allocator := newSwiftIdentifierAllocator("rawValue", "allCases", "init")
+	lines := []string{"public enum " + name + ": String, Codable, CaseIterable, QueryParameterValue, Sendable {"}
+	for _, entry := range uniqueStrings(values) {
+		lines = append(lines, "\tcase "+allocator.allocateCamel(entry)+" = "+strconv.Quote(entry))
+	}
+	lines = append(lines, "}")
+
+	return ensureModel(context.Models, name, strings.Join(lines, "\n"), group)
+}
+
 // buildObjectDeclaration renders objects, records, and params as Codable Swift structs.
 func buildObjectDeclaration(fullName string, referenceBase string, schemaData schema.Schema, group string, context *generatedContext, options objectDeclarationOptions) string {
 	name := modelName(fullName)
@@ -594,12 +645,20 @@ func buildObjectDeclaration(fullName string, referenceBase string, schemaData sc
 		protocols = []string{"Codable", "Sendable", "Equatable"}
 	}
 
+	propertyNameAllocator := newSwiftIdentifierAllocator("CodingKeys", "init")
+	if options.TypeIdentifier != "" {
+		propertyNameAllocator.reserve("typeIdentifier")
+	}
+	if options.QueryEncodable {
+		propertyNameAllocator.reserve("asQueryItems")
+	}
+
 	properties := make([]objectProperty, 0, len(keys))
 	for _, key := range keys {
 		property := schemaData.Properties[key]
 		properties = append(properties, objectProperty{
 			Key:       key,
-			SwiftName: propertySwiftName(key),
+			SwiftName: propertyNameAllocator.allocateCamel(key),
 			Type:      mapSchemaToSwiftType(&property, fullName+"."+key, referenceBase, group, context, mapSchemaOptions{}),
 			Optional:  !isRequired(schemaData, key) || isNullable(schemaData, key),
 		})
@@ -760,7 +819,7 @@ func buildUnionDeclaration(fullName string, referenceBase string, refs []string,
 		IsRecord               bool
 	}
 
-	usedCaseNames := map[string]struct{}{}
+	caseNameAllocator := newSwiftIdentifierAllocator("unexpected", "init", "encode")
 	cases := make([]unionCase, 0, len(refs))
 	for _, ref := range refs {
 		target := schema.NormalizeRef(ref, referenceBase)
@@ -774,7 +833,7 @@ func buildUnionDeclaration(fullName string, referenceBase string, refs []string,
 			parts := strings.Split(definition.ID, ".")
 			caseInput = parts[len(parts)-1]
 		}
-		caseName := uniqueCaseName(usedCaseNames, caseInput)
+		caseName := uniqueCaseName(caseNameAllocator, caseInput)
 		caseType := modelName(target)
 		typeIdentifier := typeIdentifierForNamedType(definition)
 		if definition.Type == "record" && definition.Definition.Record != nil {
@@ -836,18 +895,23 @@ func buildPermissionSetDeclaration(named ir.NamedType, context *generatedContext
 	}
 
 	methodLines := []string{"public struct " + methodName + ": RawRepresentable, Codable, Hashable, Sendable {", "\tpublic let rawValue: String", "", "\tpublic init(rawValue: String) {", "\t\tself.rawValue = rawValue", "\t}"}
+	methodNameAllocator := newSwiftIdentifierAllocator("rawValue", "init")
+	methodNames := make([]string, len(knownMethods))
+	for index, value := range knownMethods {
+		methodNames[index] = methodNameAllocator.allocateCamel(value)
+	}
 	if len(knownMethods) > 0 {
 		methodLines = append(methodLines, "")
-		for _, value := range knownMethods {
-			methodLines = append(methodLines, "\tpublic static let "+permissionMethodName(value)+" = Self(rawValue: "+strconv.Quote(value)+")")
+		for index, value := range knownMethods {
+			methodLines = append(methodLines, "\tpublic static let "+methodNames[index]+" = Self(rawValue: "+strconv.Quote(value)+")")
 		}
 	}
 	methodLines = append(methodLines, "}")
 	ensureModel(context.Models, methodName, strings.Join(methodLines, "\n"), group)
 
 	methodRefs := make([]string, 0, len(knownMethods))
-	for _, value := range knownMethods {
-		methodRefs = append(methodRefs, "."+permissionMethodName(value))
+	for _, name := range methodNames {
+		methodRefs = append(methodRefs, "."+name)
 	}
 	lines := []string{
 		"public struct " + name + ": Codable, Sendable, Equatable {",
@@ -897,6 +961,9 @@ func buildNamedType(named ir.NamedType, context *generatedContext) string {
 		}
 		return ensureModel(context.Models, modelName(named.FullName), typealiasBody(modelName(named.FullName), "ATProtocolValueContainer"), group)
 	case "string":
+		if len(named.Definition.Enum) > 0 {
+			return buildClosedStringEnum(named.FullName, named.Definition.Enum, group, context)
+		}
 		if len(named.Definition.KnownValues) > 0 {
 			return buildKnownValueEnum(named.FullName, named.Definition.KnownValues, group, context, "")
 		}
@@ -964,9 +1031,10 @@ func buildEndpointErrorType(endpoint ir.Endpoint, context *generatedContext) str
 	fullName := endpoint.FullName + ".Error"
 	name := modelName(fullName)
 	group := modelGroupFromID(endpoint.Source)
+	caseNameAllocator := newSwiftIdentifierAllocator("rawValue", "allCases", "init")
 	lines := []string{"public enum " + name + ": String, Swift.Error, CaseIterable, Sendable {"}
 	for _, endpointError := range endpoint.Errors {
-		lines = append(lines, "\tcase "+toSwiftSafeIdentifier(toCamelCase(endpointError.Name))+" = "+strconv.Quote(endpointError.Name))
+		lines = append(lines, "\tcase "+caseNameAllocator.allocateCamel(endpointError.Name)+" = "+strconv.Quote(endpointError.Name))
 	}
 	lines = append(lines, "", "\tpublic init?(transportError: XRPCTransportError) {", "\t\tguard let rawValue = transportError.payload?.error else {", "\t\t\treturn nil", "\t\t}", "\t\tself.init(rawValue: rawValue)", "\t}", "}")
 	return ensureModel(context.Models, name, strings.Join(lines, "\n"), group)
@@ -1172,10 +1240,11 @@ func renderNamespaceNode(node *namespaceTreeNode) []string {
 		)
 
 		children := sortedNamespaceChildren(node.Children)
+		childNameAllocator := newSwiftIdentifierAllocator()
 		for _, child := range children {
 			output = append(output,
 				"",
-				"\tpublic var "+toCamelCase(child.Segment)+": "+namespaceStructName(child.Prefix)+" {",
+				"\tpublic var "+childNameAllocator.allocateCamel(child.Segment)+": "+namespaceStructName(child.Prefix)+" {",
 				"\t\t"+namespaceStructName(child.Prefix)+"(client: client)",
 				"\t}",
 			)
@@ -1201,9 +1270,10 @@ func renderEndpointNamespaces(endpoints []endpointSurface, header string) string
 	root := buildNamespaceTree(endpoints)
 	topLevel := sortedNamespaceChildren(root.Children)
 	lines := []string{header + "import Foundation", "", "public extension ATProtoClient {"}
+	topLevelNameAllocator := newSwiftIdentifierAllocator()
 	for _, child := range topLevel {
 		lines = append(lines,
-			"\tvar "+toCamelCase(child.Segment)+": "+namespaceStructName(child.Prefix)+" {",
+			"\tvar "+topLevelNameAllocator.allocateCamel(child.Segment)+": "+namespaceStructName(child.Prefix)+" {",
 			"\t\t"+namespaceStructName(child.Prefix)+"(client: self)",
 			"\t}",
 		)

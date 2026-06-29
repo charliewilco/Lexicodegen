@@ -5,7 +5,7 @@ Use [`charliewilco/action-lexicodegen`](https://github.com/charliewilco/action-l
 The action version and the Lexicodegen version are separate:
 
 - `charliewilco/action-lexicodegen@v1` pins the action interface.
-- `version: v0.1.0` pins the Lexicodegen CLI release used to generate Swift.
+- `version: v0.2.0` pins the Lexicodegen CLI release used to generate Swift.
 
 Pinning the CLI version is recommended. It makes generated Swift diffs reproducible and turns generator upgrades into intentional pull requests.
 
@@ -22,7 +22,7 @@ jobs:
 
       - uses: charliewilco/action-lexicodegen@v1
         with:
-          version: v0.1.0
+          version: v0.2.0
 
       - run: lexicodegen ./lexicons --output ./output/swift
 ```
@@ -40,7 +40,7 @@ jobs:
 
       - uses: charliewilco/action-lexicodegen/run@v1
         with:
-          version: v0.1.0
+          version: v0.2.0
           sources: ./lexicons
           output: ./output/swift
 ```
@@ -50,7 +50,7 @@ Multiple sources can be passed as newline-separated input:
 ```yaml
 - uses: charliewilco/action-lexicodegen/run@v1
   with:
-    version: v0.1.0
+    version: v0.2.0
     sources: |
       ./lexicons
       git-archive:https://github.com/example/lexicons/archive/refs/heads/main.tar.gz
@@ -64,7 +64,7 @@ When a repository has a checked-in Lexicodegen config file, prefer passing the c
 ```yaml
 - uses: charliewilco/action-lexicodegen/run@v1
   with:
-    version: v0.1.0
+    version: v0.2.0
     config: ./lexicodegen.toml
 ```
 
@@ -83,7 +83,7 @@ Use `extra-args` for additional CLI flags such as prefix filters:
 ```yaml
 - uses: charliewilco/action-lexicodegen/run@v1
   with:
-    version: v0.1.0
+    version: v0.2.0
     sources: ./lexicons
     output: ./output/swift
     extra-args: --allow-prefix app.bsky --deny-deprecated
@@ -104,7 +104,7 @@ jobs:
 
       - uses: charliewilco/action-lexicodegen/run@v1
         with:
-          version: v0.1.0
+          version: v0.2.0
           config: ./lexicodegen.toml
 
       - run: git diff --exit-code

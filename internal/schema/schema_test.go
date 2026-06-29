@@ -1,6 +1,9 @@
 package schema
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestParseDocumentsSingleAndArray(t *testing.T) {
 	t.Parallel()
@@ -31,6 +34,11 @@ func TestParseDocumentsSingleAndArray(t *testing.T) {
 		t.Fatalf("expected raw schema payload to be captured")
 	}
 
+	enumSchema := docs[0].Defs["main"].Properties["subject"]
+	if len(enumSchema.Enum) != 0 {
+		t.Fatalf("unexpected enum values in plain string schema: %#v", enumSchema.Enum)
+	}
+
 	array := []byte(`[
 		{
 			"lexicon": 1,
@@ -52,6 +60,39 @@ func TestParseDocumentsSingleAndArray(t *testing.T) {
 	}
 	if docs[0].ID != "app.bsky.feed.one" || docs[1].ID != "app.bsky.feed.two" {
 		t.Fatalf("unexpected ids: %#v", docs)
+	}
+}
+
+func TestParseDocumentsPreservesStringEnum(t *testing.T) {
+	t.Parallel()
+
+	payload := []byte(`{
+		"lexicon": 1,
+		"id": "tools.ozone.moderation.query",
+		"defs": {
+			"main": {
+				"type": "query",
+				"parameters": {
+					"type": "params",
+					"properties": {
+						"sort": {
+							"type": "string",
+							"enum": ["createdAt", "updatedAt"]
+						}
+					}
+				}
+			}
+		}
+	}`)
+
+	docs, err := ParseDocuments(payload)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sortSchema := docs[0].Defs["main"].Parameters.Properties["sort"]
+	if got, want := strings.Join(sortSchema.Enum, ","), "createdAt,updatedAt"; got != want {
+		t.Fatalf("unexpected enum values: %s != %s", got, want)
 	}
 }
 
