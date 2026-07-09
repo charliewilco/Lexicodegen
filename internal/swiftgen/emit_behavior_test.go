@@ -2,6 +2,7 @@ package swiftgen
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -305,6 +306,183 @@ func TestEmitSwiftFromIRPrefixesGeneratedFileNames(t *testing.T) {
 		if files[index] != want {
 			t.Fatalf("unexpected file at %d: %s != %s", index, files[index], want)
 		}
+	}
+}
+
+func TestEmitSwiftFromIRKnownValuesOpenEnum(t *testing.T) {
+	t.Parallel()
+
+	namedTypes := []ir.NamedType{
+		{
+			ID:       "com.atproto.label.defs",
+			Name:     "labelValueDefinitionDefaultSetting",
+			FullName: "com.atproto.label.defs.labelValueDefinitionDefaultSetting",
+			Definition: schema.Schema{
+				Type:        "string",
+				KnownValues: []string{"ignore", "warn", "hide", "foo-bar", "foo_bar", "rawValue", "allKnownValues"},
+			},
+			Source: "com.atproto.label.defs",
+			Tag:    "com.atproto.label",
+			Type:   "string",
+		},
+	}
+
+	data := ir.LexiconIR{
+		NamedTypes: namedTypes,
+		DefinitionIndex: map[string]ir.NamedType{
+			namedTypes[0].FullName: namedTypes[0],
+		},
+	}
+
+	outputDir := t.TempDir()
+	if err := EmitSwiftFromIR(data, outputDir); err != nil {
+		t.Fatal(err)
+	}
+
+	generated := readFile(t, filepath.Join(outputDir, "ComAtprotoLabel.generated.swift"))
+
+	// knownValues is an open set, so it is emitted as a String newtype struct
+	if strings.Contains(generated, ": String, Codable, CaseIterable") {
+		t.Fatalf("knownValues should not be a closed String-backed enum:\n%s", generated)
+	}
+	if strings.Contains(generated, "case unexpected") {
+		t.Fatalf("knownValues should be open by construction, not an enum fallback case:\n%s", generated)
+	}
+
+	for _, snippet := range []string{
+		"public struct ComAtprotoLabelDefsLabelValueDefinitionDefaultSetting: RawRepresentable, Codable, Hashable, Sendable, QueryParameterValue {",
+		"public let rawValue: String",
+		"public static let ignore = ComAtprotoLabelDefsLabelValueDefinitionDefaultSetting(rawValue: \"ignore\")",
+		"public static let hide = ComAtprotoLabelDefsLabelValueDefinitionDefaultSetting(rawValue: \"hide\")",
+		"public static let fooBar = ComAtprotoLabelDefsLabelValueDefinitionDefaultSetting(rawValue: \"foo-bar\")",
+		"public static let fooBar2 = ComAtprotoLabelDefsLabelValueDefinitionDefaultSetting(rawValue: \"foo_bar\")",
+		"public static let rawValue2 = ComAtprotoLabelDefsLabelValueDefinitionDefaultSetting(rawValue: \"rawValue\")",
+		"public static let allKnownValues2 = ComAtprotoLabelDefsLabelValueDefinitionDefaultSetting(rawValue: \"allKnownValues\")",
+		"public static let allKnownValues: [ComAtprotoLabelDefsLabelValueDefinitionDefaultSetting] = [.ignore, .warn, .hide, .fooBar, .fooBar2, .rawValue2, .allKnownValues2]",
+	} {
+		if !strings.Contains(generated, snippet) {
+			t.Fatalf("open string struct output missing %q:\n%s", snippet, generated)
+		}
+	}
+}
+
+func TestEmitSwiftFromIRStringConstraintIdentifierRegressions(t *testing.T) {
+	t.Parallel()
+
+	namedTypes := []ir.NamedType{
+		{
+			ID:       "tools.ozone.moderation.defs",
+			Name:     "sort",
+			FullName: "tools.ozone.moderation.defs.sort",
+			Definition: schema.Schema{
+				Type: "string",
+				Enum: []string{"public", "foo-bar", "foo_bar", "rawValue"},
+			},
+			Source: "tools.ozone.moderation.defs",
+			Tag:    "tools.ozone.moderation",
+			Type:   "string",
+		},
+		{
+			ID:       "app.bsky.feed.defs",
+			Name:     "collisionSubject",
+			FullName: "app.bsky.feed.defs.collisionSubject",
+			Definition: schema.Schema{
+				Type: "object",
+				Properties: map[string]schema.Schema{
+					"class":   {Type: "string"},
+					"foo-bar": {Type: "string"},
+					"foo_bar": {Type: "string"},
+				},
+			},
+			Source: "app.bsky.feed.defs",
+			Tag:    "app.bsky.feed",
+			Type:   "object",
+		},
+	}
+
+	data := ir.LexiconIR{
+		NamedTypes: namedTypes,
+		Endpoints: []ir.Endpoint{
+			{
+				ID:       "app.internal.getThing",
+				Name:     "main",
+				FullName: "app.internal.getThing",
+				Method:   "query",
+				Source:   "app.internal",
+				Tag:      "app.internal",
+				Path:     "/xrpc/app.internal.getThing",
+				Errors: []ir.EndpointError{
+					{Name: "Bad-Request"},
+					{Name: "bad_request"},
+					{Name: "internal"},
+				},
+			},
+		},
+		DefinitionIndex: map[string]ir.NamedType{
+			namedTypes[0].FullName: namedTypes[0],
+			namedTypes[1].FullName: namedTypes[1],
+		},
+	}
+
+	outputDir := t.TempDir()
+	if err := EmitSwiftFromIR(data, outputDir); err != nil {
+		t.Fatal(err)
+	}
+
+	ozone := readFile(t, filepath.Join(outputDir, "ToolsOzoneModeration.generated.swift"))
+	for _, snippet := range []string{
+		"public enum ToolsOzoneModerationDefsSort: String, Codable, CaseIterable, QueryParameterValue, Sendable {",
+		"\tcase `public` = \"public\"",
+		"\tcase fooBar = \"foo-bar\"",
+		"\tcase fooBar2 = \"foo_bar\"",
+		"\tcase rawValue2 = \"rawValue\"",
+	} {
+		if !strings.Contains(ozone, snippet) {
+			t.Fatalf("closed enum output missing %q:\n%s", snippet, ozone)
+		}
+	}
+
+	feed := readFile(t, filepath.Join(outputDir, "AppBskyFeed.generated.swift"))
+	for _, snippet := range []string{
+		"\tpublic let `class`: String?",
+		"\tpublic let fooBar: String?",
+		"\tpublic let fooBar2: String?",
+		"\t\tcase `class` = \"class\"",
+		"\t\tcase fooBar = \"foo-bar\"",
+		"\t\tcase fooBar2 = \"foo_bar\"",
+	} {
+		if !strings.Contains(feed, snippet) {
+			t.Fatalf("object collision output missing %q:\n%s", snippet, feed)
+		}
+	}
+
+	internal := readFile(t, filepath.Join(outputDir, "AppInternal.generated.swift"))
+	for _, snippet := range []string{
+		"\tcase badRequest = \"Bad-Request\"",
+		"\tcase badRequest2 = \"bad_request\"",
+		"\tcase `internal` = \"internal\"",
+	} {
+		if !strings.Contains(internal, snippet) {
+			t.Fatalf("endpoint error output missing %q:\n%s", snippet, internal)
+		}
+	}
+
+	endpoints := readFile(t, filepath.Join(outputDir, "Endpoints.swift"))
+	if !strings.Contains(endpoints, "\tpublic var `internal`: AppInternalNamespace {") && !strings.Contains(endpoints, "\tvar `internal`: AppInternalNamespace {") {
+		t.Fatalf("keyword namespace accessor was not escaped:\n%s", endpoints)
+	}
+
+	if _, err := exec.LookPath("swiftc"); err != nil {
+		t.Skip("swiftc not available")
+	}
+	files, err := filepath.Glob(filepath.Join(outputDir, "*.swift"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	args := append([]string{"-typecheck"}, files...)
+	output, err := exec.Command("swiftc", args...).CombinedOutput()
+	if err != nil {
+		t.Fatalf("swiftc failed: %v\n%s", err, string(output))
 	}
 }
 

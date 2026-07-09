@@ -26,6 +26,7 @@ type Schema struct {
 	Properties  map[string]Schema `json:"properties,omitempty"`
 	Items       *Schema           `json:"items,omitempty"`
 	KnownValues []string          `json:"knownValues,omitempty"`
+	Enum        []string          `json:"enum,omitempty"`
 	Ref         string            `json:"ref,omitempty"`
 	Refs        []string          `json:"refs,omitempty"`
 	Record      *Schema           `json:"record,omitempty"`

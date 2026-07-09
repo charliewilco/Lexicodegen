@@ -51,7 +51,7 @@ The Homebrew shorthand above expects a `charliewilco/homebrew-lexicodegen` tap r
 Install with Go:
 
 ```bash
-go install github.com/charliewilco/lexicodegen/cmd/lexicodegen@v0.1.0
+go install github.com/charliewilco/lexicodegen/cmd/lexicodegen@v0.2.0
 ```
 
 Build the CLI from source:
@@ -75,7 +75,7 @@ Install the CLI and run it in a later step:
 ```yaml
 - uses: charliewilco/action-lexicodegen@v1
   with:
-    version: v0.1.0
+    version: v0.2.0
 
 - run: lexicodegen ./lexicons --output ./output/swift
 ```
@@ -85,7 +85,7 @@ Or install and run Lexicodegen in one step:
 ```yaml
 - uses: charliewilco/action-lexicodegen/run@v1
   with:
-    version: v0.1.0
+    version: v0.2.0
     sources: ./lexicons
     output: ./output/swift
 ```
@@ -327,20 +327,20 @@ Primary verification flow:
 
 Tagged releases are published with GoReleaser via `.github/workflows/release.yml`.
 
-Release tags are the installable version contract for downstream automation such as GitHub Actions. Prefer pinned SemVer tags such as `v0.1.0` over `latest` when another repository needs reproducible generation.
+Release tags are the installable version contract for downstream automation such as GitHub Actions. Prefer pinned SemVer tags such as `v0.2.0` over `latest` when another repository needs reproducible generation.
 
 Release flow:
 
-- create and push a semver tag such as `v0.1.0`
+- create and push a semver tag such as `v0.2.0`
 - GitHub Actions runs GoReleaser
 - GoReleaser uploads release archives to GitHub Releases
 - GoReleaser updates `Formula/lexicodegen.rb` in the `charliewilco/homebrew-lexicodegen` tap repository when `HOMEBREW_TAP_GITHUB_TOKEN` is configured
 
-First release:
+Release tag:
 
 ```bash
-git tag -a v0.1.0 -m "Release v0.1.0"
-git push origin v0.1.0
+git tag -a v0.2.0 -m "Release v0.2.0"
+git push origin v0.2.0
 ```
 
 After the release workflow completes, verify the published binary:
