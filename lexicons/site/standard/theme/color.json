@@ -1,53 +1,54 @@
 {
-	"defs": {
-		"rgb": {
-			"properties": {
-				"b": {
-					"maximum": 255,
-					"minimum": 0,
-					"type": "integer"
-				},
-				"g": {
-					"maximum": 255,
-					"minimum": 0,
-					"type": "integer"
-				},
-				"r": {
-					"maximum": 255,
-					"minimum": 0,
-					"type": "integer"
-				}
-			},
-			"required": ["r", "g", "b"],
-			"type": "object"
-		},
-		"rgba": {
-			"properties": {
-				"a": {
-					"maximum": 100,
-					"minimum": 0,
-					"type": "integer"
-				},
-				"b": {
-					"maximum": 255,
-					"minimum": 0,
-					"type": "integer"
-				},
-				"g": {
-					"maximum": 255,
-					"minimum": 0,
-					"type": "integer"
-				},
-				"r": {
-					"maximum": 255,
-					"minimum": 0,
-					"type": "integer"
-				}
-			},
-			"required": ["r", "g", "b", "a"],
-			"type": "object"
-		}
-	},
-	"id": "site.standard.theme.color",
-	"lexicon": 1
+  "id": "site.standard.theme.color",
+  "defs": {
+    "rgb": {
+      "type": "object",
+      "required": ["r", "g", "b"],
+      "properties": {
+        "b": {
+          "type": "integer",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "g": {
+          "type": "integer",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "r": {
+          "type": "integer",
+          "maximum": 255,
+          "minimum": 0
+        }
+      }
+    },
+    "rgba": {
+      "type": "object",
+      "required": ["r", "g", "b", "a"],
+      "properties": {
+        "a": {
+          "type": "integer",
+          "maximum": 100,
+          "minimum": 0
+        },
+        "b": {
+          "type": "integer",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "g": {
+          "type": "integer",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "r": {
+          "type": "integer",
+          "maximum": 255,
+          "minimum": 0
+        }
+      }
+    }
+  },
+  "$type": "com.atproto.lexicon.schema",
+  "lexicon": 1
 }
