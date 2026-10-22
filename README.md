@@ -29,7 +29,7 @@ Implementation notes:
 - `internal/swiftgen`: Swift-specific code generation
 - `lexicons/`: checked-in lexicon JSON input
 - `testdata/golden/minimal-endpoints/`: pinned parity snapshot for focused generated Swift output
-- `scripts/get-lexicons.sh`: refreshes lexicon snapshots from upstream
+- `scripts/get-lexicons.sh`: refreshes combined upstream lexicon snapshots (`com`/`tools` from AT Protocol and `app`/`chat` from Bluesky). Passing explicit archive URL, destination, and archive-path arguments preserves single-source refreshes. Downloads and extraction finish before existing snapshots are replaced. Run `python3 scripts/test-get-lexicons.py` for the isolated refresh regression tests.
 - `scripts/check-swift-compile.sh`: typechecks generated Swift with `swiftc`
 - `docs/`: focused documentation for CLI usage, GitHub Actions usage, and TOML configuration
 

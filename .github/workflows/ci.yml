@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       SWIFT_MODULE_CACHE_PATH: .swift-module-cache
 
